@@ -1045,7 +1045,9 @@ async function refreshData(showToast){
 
 // 행사 전환: 드롭다운에서 다른 행사 선택 시 서버에서 그 행사의 데이터만 다시 가져옴
 async function switchEvent(evtId){
-  console.log("[switchEvent] 요청 evtId:", evtId, "현재 CUR_EVT.evtId:", CUR_EVT&&CUR_EVT.evtId, "EVENTS:", JSON.stringify(EVENTS.map(function(e){return{id:e.evtId,nm:e.nm}})));
+  console.log("[switchEvent] 요청 evtId:", evtId, "현재 CUR_EVT.evtId:", CUR_EVT&&CUR_EVT.evtId, "같음?",(CUR_EVT&&CUR_EVT.evtId)===evtId, "EVENTS:", JSON.stringify(EVENTS.map(function(e){return{id:e.evtId,nm:e.nm}})));
+  console.log("[CustomTabs]", JSON.stringify(_getCustomTabs()));
+  console.log("[_cache.CustomTabs]", JSON.stringify(_cache&&_cache.CustomTabs));
   // CUR_EVT 가 null(다중행사 로그인 직후)이면 첫 선택, 이미 같은 행사면 무시
   if(!evtId || (CUR_EVT && CUR_EVT.evtId===evtId)){
     console.warn("[switchEvent] SKIP — 같은 행사 또는 evtId 없음. evtId="+evtId+" cur="+(CUR_EVT&&CUR_EVT.evtId));
