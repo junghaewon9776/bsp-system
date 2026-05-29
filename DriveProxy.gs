@@ -23,7 +23,7 @@ function getRoot_() {
   if (id) {
     try { return DriveApp.getFolderById(id); } catch(e) {}
   }
-  var folder = DriveApp.createFolder("시스템_파일저장소");
+  var folder = DriveApp.createFolder("fire");
   PROPS.setProperty(ROOT_KEY, folder.getId());
   return folder;
 }
