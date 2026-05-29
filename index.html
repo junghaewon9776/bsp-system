@@ -1254,12 +1254,23 @@ function mkTabs(){
   if(FIELD_MENU==="on"){
     var fieldItems=[
       {k:"field_layout",l:"축제 배치도",frame:"방역코스/layout.html"},
-      {k:"field_monitor",l:"본부 모니터링",frame:"방역코스/monitor.html"}
+      {k:"field_vehicle",l:"🚗 행사차량 관리",frame:"방역코스/vehicle.html"}
     ];
-    fieldItems.push({k:"field_admin",l:"방역코스 관리",frame:"방역코스/admin.html"});
-    fieldItems.push({k:"field_vehicle",l:"행사차량 관리",frame:"방역코스/vehicle.html"});
-    fieldItems.push({k:"field_today",l:"오늘의 운영",frame:"방역코스/today.html"});
     cats.push({id:"field",label:"📍 현장",items:fieldItems});
+  }
+
+  // ── 방역 ── (외부 course 사이트 iframe 연동)
+  if(FIELD_MENU==="on"){
+    var byItems=[
+      {k:"by_today",l:"🚐 오늘의 운영"},
+      {k:"by_admin",l:"⚙️ 관리자"},
+      {k:"by_monitor",l:"📊 모니터링"},
+      {k:"by_members",l:"👥 인원관리"},
+      {k:"by_stats",l:"📈 통계"},
+      {k:"by_accounts",l:"🔐 계정관리"},
+      {k:"by_print",l:"🖨 인쇄"}
+    ];
+    cats.push({id:"byeok",label:"🦠 방역",items:byItems});
   }
 
   // _curCat이 유효한 카테고리인지 확인, 아니면 CTAB 기반으로 자동 선택
@@ -5718,7 +5729,20 @@ function draw(){
 
 function _getFrameUrl(tabKey){
   if(FIELD_MENU!=="on")return null;
-  var map={field_layout:"방역코스/layout.html",field_monitor:"방역코스/monitor.html",field_admin:"방역코스/admin.html",field_vehicle:"방역코스/vehicle.html",field_today:"방역코스/today.html"};
+  var COURSE_BASE="https://junghaewon9776.github.io/course/";
+  var map={
+    // 현장 (로컬)
+    field_layout:"방역코스/layout.html",
+    field_vehicle:"방역코스/vehicle.html",
+    // 방역 (외부 course 사이트 — 수정 시 자동 반영)
+    by_today:   COURSE_BASE+"today.html",
+    by_admin:   COURSE_BASE+"admin.html",
+    by_monitor: COURSE_BASE+"monitor.html",
+    by_members: COURSE_BASE+"members.html",
+    by_stats:   COURSE_BASE+"stats.html",
+    by_accounts:COURSE_BASE+"accounts.html",
+    by_print:   COURSE_BASE+"print.html"
+  };
   var url=map[tabKey]||null;
   if(url && CUR_EVT && CUR_EVT.evtId) url += (url.indexOf('?')>=0?'&':'?')+'evtId='+encodeURIComponent(CUR_EVT.evtId);
   return url;
