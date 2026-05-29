@@ -16625,18 +16625,25 @@ async function doImp(inp){
       }
       // 구매 — 벌크 (명세서ID 그룹핑은 서버에서 처리하지 않으므로 클라에서 inv 매핑)
       if(checkList.some(function(x){return x.sheet==="물품구매";})){
-        var r2=XLSX.utils.sheet_to_json(wb.Sheets["물품구매"],{raw:false, dateNF:'yyyy-mm-dd HH:MM:SS'});
+        var r2=XLSX.utils.sheet_to_json(wb.Sheets["물품구매"],{dateNF:'yyyy-mm-dd'});
         var invMap={};
         var pRows=r2.map(function(x){
           var bi=null;for(var j=0;j<BG.length;j++)if(BG[j].n==String(x["비목"]||x["예산비목"]||""))bi=BG[j].id;
           var key=String(x["명세서ID"]||"").trim();
           var inv=key?(invMap[key]||(invMap[key]="INV"+Date.now()+Math.floor(Math.random()*9999))):("INV"+Date.now()+Math.floor(Math.random()*9999));
-          var _qt=String(x["수량"]||"").replace(/,/g,"");
-          var _un=String(x["단가(원)"]||x["단가"]||"").replace(/,/g,"");
-          var _tot=String(x["합계(원)"]||x["합계(천원)"]||x["합계"]||"").replace(/,/g,"");
+          var _qt=Number(String(x["수량"]||"1").replace(/,/g,""))||1;
+          var _un=Number(String(x["단가(원)"]||x["단가"]||"0").replace(/,/g,""))||0;
+          var _tot=Number(String(x["합계(원)"]||x["합계(천원)"]||x["합계"]||"0").replace(/,/g,""))||0;
           // 합계(천원)이면 ×1000
-          if(!x["합계(원)"]&&!x["합계"]&&x["합계(천원)"]&&_tot) _tot=String(Number(_tot)*1000);
-          return {dt:String(x["구매일"]||""),ar:String(x["부서"]||""),it:String(x["물품명"]||""),qt:_qt,un:_un,tot:_tot,bi:bi||(BG[0]?BG[0].id:"B5"),ph:[],rc:[],by:String(x["등록자"]||CID),prtD:String(x["결의서발행일"]||""),inv:inv};
+          if(!x["합계(원)"]&&!x["합계"]&&x["합계(천원)"]&&_tot) _tot=_tot*1000;
+          // 단가 비어있으면 합계÷수량으로 역산
+          if(!_un && _tot && _qt) _un=Math.round(_tot/_qt);
+          // 합계 비어있으면 단가×수량
+          if(!_tot && _un && _qt) _tot=_un*_qt;
+          // 날짜 처리 (엑셀 날짜 숫자→문자열)
+          var _dt=x["구매일"]||"";
+          if(typeof _dt==="number"){ var d=XLSX.SSF.parse_date_code(_dt); _dt=d?d.y+"-"+String(d.m).padStart(2,"0")+"-"+String(d.d).padStart(2,"0"):""; }
+          return {dt:String(_dt),ar:String(x["부서"]||""),it:String(x["물품명"]||""),qt:String(_qt),un:String(_un),tot:String(_tot),bi:bi||(BG[0]?BG[0].id:"B5"),ph:[],rc:[],by:String(x["등록자"]||CID),prtD:String(x["결의서발행일"]||""),inv:inv};
         });
         if(pRows.length){
           showLoading("물품구매 "+pRows.length+"건 일괄 저장중...");
