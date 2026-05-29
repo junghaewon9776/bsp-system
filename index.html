@@ -1045,8 +1045,12 @@ async function refreshData(showToast){
 
 // 행사 전환: 드롭다운에서 다른 행사 선택 시 서버에서 그 행사의 데이터만 다시 가져옴
 async function switchEvent(evtId){
+  console.log("[switchEvent] 요청 evtId:", evtId, "현재 CUR_EVT.evtId:", CUR_EVT&&CUR_EVT.evtId, "EVENTS:", JSON.stringify(EVENTS.map(function(e){return{id:e.evtId,nm:e.nm}})));
   // CUR_EVT 가 null(다중행사 로그인 직후)이면 첫 선택, 이미 같은 행사면 무시
-  if(!evtId || (CUR_EVT && CUR_EVT.evtId===evtId)) return;
+  if(!evtId || (CUR_EVT && CUR_EVT.evtId===evtId)){
+    console.warn("[switchEvent] SKIP — 같은 행사 또는 evtId 없음. evtId="+evtId+" cur="+(CUR_EVT&&CUR_EVT.evtId));
+    return;
+  }
   showLoading("📡 서버에서 따끈한 데이터 가져오는 중...");
   var r=await api("refresh",{id:CID, evtId:evtId});
   if(!r||!r.ok){ hideLoading(); toast((r&&r.err)||"행사 전환 실패", true); return; }
