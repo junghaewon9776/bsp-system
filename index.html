@@ -553,7 +553,7 @@ document.addEventListener("DOMContentLoaded", function(){
 var AR=[], BG=[], US={}, acts=[], purs=[], exps=[], mems=[], notices=[], pays=[], dpst=[], inc=[], incTypes=[], expBG=[], txn=[], expTypes=[], gwanTypes=[], incCards=[], awards=[], memGroups=[], vendors=[], fees=[], assets=[], rentals=[], assetCats=[], assetLocs=[];
 var SHARE_MEMS=false;
 var FIELD_MENU="on";
-var ACCOUNTANT_NAME = ""; // 회계담당자 고정 이름 (Config에서 로드)
+var ACCOUNTANT_NAME = "정해원"; // 회계담당자 고정 이름 (Config에서 로드)
 var RPT_SHOW = ""; // 현재 선택된 결산서 미리보기 ("" | inc | expAcc | expCat | expSrc)
 var EXP_LOADED = false; // 세출관리 데이터 로드 완료 플래그
 var _EXP_LOADING = false;
@@ -2980,7 +2980,7 @@ function awardsTmpl(){
   if(typeof XLSX==="undefined"){ toast("XLSX 라이브러리 로딩 중", true); return; }
   var rows = [
     {"상이름":"대상","훈격":"영광군수상","순서":1},
-    {"상이름":"우수상","훈격":"보존회장상","순서":2},
+    {"상이름":"우수상","훈격":"청년회장상","순서":2},
     {"상이름":"장려상","훈격":"","순서":3}
   ];
   var ws = XLSX.utils.json_to_sheet(rows);
@@ -8040,7 +8040,7 @@ function dInc(){
   h += '</div>';
   // 등록된 카드 없으면 안내
   if(!(incCards||[]).length){
-    h += '<div style="padding:10px 14px;background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;margin-bottom:12px;font-size:13px">⚠️ 먼저 <b>💳 카드/계좌</b> 버튼으로 카드·통장을 등록하세요 (예: 보탬이=지정카드, 한수원카드=지정카드, 보존회통장=지정카드/계좌이체)</div>';
+    h += '<div style="padding:10px 14px;background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;margin-bottom:12px;font-size:13px">⚠️ 먼저 <b>💳 카드/계좌</b> 버튼으로 카드·통장을 등록하세요 (예: 청년회카드=지정카드, 후원카드=지정카드, 청년회통장=지정카드/계좌이체)</div>';
   }
 
   // 필터
@@ -8331,7 +8331,7 @@ function incManageCards(){
   if(!isA()) return;
   var h = '';
   h += '<h3 style="margin:0 0 12px">💳 카드/계좌 등록</h3>';
-  h += '<div class="mut" style="font-size:12px;margin-bottom:10px">예) 보탬이 → 지정카드만, 한수원카드 → 지정카드만, 보존회통장 → 지정카드/계좌이체</div>';
+  h += '<div class="mut" style="font-size:12px;margin-bottom:10px">예) 청년회카드 → 지정카드만, 후원카드 → 지정카드만, 청년회통장 → 지정카드/계좌이체</div>';
   h += '<div style="max-height:320px;overflow:auto;border:1px solid #e5e7eb;border-radius:6px;margin-bottom:12px">';
   if((incCards||[]).length === 0){
     h += '<div class="mut" style="padding:20px;text-align:center">등록된 카드/계좌가 없습니다</div>';
@@ -8358,7 +8358,7 @@ function incManageCards(){
   // 신규 등록
   h += '<div style="border:1px solid #e5e7eb;border-radius:6px;padding:10px;background:#fafbfc">';
   h += '<div style="font-weight:600;margin-bottom:6px">+ 신규 등록</div>';
-  h += '<input id="icNewName" type="text" placeholder="카드/계좌 이름 (예: 보탬이)" style="width:100%;padding:7px;border:1px solid #ddd;border-radius:6px;margin-bottom:6px">';
+  h += '<input id="icNewName" type="text" placeholder="카드/계좌 이름 (예: 청년회카드)" style="width:100%;padding:7px;border:1px solid #ddd;border-radius:6px;margin-bottom:6px">';
   h += '<div style="font-size:12px;margin-bottom:4px">허용 결제방법 (복수선택)</div>';
   h += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px">';
   PAY_METHODS_ALL.forEach(function(p){
@@ -15922,10 +15922,10 @@ function tmplInc(){
   var wb=XLSX.utils.book_new();
   tmplSheet(wb,"세입관리",["대분류","중분류","금액(원)","카드/계좌","결제방법","비고"],
     [
-      ["이월금","전년도 이월","3000000","보존회통장","계좌이체","전년도 잔액 이월 (회계연도 초기 1회)"],
-      ["보조금","국고보조","5000000","보존회통장","계좌이체","예시 행"],
-      ["지원금","한수원지원","2000000","한수원카드","지정카드",""],
-      ["자체수입","이자수입","50000","보존회통장","계좌이체","예금 이자"]
+      ["이월금","전년도 이월","3000000","청년회통장","계좌이체","전년도 잔액 이월 (회계연도 초기 1회)"],
+      ["보조금","국고보조","5000000","청년회통장","계좌이체","예시 행"],
+      ["지원금","후원금","2000000","후원카드","지정카드",""],
+      ["자체수입","이자수입","50000","청년회통장","계좌이체","예금 이자"]
     ],
     [18,24,14,16,14,28]);
   XLSX.writeFile(wb,"양식_세입관리.xlsx");toast("세입관리 양식 다운로드");
