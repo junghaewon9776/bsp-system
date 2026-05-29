@@ -1311,11 +1311,8 @@ function mkTabs(){
   // ── 현장 ──
   if(FIELD_MENU==="on"){
     var fieldItems=[
-      {k:"field_layout",l:"축제 배치도",frame:"field_layout"},
-      {k:"field_monitor",l:"본부 모니터링",frame:"field_monitor"},
-      {k:"field_admin",l:"방역코스 관리",frame:"field_admin"},
-      {k:"field_vehicle",l:"🚗 행사차량 관리",frame:"field_vehicle"},
-      {k:"field_today",l:"오늘의 운영",frame:"field_today"}
+      {k:"field_layout",l:"축제 배치도",frame:"방역코스/layout.html"},
+      {k:"field_vehicle",l:"🚗 행사차량 관리",frame:"방역코스/vehicle.html"}
     ];
     cats.push({id:"field",label:"📍 현장",items:fieldItems});
   }
@@ -5776,9 +5773,8 @@ function draw(){
 }
 
 function _getFrameUrl(tabKey){
-  // 현장 탭 — 단오시스템 GitHub Pages 연동
-  var _DANO_BASE="https://junghaewon9776.github.io/bspdano-system/방역코스/";
-  var localMap={field_layout:_DANO_BASE+"layout.html",field_monitor:_DANO_BASE+"monitor.html",field_admin:_DANO_BASE+"admin.html",field_vehicle:_DANO_BASE+"vehicle.html",field_today:_DANO_BASE+"today.html"};
+  // 현장 탭 (로컬 iframe)
+  var localMap={field_layout:"방역코스/layout.html",field_vehicle:"방역코스/vehicle.html"};
   if(localMap[tabKey]){
     var u=localMap[tabKey];
     if(CUR_EVT && CUR_EVT.evtId) u+=(u.indexOf('?')>=0?'&':'?')+'evtId='+encodeURIComponent(CUR_EVT.evtId);
