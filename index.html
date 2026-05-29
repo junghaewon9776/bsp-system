@@ -446,7 +446,7 @@ label{display:block;font-size:10px;color:#999;margin-bottom:3px}
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <!-- Firebase Storage 제거 — 구글 드라이브 프록시로 대체 -->
 <script src="firebase-config.js"></script>
-<script src="common.js?v=20260529i"></script>
+<script src="common.js?v=20260529k"></script>
 
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" onerror="console.warn('XLSX CDN load failed')"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js" onerror="console.warn('xlsx-js-style CDN load failed')"></script>
@@ -1300,6 +1300,7 @@ function mkTabs(){
   if(LINK_TABS==="on"){
     var _ctabs = _getCustomTabs();
     _ctabs.forEach(function(cat,ci){
+      if(cat.hidden) return; // 개별 OFF된 카테고리 숨김
       var ctItems=(cat.items||[]).map(function(it,ii){
         return {k:"ct_"+cat.id+"_"+ii, l:(it.icon?it.icon+" ":"")+it.label};
       });
@@ -17090,7 +17091,8 @@ function dLinkTabs(){
     tabs.forEach(function(cat,ci){
       h+='<div style="border:1.5px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:12px;background:#f8fafc">';
       h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">';
-      h+='<div style="font-size:16px;font-weight:700">'+(cat.icon||"🔗")+' '+esc(cat.label||"")+'</div>';
+      h+='<div style="display:flex;align-items:center;gap:10px"><span style="font-size:16px;font-weight:700">'+(cat.icon||"🔗")+' '+esc(cat.label||"")+'</span>';
+      h+='<button onclick="toggleLinkCat('+ci+')" style="padding:4px 12px;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;'+(cat.hidden?'background:#fecaca;color:#dc2626':'background:#bbf7d0;color:#16a34a')+'">'+(cat.hidden?'❌ OFF':'✅ ON')+'</button></div>';
       h+='<div style="display:flex;gap:6px">';
       h+='<button class="btn btn-s" onclick="popLinkCat('+ci+')" style="font-size:11px">✏️ 수정</button>';
       h+='<button class="btn btn-s" onclick="delLinkCat('+ci+')" style="font-size:11px;color:#dc2626">🗑 삭제</button>';
@@ -17162,6 +17164,17 @@ function saveLinkCat(idx){
   showLoading("저장 중...");
   _saveCustomTabs(tabs).then(function(){
     hideLoading(); closePopup(); toast(idx<0?"카테고리 추가됨":"카테고리 수정됨");
+    setTimeout(function(){ draw(); },300);
+  });
+}
+
+function toggleLinkCat(idx){
+  var tabs=JSON.parse(JSON.stringify(_getCustomTabs()));
+  if(!tabs[idx]) return;
+  tabs[idx].hidden = !tabs[idx].hidden;
+  showLoading("저장 중...");
+  _saveCustomTabs(tabs).then(function(){
+    hideLoading(); toast(tabs[idx].label+" "+(tabs[idx].hidden?"OFF":"ON"));
     setTimeout(function(){ draw(); },300);
   });
 }
