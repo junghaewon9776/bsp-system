@@ -446,7 +446,7 @@ label{display:block;font-size:10px;color:#999;margin-bottom:3px}
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 <script src="firebase-config.js"></script>
-<script src="common.js?v=20260529g"></script>
+<script src="common.js?v=20260529h"></script>
 
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" onerror="console.warn('XLSX CDN load failed')"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js" onerror="console.warn('xlsx-js-style CDN load failed')"></script>
@@ -17087,13 +17087,25 @@ function dLinkTabs(){
   return h;
 }
 
+var EMOJI_LIST=["🔗","🦠","📋","🗺️","📊","📦","🚗","🏠","📷","💰","📝","🎪","👥","⚙️","📁","🔔","📌","🎯","🛒","💳","🏷️","📞","🌐","🔧","📅","🎵","🎬","🏆","🍽️","☀️","🌙","⭐","❤️","🔥","💡","🚀","✈️"];
+function _emojiSelect(id, cur){
+  var h='<select id="'+id+'" style="font-size:22px;padding:6px 10px;border-radius:8px;border:1px solid #d1d5db;cursor:pointer;min-width:70px">';
+  var found=false;
+  EMOJI_LIST.forEach(function(e){
+    var sel=(e===cur);if(sel)found=true;
+    h+='<option value="'+e+'"'+(sel?' selected':'')+' style="font-size:20px">'+e+'</option>';
+  });
+  if(cur&&!found) h='<select id="'+id+'" style="font-size:22px;padding:6px 10px;border-radius:8px;border:1px solid #d1d5db;cursor:pointer;min-width:70px"><option value="'+esc(cur)+'" selected style="font-size:20px">'+cur+'</option>'+h.split('>').slice(1).join('>');
+  h+='</select>';
+  return h;
+}
 function popLinkCat(idx){
   var tabs=_getCustomTabs();
   var isNew=idx<0;
   var cat=isNew?{id:"",label:"",icon:"🔗"}:tabs[idx]||{};
   var h='<div class="pop-head"><h3>'+(isNew?"➕ 카테고리 추가":"✏️ 카테고리 수정")+'</h3></div>';
   h+='<div style="padding:14px">';
-  h+='<div class="fr"><label>아이콘 (이모지)</label><input id="lc_icon" value="'+esc(cat.icon||"🔗")+'" style="width:60px;font-size:20px;text-align:center" maxlength="4"></div>';
+  h+='<div class="fr"><label>아이콘</label>'+_emojiSelect("lc_icon",cat.icon||"🔗")+'</div>';
   h+='<div class="fr"><label>이름</label><input id="lc_label" value="'+esc(cat.label||"")+'" placeholder="예: 방역"></div>';
   h+='<div style="text-align:right;margin-top:12px"><button class="btn" onclick="closePopup()">취소</button> <button class="btn btn-b" onclick="saveLinkCat('+idx+')">저장</button></div>';
   h+='</div>';
@@ -17138,9 +17150,10 @@ function popLinkItem(catIdx, itemIdx){
   var it=isNew?{label:"",icon:"",url:""}:(cat.items||[])[itemIdx]||{};
   var h='<div class="pop-head"><h3>'+(isNew?"➕ 항목 추가":"✏️ 항목 수정")+' — '+esc(cat.label)+'</h3></div>';
   h+='<div style="padding:14px">';
-  h+='<div class="fr"><label>아이콘 (선택)</label><input id="li_icon" value="'+esc(it.icon||"")+'" style="width:60px;font-size:20px;text-align:center" maxlength="4" placeholder="🔗"></div>';
+  h+='<div class="fr"><label>아이콘</label>'+_emojiSelect("li_icon",it.icon||"🔗")+'</div>';
   h+='<div class="fr"><label>이름</label><input id="li_label" value="'+esc(it.label||"")+'" placeholder="예: 오늘의 운영"></div>';
   h+='<div class="fr"><label>URL</label><input id="li_url" value="'+esc(it.url||"")+'" placeholder="https://example.com/page.html" style="font-size:12px"></div>';
+  h+='<div class="mut" style="font-size:11px;margin-top:-6px;color:#6366f1">💡 구글 드라이브 폴더/사이트/외부 시스템 URL을 입력하세요</div>';
   h+='<div style="text-align:right;margin-top:12px"><button class="btn" onclick="closePopup()">취소</button> <button class="btn btn-b" onclick="saveLinkItem('+catIdx+','+itemIdx+')">저장</button></div>';
   h+='</div>';
   openPopup(h,460);
