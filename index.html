@@ -1251,15 +1251,6 @@ function mkTabs(){
   if(_isSuperAdmin()) c5.push({k:"linkTabs",l:"🔗 연동 탭"});
   cats.push({id:"sys",label:"⚙️ 시스템",items:c5});
 
-  // ── 현장 ──
-  if(FIELD_MENU==="on"){
-    var fieldItems=[
-      {k:"field_layout",l:"축제 배치도",frame:"방역코스/layout.html"},
-      {k:"field_vehicle",l:"🚗 행사차량 관리",frame:"방역코스/vehicle.html"}
-    ];
-    cats.push({id:"field",label:"📍 현장",items:fieldItems});
-  }
-
   // ── 연동 탭 (CustomTabs) — 관리자가 UI에서 추가/편집 ──
   var _ctabs = _getCustomTabs();
   _ctabs.forEach(function(cat,ci){
@@ -1268,6 +1259,15 @@ function mkTabs(){
     });
     if(ctItems.length) cats.push({id:"ct_"+cat.id, label:(cat.icon||"🔗")+" "+cat.label, items:ctItems});
   });
+
+  // ── 현장 ──
+  if(FIELD_MENU==="on"){
+    var fieldItems=[
+      {k:"field_layout",l:"축제 배치도",frame:"방역코스/layout.html"},
+      {k:"field_vehicle",l:"🚗 행사차량 관리",frame:"방역코스/vehicle.html"}
+    ];
+    cats.push({id:"field",label:"📍 현장",items:fieldItems});
+  }
 
   // _curCat이 유효한 카테고리인지 확인, 아니면 CTAB 기반으로 자동 선택
   var validCat=cats.some(function(c){return c.id===_curCat});
