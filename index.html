@@ -1248,7 +1248,7 @@ function mkTabs(){
   if(!isA()) c5.push({k:"myinfo",l:"내 정보"});
   if(_isEvtAdmin()) c5.push({k:"evtMgr",l:"행사관리"});
   if(ME && (ME.r==="super" || ME.r==="admin")) c5.push({k:"forms",l:"폼 관리"});
-  if(isA()) c5.push({k:"linkTabs",l:"🔗 연동 탭"});
+  if(_isSuperAdmin()) c5.push({k:"linkTabs",l:"🔗 연동 탭"});
   cats.push({id:"sys",label:"⚙️ 시스템",items:c5});
 
   // ── 현장 ──
