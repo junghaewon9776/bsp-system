@@ -19958,8 +19958,8 @@ function smsVarSelectHtml(targetTextareaId, varList){
     if (typeof v === "string"){ key = v; ex = ""; }
     else { key = String(v.key||""); ex = String(v.example||""); }
     if (!key) return;
-    var label = key + (ex ? "  =  " + ex : "");
-    opts += '<option value="'+esc(key)+'">'+esc(label)+'</option>';
+    var label = '{' + key + '}' + (ex ? "  =  " + ex : "");
+    opts += '<option value="'+esc('{'+key+'}')+'">'+esc(label)+'</option>';
   });
   var onchange = "_smsInsertVarToTarget('"+targetTextareaId+"', this.value); this.value='';";
   // color:#1f2937 명시 — 부모에서 흰 글씨 상속받는 문제 회피
