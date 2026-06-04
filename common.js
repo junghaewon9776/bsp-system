@@ -1186,37 +1186,123 @@ function _getAligoCfg(evtId) {
     };
   });
 }
+function _getSensCfg(evtId) {
+  return loadEvtData(evtId).then(function(data) {
+    var cfg = {};
+    (data.Config || []).forEach(function(c) { if(c && c.k) cfg[c.k] = c.v; });
+    return {
+      provider:   cfg.SMS_PROVIDER || "",
+      serviceId:  cfg.NAVER_SENS_SERVICE_ID || "",
+      sender:     cfg.NAVER_SENS_SENDER || "",
+      accessKey:  cfg.NAVER_SENS_ACCESS_KEY || "",
+      secretKey:  cfg.NAVER_SENS_SECRET_KEY || "",
+      smsSignature: cfg.SMS_SIGNATURE || "",
+      tplCode:    cfg.ALIGO_TPL_CODE || "",
+      kakaoOn:    cfg.ALIGO_KAKAO_ON === "1"
+    };
+  });
+}
+function _getSmsCfgAuto(evtId) {
+  return loadEvtData(evtId).then(function(data) {
+    var cfg = {};
+    (data.Config || []).forEach(function(c) { if(c && c.k) cfg[c.k] = c.v; });
+    return { provider: cfg.SMS_PROVIDER || "" };
+  });
+}
 function _apiGetAligoCfg(p) {
+  // 이름은 유지(호환) — getSmsCfg 액션에서 호출됨
   var evtId = _getEvtId(p);
   if (!evtId) return Promise.resolve({ok:false, err:"행사 미선택"});
-  return _getAligoCfg(evtId).then(function(c) {
-    return {
-      ok: true,
-      hasKey: !!c.apiKey,
-      aligoKeyMask: c.apiKey ? ("***" + c.apiKey.slice(-4)) : "",
-      aligoUser: c.userId,
-      aligoSender: c.sender,
-      proxyUrl: c.proxyUrl ? "설정됨" : "",
-      sensServiceId: "", sensSender: "", hasSensAccess:false, hasSensSecret:false,
-      sensAccessMask:"", sensSecretMask:"",
-      smsSignature: c.smsSignature,
-      tplCode: c.tplCode,
-      kakaoOn: c.kakaoOn
-    };
+  return _getAligoCfg(evtId).then(function(ac) {
+    return _getSensCfg(evtId).then(function(nc) {
+      return {
+        ok: true,
+        provider: nc.provider,
+        hasKey: !!ac.apiKey,
+        aligoKeyMask: ac.apiKey ? ("***" + ac.apiKey.slice(-4)) : "",
+        aligoUser: ac.userId,
+        aligoSender: ac.sender,
+        proxyUrl: ac.proxyUrl ? "설정됨" : "",
+        sensServiceId: nc.serviceId, sensSender: nc.sender,
+        hasSensAccess: !!nc.accessKey, hasSensSecret: !!nc.secretKey,
+        sensAccessMask: nc.accessKey ? ("***" + nc.accessKey.slice(-4)) : "",
+        sensSecretMask: nc.secretKey ? ("***" + nc.secretKey.slice(-4)) : "",
+        smsSignature: nc.smsSignature || ac.smsSignature,
+        tplCode: nc.tplCode || ac.tplCode,
+        kakaoOn: nc.kakaoOn || ac.kakaoOn
+      };
+    });
   });
 }
 function _apiCheckSmsConfig(p) {
   var evtId = _getEvtId(p);
   if (!evtId) return Promise.resolve({ok:false, err:"행사 미선택"});
-  return _getAligoCfg(evtId).then(function(c) {
-    if (!c.proxyUrl) return {ok:false, err:"SMS 프록시 URL이 설정되지 않았습니다. 시스템설정 → SMS 설정에서 '알리고 프록시 URL'을 입력하세요."};
-    if (!c.apiKey || !c.userId || !c.sender) return {ok:false, err:"알리고 API Key / User ID / 발신번호를 설정하세요."};
-    return {ok:true};
+  return _getSmsCfgAuto(evtId).then(function(info) {
+    if (info.provider === "naver") {
+      return _getSensCfg(evtId).then(function(c) {
+        return _getAligoCfg(evtId).then(function(ac) {
+          if (!ac.proxyUrl) return {ok:false, err:"SMS 프록시 URL 미설정 — GAS 웹앱 URL을 등록하세요"};
+          if (!c.serviceId) return {ok:false, err:"네이버 SENS 서비스 ID 미설정"};
+          if (!c.accessKey || !c.secretKey) return {ok:false, err:"네이버 SENS Access/Secret Key 미설정"};
+          if (!c.sender) return {ok:false, err:"네이버 SENS 발신번호 미설정"};
+          return {ok:true};
+        });
+      });
+    }
+    return _getAligoCfg(evtId).then(function(c) {
+      if (!c.proxyUrl) return {ok:false, err:"SMS 프록시 URL 미설정 — 시스템설정 → SMS 설정"};
+      if (!c.apiKey || !c.userId || !c.sender) return {ok:false, err:"알리고 API Key / User ID / 발신번호를 설정하세요."};
+      return {ok:true};
+    });
   });
 }
 function _apiSendSmsAligo(p) {
   var evtId = _getEvtId(p);
   if (!evtId) return Promise.resolve({ok:false, err:"행사 미선택"});
+  return _getSmsCfgAuto(evtId).then(function(info) {
+    if (info.provider === "naver") return _apiSendSmsNaver(p, evtId);
+    return _apiSendSmsAligoReal(p, evtId);
+  });
+}
+// 네이버 SENS 발송 (GAS 프록시 경유)
+function _apiSendSmsNaver(p, evtId) {
+  return _getSensCfg(evtId).then(function(c) {
+    if (!c.serviceId || !c.accessKey || !c.secretKey || !c.sender)
+      return {ok:false, err:"네이버 SENS 설정 미완료"};
+    // 프록시 URL 확인 (알리고와 동일 키 SMS_PROXY_URL 사용)
+    return _getAligoCfg(evtId).then(function(ac) {
+      var proxyUrl = ac.proxyUrl;
+      if (!proxyUrl) return {ok:false, err:"SMS 프록시 URL 미설정 — 시스템설정에서 GAS 프록시 URL을 등록하세요"};
+      var tels = p.tels || [];
+      if (!tels.length) return {ok:false, err:"수신번호 없음"};
+      var body = {
+        action:    "send",
+        serviceId: c.serviceId,
+        accessKey: c.accessKey,
+        secretKey: c.secretKey,
+        sender:    c.sender,
+        tels:      tels,
+        msg:       p.msg || ""
+      };
+      if (p.rdate) { body.rdate = p.rdate; body.rtime = p.rtime || ""; }
+      return fetch(proxyUrl, {
+        method: "POST",
+        redirect: "follow",
+        body: JSON.stringify(body)
+      }).then(function(resp) { return resp.json(); }).then(function(r) {
+        if (r && r.ok) {
+          _apiSmsLogAdd({evtId:evtId, by:(typeof CID!=='undefined'?CID:""), tels:tels, msg:p.msg||"",
+            sent:r.sent||tels.length, failed:r.failed||0, type:r.msgType||"SMS", rdate:p.rdate||""});
+        }
+        return r;
+      }).catch(function(e) {
+        return {ok:false, err:"SENS 프록시 통신 오류: "+(e.message||e)};
+      });
+    });
+  });
+}
+// 알리고 프록시 발송 (기존)
+function _apiSendSmsAligoReal(p, evtId) {
   return _getAligoCfg(evtId).then(function(c) {
     if (!c.proxyUrl) return {ok:false, err:"SMS 프록시 URL 미설정 — 시스템설정 → SMS 설정"};
     if (!c.apiKey || !c.userId || !c.sender) return {ok:false, err:"알리고 설정 미완료 (API Key/User ID/발신번호)"};
@@ -1235,7 +1321,7 @@ function _apiSendSmsAligo(p) {
     if (p.rdate) { body.rdate = p.rdate; body.rtime = p.rtime || ""; }
     return fetch(c.proxyUrl, {
       method: "POST",
-      headers: {"Content-Type":"application/json"},
+      redirect: "follow",
       body: JSON.stringify(body)
     }).then(function(resp) { return resp.json(); }).then(function(r) {
       if (r && r.ok) {
