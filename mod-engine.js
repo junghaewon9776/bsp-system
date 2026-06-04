@@ -2933,7 +2933,8 @@ function _modStatSearch(name){
   _modSearch[key]=name;
   var el=document.getElementById('_modSearch_'+key);
   if(el) el.value=name;
-  _modRefreshList(key);
+  var b=document.getElementById('_modBody_'+key);
+  if(b) b.innerHTML=_modListHtml(key);
 }
 function _modStatNames(rows,key){
   if(!rows.length) return '';
