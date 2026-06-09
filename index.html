@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>법성포청년회 관리시스템</title>
-<meta name="description" content="법성포청년회 관리시스템">
-<meta property="og:title" content="법성포청년회 관리시스템">
-<meta property="og:description" content="청년회 운영 관리 시스템">
+<title>법성포단오제 보존회 관리시스템</title>
+<meta name="description" content="법성포단오제 보존회 관리시스템">
+<meta property="og:title" content="법성포단오제 보존회 관리시스템">
+<meta property="og:description" content="축제 운영 통합 관리 시스템">
 <meta property="og:type" content="website">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -245,8 +245,8 @@ label{display:block;font-size:10px;color:#999;margin-bottom:3px}
 
 <div id="loginPage">
   <div id="loginBox">
-    <h1>🏛️ 법성포청년회 관리시스템</h1>
-    <p>2026 법성포청년회 | 운영 통합 관리</p>
+    <h1>🎎 법성포단오제 보존회 관리시스템</h1>
+    <p>2026 법성포단오제 | 축제 참가자·운영 통합 관리</p>
     <label>아이디</label>
     <input type="text" id="lId" placeholder="아이디" autocomplete="username">
     <label>비밀번호</label>
@@ -421,14 +421,14 @@ label{display:block;font-size:10px;color:#999;margin-bottom:3px}
     <div style="color:#6b7280;font-size:13px" id="apfDoneTs"></div>
     <div style="margin-top:22px"><button class="apf-btn-s" onclick="apfResetForm()">새로 접수하기</button></div>
   </div>
-  <div class="apf-footer" id="apfFooter">법성포청년회</div>
+  <div class="apf-footer" id="apfFooter">법성포단오제보존회</div>
 </div>
 <div id="apfLoading"><div class="box"><div class="spin"></div><div id="apfLoadMsg" style="margin-top:10px;color:#333">제출 중...</div></div></div>
 </div>
 
 <div id="mainPage">
   <div class="topBar">
-    <div><h2>🏛️ 법성포청년회 관리시스템</h2><small>법성포청년회 | 운영 통합시스템</small></div>
+    <div><h2>🎎 법성포단오제 보존회 관리시스템</h2><small>법성포단오제보존회 | 축제 운영 통합시스템</small></div>
     <div class="userArea"><span id="uBadge" class="badge2"></span><button id="vendorBtn" class="logoutBtn" style="background:#7c3aed;display:none" onclick="openVendorManage()" title="거래처 관리">🏢 거래처</button><button id="mainSSBtn" class="logoutBtn" style="background:#10b981;display:none" onclick="openSheet('Users')" title="데이터 시트 열기 (super 전용)">📊 시트</button><button class="logoutBtn" style="background:#0ea5e9" onclick="refreshData(true)" title="서버에서 최신 데이터 다시 가져오기">🔄 새로고침</button><button class="logoutBtn" onclick="logout()">로그아웃</button></div>
   </div>
   <div id="evtBar" class="evtBar"></div>
@@ -448,10 +448,10 @@ label{display:block;font-size:10px;color:#999;margin-bottom:3px}
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<!-- Firebase Storage 제거 — 구글 드라이브 프록시로 대체 -->
+<!-- firebase-storage 제거: 구글 드라이브 프록시로 대체 -->
 <script src="firebase-config.js"></script>
 <script src="common.js?v=20260604c"></script>
-<script src="mod-engine.js?v=20260609b"></script>
+<script src="mod-engine.js?v=20260609c"></script>
 
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" onerror="console.warn('XLSX CDN load failed')"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js" onerror="console.warn('xlsx-js-style CDN load failed')"></script>
@@ -493,11 +493,11 @@ label{display:block;font-size:10px;color:#999;margin-bottom:3px}
 // ★★★ 시스템 브랜딩 — 여기 6줄만 바꾸면 모든 화면에 반영됩니다 ★★★
 // ============================================================
 var SYS_YEAR      = "2026";                   // 년도
-var SYS_NAME      = "법성포청년회";            // 행사명
-var SYS_PARENT    = "법성포청년회";             // 주관단체 (SMS 서명, 지출결의서 발행처 등에 사용)
-var SYS_ICON      = "🏛️";                    // 상단 아이콘 이모지 (예: 🎎/🌿/🎭/🏛️)
-var SYS_TAGLINE   = "운영 통합시스템";          // 상단 부제
-var SYS_LOGIN_SUB = SYS_YEAR+" "+SYS_NAME+" | 운영 통합 관리"; // 로그인 화면 부제
+var SYS_NAME      = "법성포단오제";            // 행사명
+var SYS_PARENT    = "법성포단오제보존회";       // 주관단체 (SMS 서명, 지출결의서 발행처 등에 사용)
+var SYS_ICON      = "🎎";                    // 상단 아이콘 이모지 (예: 🎎/🌿/🎭/🏛️)
+var SYS_TAGLINE   = "축제 운영 통합시스템";    // 상단 부제
+var SYS_LOGIN_SUB = SYS_YEAR+" "+SYS_NAME+" | 축제 참가자·운영 통합 관리"; // 로그인 화면 부제
 // ============================================================
 // 아래는 자동 조합 — 수정 불필요
 var SYS_TITLE    = SYS_YEAR + " " + SYS_NAME + " 관리시스템";
@@ -614,7 +614,7 @@ var AR=[], BG=[], US={}, acts=[], purs=[], exps=[], mems=[], notices=[], pays=[]
 var SHARE_MEMS=false;
 var FIELD_MENU="on";
 var LINK_TABS="on";
-var ACCOUNTANT_NAME = "정해원"; // 회계담당자 고정 이름 (Config에서 로드)
+var ACCOUNTANT_NAME = ""; // 회계담당자 고정 이름 (Config에서 로드)
 var RPT_SHOW = ""; // 현재 선택된 결산서 미리보기 ("" | inc | expAcc | expCat | expSrc)
 var EXP_LOADED = false; // 세출관리 데이터 로드 완료 플래그
 var _EXP_LOADING = false;
@@ -1006,8 +1006,11 @@ async function doLogin(id,pw,keep,silent){
   // 거래처 관리 버튼 — super/admin/subAdm
   var _vb=document.getElementById("vendorBtn");
   if(_vb) _vb.style.display = _isGlobalAdm() ? "" : "none";
-  CTAB = DEEP_TAB || "dash";  // URL 딥링크 탭 우선
+  // 전용 계정은 지정 화면, 그외 대시보드 (딥링크 우선)
+  var _viewTab = (ME&&ME.r==="applyView") ? "apply" : ((ME&&ME.r&&ME.r.indexOf("view:")===0) ? ME.r.slice(5) : "");
+  CTAB = DEEP_TAB || _viewTab || "dash";
   FILT=isA()?"전체":myar();
+  // 커스텀 모듈 정의 로드 후 탭 렌더 (딥링크가 모듈 탭이면 로드 후 자동 표시)
   if(typeof loadModDefs==='function') loadModDefs(function(){modLoadAll();mkTabs();draw()});
   mkTabs();drawEventBar();draw();
   if(keep)saveAuth(id,pw); else clearAuth();
@@ -1100,14 +1103,8 @@ async function refreshData(showToast){
 
 // 행사 전환: 드롭다운에서 다른 행사 선택 시 서버에서 그 행사의 데이터만 다시 가져옴
 async function switchEvent(evtId){
-  console.log("[switchEvent] 요청 evtId:", evtId, "현재 CUR_EVT.evtId:", CUR_EVT&&CUR_EVT.evtId, "같음?",(CUR_EVT&&CUR_EVT.evtId)===evtId, "EVENTS:", JSON.stringify(EVENTS.map(function(e){return{id:e.evtId,nm:e.nm}})));
-  console.log("[CustomTabs]", JSON.stringify(_getCustomTabs()));
-  console.log("[_cache.CustomTabs]", JSON.stringify(_cache&&_cache.CustomTabs));
   // CUR_EVT 가 null(다중행사 로그인 직후)이면 첫 선택, 이미 같은 행사면 무시
-  if(!evtId || (CUR_EVT && CUR_EVT.evtId===evtId)){
-    console.warn("[switchEvent] SKIP — 같은 행사 또는 evtId 없음. evtId="+evtId+" cur="+(CUR_EVT&&CUR_EVT.evtId));
-    return;
-  }
+  if(!evtId || (CUR_EVT && CUR_EVT.evtId===evtId)) return;
   showLoading("📡 서버에서 따끈한 데이터 가져오는 중...");
   var r=await api("refresh",{id:CID, evtId:evtId});
   if(!r||!r.ok){ hideLoading(); toast((r&&r.err)||"행사 전환 실패", true); return; }
@@ -1357,7 +1354,9 @@ function mkTabs(){
     var _catGroups={};
     Object.keys(_modDefs).forEach(function(k){
       var d=_modDefs[k];
+      // 행사별 모듈인데 소속 행사가 정해져 있고 현재 행사와 다르면 숨김
       if(!d.global && d.evtId && d.evtId!==_curEvtId) return;
+      // 관리자 전용 탭이면 SUBADMIN 이상만 표시
       if(d.adminTab && !isA()) return;
       var cl=d.catLabel||'커스텀';
       if(!_catGroups[cl]) _catGroups[cl]={icon:d.catIcon||d.icon||'📦',items:[]};
@@ -1369,11 +1368,11 @@ function mkTabs(){
     });
   }
 
-  // ── 연동 탭 (CustomTabs) — 관리자가 UI에서 추가/편집 ──
+  // ── 연동 탭 (CustomTabs) ──
   if(LINK_TABS==="on"){
     var _ctabs = _getCustomTabs();
     _ctabs.forEach(function(cat,ci){
-      if(cat.hidden) return; // 개별 OFF된 카테고리 숨김
+      if(cat.hidden) return;
       if(cat.admin && !isA()) return; // 관리자(SUBADMIN 이상)만 보기
       var ctItems=(cat.items||[]).map(function(it,ii){
         return {k:"ct_"+cat.id+"_"+ii, l:(it.icon?it.icon+" ":"")+it.label};
@@ -1386,9 +1385,23 @@ function mkTabs(){
   if(FIELD_MENU==="on"){
     var fieldItems=[
       {k:"field_layout",l:"축제 배치도",frame:"방역코스/layout.html"},
-      {k:"field_vehicle",l:"🚗 행사차량 관리",frame:"방역코스/vehicle.html"}
+      {k:"field_monitor",l:"본부 모니터링",frame:"방역코스/monitor.html"}
     ];
+    fieldItems.push({k:"field_admin",l:"코스 관리",frame:"방역코스/admin.html"});
+    fieldItems.push({k:"field_today",l:"오늘의 운영",frame:"방역코스/today.html"});
     cats.push({id:"field",label:"📍 현장",items:fieldItems});
+  }
+
+  // 전용 계정 역할: 지정한 화면 하나만 보이게 (나머지 탭 전부 숨김)
+  //   r="applyView" (구) 또는 r="view:{탭키}" → 참가자관리(apply) / 모듈(mod_xxx)
+  if(ME && ME.r && (ME.r==="applyView" || ME.r.indexOf("view:")===0)){
+    var _vt = (ME.r==="applyView") ? "apply" : ME.r.slice(5);
+    if(_vt==="apply"){
+      cats=[{id:"apply",label:"👥 참가자",items:[{k:"apply",l:"참가자 관리"},{k:"apstat",l:"참가자 현황"}]}];
+    } else if(_vt.indexOf("mod_")===0){
+      var _mk=_vt.slice(4); var _md=(typeof _modDefs!=='undefined')?_modDefs[_mk]:null;
+      cats = _md ? [{id:"vmod",label:(_md.icon?_md.icon+" ":"")+_md.label,items:[{k:_vt,l:_md.label}]}] : [];
+    } else { cats=[]; }
   }
 
   // _curCat이 유효한 카테고리인지 확인, 아니면 CTAB 기반으로 자동 선택
@@ -3110,7 +3123,7 @@ function awardsTmpl(){
   if(typeof XLSX==="undefined"){ toast("XLSX 라이브러리 로딩 중", true); return; }
   var rows = [
     {"상이름":"대상","훈격":"영광군수상","순서":1},
-    {"상이름":"우수상","훈격":"청년회장상","순서":2},
+    {"상이름":"우수상","훈격":"보존회장상","순서":2},
     {"상이름":"장려상","훈격":"","순서":3}
   ];
   var ws = XLSX.utils.json_to_sheet(rows);
@@ -4567,7 +4580,7 @@ function applyColorCtx(evt, seq){
   h+='</div>';
   h+='<div style="margin-top:10px;padding:0 14px;display:flex;gap:6px">';
   h+='<button class="btn" style="background:#ef4444;color:#fff" onclick="applyColorSet(\''+esc(seq)+'\',-1)">🚫 색상 제거</button>';
-  h+='<button class="btn" onclick="closePopup()">닫기</button>';
+  h+='<button class="btn" style="background:#64748b;color:#fff" onclick="closePopup()">닫기</button>';
   h+='</div></div>';
   openPopup(h, 340);
 }
@@ -4678,7 +4691,7 @@ function applySmsPopup(){
   var state = _applySmsFilteredRows();
   if(!state.rows.length){ toast("필터된 참가자가 0명입니다",true); return; }
   if(state.iTel<0){ toast("연락처 컬럼을 찾을 수 없습니다",true); return; }
-  var defTmpl = "{이름}님 안녕하세요.\n법성포청년회 참가 안내드립니다.\n\n감사합니다.\n{서명}";
+  var defTmpl = "{이름}님 안녕하세요.\n법성포단오제 참가 안내드립니다.\n\n감사합니다.\n{서명}";
   var h='<h3 style="margin:0 0 12px">💬 참가자 문자 발송</h3>';
   h+='<div style="margin-bottom:8px;padding:8px 12px;background:#eff6ff;border-radius:6px;font-size:13px">';
   h+='<span id="asms_topcnt">📋 현재 필터 대상: <b>'+state.rows.length+'명</b> / 전체 '+(((APPLY&&APPLY.rows)||[]).length)+'명 · 연락처 컬럼: <b>'+esc(state.H[state.iTel]||"?")+'</b></span>';
@@ -4759,7 +4772,7 @@ function applySmsPopup(){
     {key:"{예선합격}", example:"O"},
     {key:"{최종합격}", example:"O"},
     {key:"{연락처}",   example:pickEx("연락처")||"010-1234-5678"},
-    {key:"{서명}",     example:"청년회"}
+    {key:"{서명}",     example:"단오제보존회"}
   ];
   // 날짜/시간 변수 추가 (공용)
   applyVars = applyVars.concat(_smsDateVars());
@@ -5851,12 +5864,13 @@ function draw(){
 }
 
 function _getFrameUrl(tabKey){
-  // 현장 탭 (로컬 iframe)
-  var localMap={field_layout:"방역코스/layout.html",field_vehicle:"방역코스/vehicle.html"};
-  if(localMap[tabKey]){
-    var u=localMap[tabKey];
-    if(CUR_EVT && CUR_EVT.evtId) u+=(u.indexOf('?')>=0?'&':'?')+'evtId='+encodeURIComponent(CUR_EVT.evtId);
-    return u;
+  var map={field_layout:"방역코스/layout.html",field_monitor:"방역코스/monitor.html",field_admin:"방역코스/admin.html",field_vehicle:"방역코스/vehicle.html",field_today:"방역코스/today.html"};
+  if(FIELD_MENU==="on"){
+    var url=map[tabKey]||null;
+    if(url){
+      if(CUR_EVT && CUR_EVT.evtId) url += (url.indexOf('?')>=0?'&':'?')+'evtId='+encodeURIComponent(CUR_EVT.evtId);
+      return url;
+    }
   }
   // 연동 탭 (CustomTabs) — ct_{catId}_{itemIdx}
   if(tabKey.indexOf("ct_")===0){
@@ -7318,7 +7332,7 @@ function vchInv(invId){
   var dtP=p.dtIni||p.dt||"";
   var dtE=today();
   var note=p.note||"";
-  var orgName=(typeof SYS_PARENT!=="undefined"?SYS_PARENT:"법성포청년회");
+  var orgName=(typeof SYS_PARENT!=="undefined"?SYS_PARENT:"법성포단오제보존회");
 
   // 내역 행 생성 — 기본 4칸 유지, 많으면 칸 높이 줄여서 다 보이게
   var MIN_ROWS = 4;
@@ -7540,7 +7554,7 @@ function vchMulti(){
   var todayStr=today();
   var tm=todayStr.slice(5,7).replace(/^0/,""),td=todayStr.slice(8,10).replace(/^0/,""),ty=todayStr.slice(0,4);
   var accountant=(typeof ACCOUNTANT_NAME!=="undefined" && ACCOUNTANT_NAME)?ACCOUNTANT_NAME:((ME&&ME.nm)||"회계담당자");
-  var orgName=(typeof SYS_PARENT!=="undefined"?SYS_PARENT:"법성포청년회");
+  var orgName=(typeof SYS_PARENT!=="undefined"?SYS_PARENT:"법성포단오제보존회");
   var css='body{font-family:"맑은 고딕","Malgun Gothic",sans-serif;color:#000;font-size:13px;margin:0;padding:20px;background:#fafafa}'+
     '.page{background:#fff;padding:20px;border:1px solid #999;max-width:720px;margin:0 auto 24px;page-break-after:always}'+
     '.page:last-child{page-break-after:auto}'+
@@ -8205,7 +8219,7 @@ function dInc(){
   h += '</div>';
   // 등록된 카드 없으면 안내
   if(!(incCards||[]).length){
-    h += '<div style="padding:10px 14px;background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;margin-bottom:12px;font-size:13px">⚠️ 먼저 <b>💳 카드/계좌</b> 버튼으로 카드·통장을 등록하세요 (예: 청년회카드=지정카드, 후원카드=지정카드, 청년회통장=지정카드/계좌이체)</div>';
+    h += '<div style="padding:10px 14px;background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;margin-bottom:12px;font-size:13px">⚠️ 먼저 <b>💳 카드/계좌</b> 버튼으로 카드·통장을 등록하세요 (예: 보탬이=지정카드, 한수원카드=지정카드, 보존회통장=지정카드/계좌이체)</div>';
   }
 
   // 필터
@@ -8398,6 +8412,7 @@ function incAddSave(){
   });
 }
 
+// 세입 수정
 // 세입 수정 (배열 인덱스 기반)
 function incEdit(idx){
   try{
@@ -8436,7 +8451,6 @@ function incEditSave(idx){
   var note = document.getElementById("incNote").value;
   if(!tp || !sub){ alert("대분류/중분류를 입력해주세요"); return; }
   if(!card){ alert("카드/계좌를 선택해주세요"); return; }
-  // 직접 배열 수정 후 Firebase 저장
   row.tp = tp; row.sub = sub; row.am = am; row.card = card; row.note = note;
   showLoading("저장 중...");
   fbDb.ref('/evtData/'+CUR_EVT.evtId+'/Inc').set(inc).then(function(){
@@ -8529,7 +8543,7 @@ function incManageCards(){
   if(!isA()) return;
   var h = '';
   h += '<h3 style="margin:0 0 12px">💳 카드/계좌 등록</h3>';
-  h += '<div class="mut" style="font-size:12px;margin-bottom:10px">예) 청년회카드 → 지정카드만, 후원카드 → 지정카드만, 청년회통장 → 지정카드/계좌이체</div>';
+  h += '<div class="mut" style="font-size:12px;margin-bottom:10px">예) 보탬이 → 지정카드만, 한수원카드 → 지정카드만, 보존회통장 → 지정카드/계좌이체</div>';
   h += '<div style="max-height:320px;overflow:auto;border:1px solid #e5e7eb;border-radius:6px;margin-bottom:12px">';
   if((incCards||[]).length === 0){
     h += '<div class="mut" style="padding:20px;text-align:center">등록된 카드/계좌가 없습니다</div>';
@@ -8556,7 +8570,7 @@ function incManageCards(){
   // 신규 등록
   h += '<div style="border:1px solid #e5e7eb;border-radius:6px;padding:10px;background:#fafbfc">';
   h += '<div style="font-weight:600;margin-bottom:6px">+ 신규 등록</div>';
-  h += '<input id="icNewName" type="text" placeholder="카드/계좌 이름 (예: 청년회카드)" style="width:100%;padding:7px;border:1px solid #ddd;border-radius:6px;margin-bottom:6px">';
+  h += '<input id="icNewName" type="text" placeholder="카드/계좌 이름 (예: 보탬이)" style="width:100%;padding:7px;border:1px solid #ddd;border-radius:6px;margin-bottom:6px">';
   h += '<div style="font-size:12px;margin-bottom:4px">허용 결제방법 (복수선택)</div>';
   h += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px">';
   PAY_METHODS_ALL.forEach(function(p){
@@ -8743,10 +8757,10 @@ function dExp(){
     return h;
   }
 
+  // 대분류별 그룹핑
   // 원본 인덱스 스탬프
   expBG.forEach(function(r,i){ r._idx = i; });
 
-  // 대분류별 그룹핑
   var order = types.slice();
   var groups = {}; order.forEach(function(t){ groups[t]=[]; });
   expBG.forEach(function(r){
@@ -9466,7 +9480,7 @@ function txnDel(rowId){
 function txnPrint(rowId){
   var t = txn.filter(function(x){return x.id===rowId;})[0];
   if (!t){ toast("거래를 찾을 수 없습니다", true); return; }
-  var orgName = (typeof SYS_PARENT!=="undefined"?SYS_PARENT:"법성포청년회");
+  var orgName = (typeof SYS_PARENT!=="undefined"?SYS_PARENT:"법성포단오제보존회");
   var amt = t.outAm || t.inAm || 0;
   var amtKR = numToKoreanMoney(amt);
   var accountant = (ME && ME.nm) || "회계담당자";
@@ -10327,7 +10341,7 @@ async function popMemSms(){
   // 📨 제목 (LMS용) — 메시지 바로 위
   h += '<div style="margin-bottom:8px;padding:8px 10px;background:#fef3c7;border:1px solid #fbbf24;border-radius:6px">';
   h += '  <label style="font-weight:700;color:#78350f;font-size:12px;display:block;margin-bottom:3px">📨 제목 (LMS용, 선택)</label>';
-  h += '  <input id="sms_title" placeholder="예: 청년회 공지 — 본문이 긴 LMS 발송 시 상단에 제목처럼 표시됨" style="width:100%;padding:6px 10px;border:1px solid #fbbf24;border-radius:5px;font-size:13px;box-sizing:border-box">';
+  h += '  <input id="sms_title" placeholder="예: 단오제 공지 — 본문이 긴 LMS 발송 시 상단에 제목처럼 표시됨" style="width:100%;padding:6px 10px;border:1px solid #fbbf24;border-radius:5px;font-size:13px;box-sizing:border-box">';
   h += '</div>';
   h += '<div style="margin-bottom:10px">';
   h += '  <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">';
@@ -10342,7 +10356,7 @@ async function popMemSms(){
   h += '  <div class="mut" style="font-size:11px;margin-top:3px">💡 발송 시 받는 사람 데이터로 자동 치환됨 (예: <code>{이름}</code> → 홍길동)</div>';
   h += '</div>';
   h += '<div class="frow fr1" style="margin-bottom:10px"><div><label>발송 모드</label><select id="sms_type"><option value="auto">자동 (90바이트 기준)</option><option value="SMS">SMS 강제</option><option value="LMS">LMS 강제</option></select></div></div>';
-  h += '<div style="margin-bottom:10px;padding:6px 10px;background:#f1f5f9;border-radius:6px"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px"><input type="checkbox" id="sms_sig_on" checked> <b>✏️ SMS 서명 포함</b> <span class="mut" style="font-size:11px">체크하면 본문 앞에 자동 서명(예: [청년회]) 붙음 — 해제 시 이번 발송만 서명 없이</span></label></div>';
+  h += '<div style="margin-bottom:10px;padding:6px 10px;background:#f1f5f9;border-radius:6px"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px"><input type="checkbox" id="sms_sig_on" checked> <b>✏️ SMS 서명 포함</b> <span class="mut" style="font-size:11px">체크하면 본문 앞에 자동 서명(예: [단오제보존회]) 붙음 — 해제 시 이번 발송만 서명 없이</span></label></div>';
   // 예약 발송 (토글)
   h += '<div style="margin-top:10px;padding:8px;background:#fef3c7;border-radius:6px">';
   h += '  <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="sms_sched" onchange="document.getElementById(\'sms_sched_wrap\').style.display=this.checked?\'flex\':\'none\'"><b>📅 예약 발송</b></label>';
@@ -11552,7 +11566,7 @@ function feeSmsPopup(){
     {key:"{납부액}", example:"30,000"},
     {key:"{이월}",   example:"10,000"},
     {key:"{계좌}",   example:"농협 123-456"},
-    {key:"{서명}",   example:"청년회"}
+    {key:"{서명}",   example:"단오제보존회"}
   ];
   // 날짜/시간 변수 추가 (공용)
   feeVars = feeVars.concat(_smsDateVars());
@@ -11709,7 +11723,7 @@ function feeSmsPreview(){
     .replace(/\{요구액\}/g,"30,000").replace(/\{납부액\}/g,"0").replace(/\{이월\}/g,"0")
     .replace(/\{오늘\}/g, new Date().toISOString().slice(0,10))
     .replace(/\{계좌\}/g,"농협 123-456-789012").replace(/\{입금계좌\}/g,"농협 123-456-789012")
-    .replace(/\{서명\}/g,"법성포청년회");
+    .replace(/\{서명\}/g,"법성포단오제보존회");
   var byteLen = new Blob([sample]).size;
   var type = byteLen>90?"LMS":"SMS";
   alert("["+type+" / "+byteLen+"byte]\n\n"+sample);
@@ -13253,7 +13267,7 @@ async function assetAddSave(){
     var nm = el.value.trim();
     if(!nm) continue;
     var pv = function(k){ var e=document.getElementById("aa_"+k+"_"+i); return e?String(e.value||"").trim():""; };
-    // 관리자 display 에서 이름만 추출 ("홍길동 (청년회)" → "홍길동")
+    // 관리자 display 에서 이름만 추출 ("홍길동 (단오보존회)" → "홍길동")
     var mgrDisp = pv("mgr");
     var mgrNm = mgrDisp.replace(/\s*\([^)]*\)\s*$/,"").trim();
     // 단가 콤마 제거
@@ -14028,7 +14042,7 @@ async function _lpPrintQz(){
   var mt = Number((document.getElementById("lp_mt")||{}).value) || 0;
   var ml = Number((document.getElementById("lp_ml")||{}).value) || 0;
   var webappUrl = location.href.split("?")[0];
-  var orgName = SYS_PARENT || "법성포청년회";
+  var orgName = SYS_PARENT || "법성포단오제보존회";
   var fontBase = Math.max(5, Math.min(11, Math.floor(Math.min(sz.w,sz.h)/6)));
   var fontHdr  = Math.max(6, fontBase+1);
   function qrSvgTag(a){
@@ -14304,7 +14318,7 @@ async function _lpPrint(){
   var ml = Number((document.getElementById("lp_ml")||{}).value) || 0;
   var w = sz.w, hh = sz.h;
   var webappUrl = location.href.split("?")[0];
-  var orgName = SYS_PARENT || "법성포청년회";
+  var orgName = SYS_PARENT || "법성포단오제보존회";
   // 작은 라벨은 단순 레이아웃, 100x30 이상은 엑셀 템플릿 스타일
   var small = (w*hh < 100*35);
   // 사용자 지정 배율 (1.0 = 기본)
@@ -14479,7 +14493,7 @@ function expAssets(){
 function popAssetTmpl(){
   if(typeof XLSX==="undefined"){ toast("엑셀 로딩 중",true); return; }
   var head = ["바코드번호","등록일자","구입일자","자산분류","자산명","품명","단가","사용년월","입고","관리자소속","관리자성명","관리자사원번호","메모","자산장소","자산위치"];
-  var sample = ["2507001018114","2025-01-08","2025-01-08","서호농악","악기","장구","","5년",20,"청년회","청년회","D0001","메모007","2층 악기보관실","B-1"];
+  var sample = ["2507001018114","2025-01-08","2025-01-08","서호농악","악기","장구","","5년",20,"단오보존회","단오보존회","D0001","메모007","2층 악기보관실","B-1"];
   var wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([head, sample]), "자산양식");
   XLSX.writeFile(wb, "자산_가져오기_양식.xlsx");
@@ -14932,7 +14946,6 @@ function _rptExpAccPreview(){
     tpObj.actTot+=p.actAm;
     gw.actTot+=p.actAm;
   });
-  // 전체 총계
   var gPlan=0,gAct=0;
   gwanTree.forEach(function(gw){ gPlan+=gw.planTot; gAct+=gw.actTot; });
   h+='<div style="overflow:auto;max-height:500px;border:1px solid #e5e7eb;border-radius:6px">';
@@ -14945,21 +14958,17 @@ function _rptExpAccPreview(){
   h+='<th style="padding:8px;text-align:right;border-bottom:2px solid #c4b5fd">집행</th>';
   h+='<th style="padding:8px;text-align:right;border-bottom:2px solid #c4b5fd">잔액</th>';
   h+='</tr></thead><tbody>';
-  // 총계 행
   h+='<tr style="background:#faf5ff;font-weight:700;border-bottom:2px solid #c4b5fd"><td colspan="3" style="padding:8px">총 계</td><td style="padding:8px;text-align:right">'+fmu(gPlan)+'</td><td style="padding:8px;text-align:right">'+fmu(gAct)+'</td><td style="padding:8px;text-align:right;color:'+(gPlan-gAct<0?"#dc2626":"#16a34a")+'">'+fmu(gPlan-gAct)+'</td></tr>';
   if(!gwanTree.length) h+='<tr><td colspan="6" style="text-align:center;padding:20px;color:#999">데이터가 없습니다</td></tr>';
   gwanTree.forEach(function(gw){
-    // 관 소계 행
     var gRem=gw.planTot-gw.actTot;
     h+='<tr style="background:#f5f3ff;font-weight:700;border-top:2px solid #ddd6fe"><td style="padding:8px;color:#7c3aed">📁 '+esc(gw.name)+'</td><td colspan="2" style="padding:8px;color:#64748b;font-size:12px">소계</td><td style="padding:8px;text-align:right">'+fmu(gw.planTot)+'</td><td style="padding:8px;text-align:right">'+fmu(gw.actTot)+'</td><td style="padding:8px;text-align:right;color:'+(gRem<0?"#dc2626":"#16a34a")+'">'+fmu(gRem)+'</td></tr>';
     gw.tpOrder.forEach(function(tp){
       var tpObj=gw.tpMap[tp];
-      // 대분류(항) 소계 행
       var tRem=tpObj.planTot-tpObj.actTot;
       h+='<tr style="background:#faf8ff;font-weight:600;border-top:1px solid #e9e5f5"><td style="padding:6px 8px"></td><td style="padding:6px 8px;color:#6d28d9">'+esc(tp)+'</td><td style="padding:6px 8px;color:#64748b;font-size:11px">소계</td><td style="padding:6px 8px;text-align:right">'+fmu(tpObj.planTot)+'</td><td style="padding:6px 8px;text-align:right">'+fmu(tpObj.actTot)+'</td><td style="padding:6px 8px;text-align:right;color:'+(tRem<0?"#dc2626":"#16a34a")+'">'+fmu(tRem)+'</td></tr>';
-      // 중분류(목) 개별 행
       tpObj.items.forEach(function(p){
-        if(!p.mid) return; // 대분류 행은 소계로 이미 표시
+        if(!p.mid) return;
         var rem=p.planAm-p.actAm;
         h+='<tr style="border-bottom:1px solid #f1f5f9"><td style="padding:5px 8px"></td><td style="padding:5px 8px"></td><td style="padding:5px 8px;color:#64748b">└ '+esc(p.mid)+'</td><td style="padding:5px 8px;text-align:right">'+fmu(p.planAm)+'</td><td style="padding:5px 8px;text-align:right">'+fmu(p.actAm)+'</td><td style="padding:5px 8px;text-align:right;color:'+(rem<0?"#dc2626":"#16a34a")+'">'+fmu(rem)+'</td></tr>';
       });
@@ -15120,7 +15129,6 @@ function rptExpAccExcel(){
   if(!_rptCheckXLSX()) return;
   var rows=[];
   rows.push(["관","항(대분류)","목(중분류)","예산(세입)","집행(세출)","잔액","비고"]);
-  // expBG 를 gwan > tp > mid 계층으로 집계 (예산)
   var plan={}, planOrder=[];
   (expBG||[]).forEach(function(r){
     var g=r.gwan||"(관 미지정)", tp=r.tp||"(대분류 미지정)", mid=r.mid||"";
@@ -15129,7 +15137,6 @@ function rptExpAccExcel(){
     plan[key].planAm+=pn(r.planAm);
     if(r.note) plan[key].notes.push(r.note);
   });
-  // purs/exps 를 같은 키로 집계 (실적)
   var byKeyAct=function(gwan,tp,mid,amt){
     var g=gwan||"(관 미지정)", t=tp||"(대분류 미지정)", m=mid||"";
     var key=g+"||"+t+"||"+m;
@@ -15138,7 +15145,6 @@ function rptExpAccExcel(){
   };
   (purs||[]).forEach(function(p){ byKeyAct(p.gwan,p.expTp,p.expMid,p.tot); });
   (exps||[]).forEach(function(e){ byKeyAct(e.gwan,e.expTp,e.expMid,e.am); });
-  // 정렬
   planOrder.sort(function(a,b){
     var pa=plan[a], pb=plan[b];
     if(pa.gwan!==pb.gwan) return String(pa.gwan).localeCompare(String(pb.gwan));
@@ -15160,9 +15166,7 @@ function rptExpAccExcel(){
   });
   var gPlan=0,gAct=0;
   gwanTree.forEach(function(gw){ gPlan+=gw.planTot; gAct+=gw.actTot; });
-  // 총계
   rows.push(["총  계","","",gPlan,gAct,gPlan-gAct,""]);
-  // 관별 소계 → 대분류 소계 → 중분류 세부
   gwanTree.forEach(function(gw){
     rows.push(["["+gw.name+"] 소계","","",gw.planTot,gw.actTot,gw.planTot-gw.actTot,""]);
     gw.tpOrder.forEach(function(tp){
@@ -15227,6 +15231,7 @@ function rptExpSrcExcel(){
 
 // ===== 마) 정산보고서 =====
 function _settleData(){
+  // 수입: 입금내역(dpst)
   var incTotal=0, incByTp={}, incRows=[];
   (dpst||[]).forEach(function(d){
     var am=pn(d.am); incTotal+=am;
@@ -15235,7 +15240,9 @@ function _settleData(){
     var payNm=d.payM||"";
     incRows.push({dt:d.dt,tp:tp,ds:d.ds||"",pay:payNm,am:am});
   });
+  // 세입 계획도 포함
   var incPlan=0; (inc||[]).forEach(function(r){incPlan+=pn(r.am);});
+  // 지출: 구매(purs) + 기타지출(exps)
   var expTotal=0, expByTp={}, expRows=[];
   (purs||[]).forEach(function(p){
     var am=pn(p.tot); expTotal+=am;
@@ -15259,11 +15266,13 @@ function _rptSettlePreview(){
   var bal=d.incTotal-d.expTotal;
   var h='<div class="card" style="margin-top:12px;border-left:4px solid #0891b2">';
   h+='<h3 style="margin:0 0 14px;color:#155e75">📊 정산보고서 미리보기</h3>';
+  // 요약 카드
   h+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">';
   h+='<div style="background:#f0fdf4;border:2px solid #16a34a;border-radius:10px;padding:14px;text-align:center"><div style="font-size:12px;color:#166534;font-weight:600">총 수입</div><div style="font-size:22px;font-weight:800;color:#16a34a;margin-top:4px">'+fmu(d.incTotal)+'<span style="font-size:13px">원</span></div></div>';
   h+='<div style="background:#fef2f2;border:2px solid #dc2626;border-radius:10px;padding:14px;text-align:center"><div style="font-size:12px;color:#991b1b;font-weight:600">총 지출</div><div style="font-size:22px;font-weight:800;color:#dc2626;margin-top:4px">'+fmu(d.expTotal)+'<span style="font-size:13px">원</span></div></div>';
   h+='<div style="background:'+(bal>=0?'#eff6ff':'#fef2f2')+';border:2px solid '+(bal>=0?'#2563eb':'#dc2626')+';border-radius:10px;padding:14px;text-align:center"><div style="font-size:12px;color:'+(bal>=0?'#1e40af':'#991b1b')+';font-weight:600">잔 액</div><div style="font-size:22px;font-weight:800;color:'+(bal>=0?'#2563eb':'#dc2626')+';margin-top:4px">'+fmu(bal)+'<span style="font-size:13px">원</span></div></div>';
   h+='</div>';
+  // 그래프: 수입/지출 종류별 비교
   var allTp={};
   Object.keys(d.incByTp).forEach(function(k){if(!allTp[k])allTp[k]={inc:0,exp:0};allTp[k].inc=d.incByTp[k];});
   Object.keys(d.expByTp).forEach(function(k){if(!allTp[k])allTp[k]={inc:0,exp:0};allTp[k].exp=d.expByTp[k];});
@@ -15280,6 +15289,7 @@ function _rptSettlePreview(){
     h+='</div>';
   });
   h+='</div>';
+  // 수입내역
   h+='<div style="margin-bottom:14px"><div style="font-size:13px;font-weight:700;color:#16a34a;margin-bottom:6px">💰 수입 내역 ('+d.incRows.length+'건)</div>';
   if(!d.incRows.length) h+='<div class="mut" style="padding:8px;text-align:center;font-size:12px">입금 내역 없음</div>';
   else{
@@ -15292,6 +15302,7 @@ function _rptSettlePreview(){
     h+='</tbody></table></div>';
   }
   h+='</div>';
+  // 지출내역
   h+='<div><div style="font-size:13px;font-weight:700;color:#dc2626;margin-bottom:6px">💸 지출 내역 ('+d.expRows.length+'건)</div>';
   if(!d.expRows.length) h+='<div class="mut" style="padding:8px;text-align:center;font-size:12px">지출 내역 없음</div>';
   else{
@@ -15311,6 +15322,7 @@ function rptSettlePrint(){
   var d=_settleData();
   var bal=d.incTotal-d.expTotal;
   var un='원';
+  // 종류별 그래프 데이터
   var allTp={};
   Object.keys(d.incByTp).forEach(function(k){if(!allTp[k])allTp[k]={inc:0,exp:0};allTp[k].inc=d.incByTp[k];});
   Object.keys(d.expByTp).forEach(function(k){if(!allTp[k])allTp[k]={inc:0,exp:0};allTp[k].exp=d.expByTp[k];});
@@ -15324,16 +15336,19 @@ function rptSettlePrint(){
     if(v.exp>0) chart+='<div style="display:flex;align-items:center;gap:4px"><span style="font-size:9px;color:#dc2626;min-width:24px">지출</span><div style="flex:1;background:#fee2e2;height:14px;overflow:hidden"><div style="width:'+Math.max(Math.round(v.exp/maxAm*100),3)+'%;height:100%;background:#dc2626"></div></div><span style="font-size:10px;font-weight:600;min-width:70px;text-align:right">'+fmu(v.exp)+'</span></div>';
     chart+='</div>';
   });
+  // 수입내역 테이블
   var incTbl='<table><thead><tr><th>날짜</th><th>종류</th><th>적요</th><th>결제수단</th><th style="text-align:right">금액</th></tr></thead><tbody>';
   d.incRows.forEach(function(r){
     incTbl+='<tr><td>'+esc(r.dt||"")+'</td><td>'+esc(r.tp)+'</td><td>'+esc(r.ds)+'</td><td>'+esc(r.pay)+'</td><td style="text-align:right">'+fmu(r.am)+'</td></tr>';
   });
   incTbl+='<tr class="total"><td colspan="4" style="text-align:right">합계</td><td style="text-align:right">'+fmu(d.incTotal)+'</td></tr></tbody></table>';
+  // 지출내역 테이블
   var expTbl='<table><thead><tr><th>날짜</th><th>구분</th><th>종류</th><th>내역</th><th style="text-align:right">금액</th></tr></thead><tbody>';
   d.expRows.forEach(function(r){
     expTbl+='<tr><td>'+esc(r.dt||"")+'</td><td>'+esc(r.src)+'</td><td>'+esc(r.tp)+'</td><td>'+esc(r.ds)+'</td><td style="text-align:right">'+fmu(r.am)+'</td></tr>';
   });
   expTbl+='<tr class="total"><td colspan="4" style="text-align:right">합계</td><td style="text-align:right">'+fmu(d.expTotal)+'</td></tr></tbody></table>';
+
   var html='<!DOCTYPE html><html><head><meta charset="utf-8"><title>정산보고서 - '+esc(SYS_NAME)+'</title><style>'+
     '@page{size:A4;margin:15mm}'+
     'body{font-family:"Malgun Gothic","맑은 고딕",sans-serif;font-size:12px;color:#111;line-height:1.5;margin:0;padding:20px}'+
@@ -15415,7 +15430,7 @@ function dAcct(){
     h+='<div class="frow fr3"><div><label>회비 주기</label><select id="cfgFeeCycle">'+_fcOpt("none","비활성")+_fcOpt("yearly","연회비")+_fcOpt("halfYearly","반기회비")+_fcOpt("quarterly","분기회비")+_fcOpt("monthly","월회비")+'</select></div>';
     h+='<div><label>기본 회비 금액(원)</label><input type="text" id="cfgFeeAmt" value="'+(FEE_DEFAULT_AMT||0).toLocaleString()+'" oninput="this.value=this.value.replace(/[^0-9]/g,\'\').replace(/\\B(?=(\\d{3})+(?!\\d))/g,\',\')"></div>';
     h+='<div><label>시작 기간 <span style="font-size:10px;color:#888">(연:2026 / 월:2026-01 / 분기:2026-Q1)</span></label><input type="text" id="cfgFeeStart" value="'+esc(FEE_START_PERIOD||"")+'" placeholder="연회비 시작연도 or 월회비 시작월"></div></div>';
-    h+='<div class="frow fr1"><div><label>입금계좌 안내 (문자용)</label><input type="text" id="cfgFeeBank" value="'+esc(window.FEE_BANK_INFO_CACHE||"")+'" placeholder="예: 농협 123-456-7890 (청년회)"></div></div>';
+    h+='<div class="frow fr1"><div><label>입금계좌 안내 (문자용)</label><input type="text" id="cfgFeeBank" value="'+esc(window.FEE_BANK_INFO_CACHE||"")+'" placeholder="예: 농협 123-456-7890 (단오보존회)"></div></div>';
     h+='<div style="text-align:right;margin-top:10px"><button class="btn btn-s" style="background:#8b5cf6;color:#fff;font-weight:700" onclick="saveFeeCfg()">💾 저장</button></div>';
     h+='</div>';
     // 💬 문자 발송 설정 (네이버 클라우드 SENS)
@@ -15426,7 +15441,7 @@ function dAcct(){
     h+='<div><label>발신번호 (사전등록)</label><input type="text" id="cfgSensSender" placeholder="01012345678 (숫자만)"></div></div>';
     h+='<div class="frow fr2"><div><label>Access Key</label><input type="password" id="cfgSensAccess" placeholder="네이버 클라우드 인증키" autocomplete="off"></div>';
     h+='<div><label>Secret Key</label><input type="password" id="cfgSensSecret" placeholder="Secret Key" autocomplete="off"></div></div>';
-    h+='<div style="margin-top:8px"><label>SMS 서명 (본문 앞에 자동 추가)</label><input type="text" id="cfgSmsSig" placeholder="[법성포청년회]"></div>';
+    h+='<div style="margin-top:8px"><label>SMS 서명 (본문 앞에 자동 추가)</label><input type="text" id="cfgSmsSig" placeholder="[법성포단오제보존회]"></div>';
     // 카카오 알림톡 (선택) — 기존 필드 유지
     h+='<details style="margin-top:10px;padding:8px;background:#fef3c7;border:1px solid #fbbf24;border-radius:6px"><summary style="cursor:pointer;font-weight:700;color:#78350f;font-size:13px">💬 카카오 알림톡 연동 (선택)</summary>';
     h+='<div style="font-size:11px;color:#78350f;line-height:1.6;margin:8px 0">네이버 SENS 의 알림톡(Biz Message) 서비스 이용. 카카오 비즈니스 채널 + 템플릿 검수 필요.</div>';
@@ -15436,8 +15451,24 @@ function dAcct(){
     h+='</details>';
     h+='<div style="text-align:right;margin-top:10px"><button class="btn btn-s" style="background:#10b981;color:#fff;font-weight:700" onclick="saveSmsCfg()">💾 저장</button> <button class="btn btn-s" style="background:#059669;color:#fff" onclick="testSmsSend()">📱 내 번호로 테스트</button></div>';
     h+='</div>';
+    // 📲 알리고 SMS 설정
+    h+='<div class="card" style="border:1px solid #6366f1;background:#eef2ff">';
+    h+='<h3 style="margin:0 0 4px;color:#3730a3">📲 알리고 SMS 설정</h3>';
+    h+='<div style="font-size:11px;color:#4338ca;margin-bottom:10px"><a href="https://smartsms.aligo.in" target="_blank" style="color:#3730a3;font-weight:700">smartsms.aligo.in</a> → 회원가입 → API Key 발급 → 발신번호 등록 → 여기 입력</div>';
+    h+='<div class="frow fr1" style="margin-bottom:8px"><div><label>프록시 URL <span style="color:#ef4444">*</span> <span style="font-size:10px;color:#888">(GAS 웹앱 배포 URL — SmsAligo_GAS.js 참고)</span></label><input type="text" id="cfgAlProxy" placeholder="https://script.google.com/macros/s/...../exec"></div></div>';
+    h+='<div class="frow fr3" style="margin-bottom:8px"><div><label>API Key <span style="color:#ef4444">*</span></label><input type="password" id="cfgAlKey" placeholder="알리고 API Key" autocomplete="off"></div>';
+    h+='<div><label>User ID <span style="color:#ef4444">*</span></label><input type="text" id="cfgAlUser" placeholder="알리고 아이디"></div>';
+    h+='<div><label>발신번호 <span style="color:#ef4444">*</span></label><input type="text" id="cfgAlSender" placeholder="01012345678 (사전등록)"></div></div>';
+    h+='<details style="margin-top:8px;padding:8px;background:#fef3c7;border:1px solid #fbbf24;border-radius:6px"><summary style="cursor:pointer;font-weight:700;color:#78350f;font-size:13px">💬 카카오 알림톡 연동 (선택)</summary>';
+    h+='<div class="frow fr2" style="margin-top:8px"><div><label>Sender Key</label><input type="text" id="cfgAlSenderKey" placeholder="카카오 발신프로필 키"></div>';
+    h+='<div><label>템플릿 코드</label><input type="text" id="cfgAlTplCode" placeholder="TPL_0001"></div></div>';
+    h+='<label style="display:flex;align-items:center;gap:6px;margin-top:6px;cursor:pointer"><input type="checkbox" id="cfgAlKakaoOn"> <span style="font-weight:600">알림톡+SMS 대체발송</span></label>';
+    h+='</details>';
+    h+='<div style="text-align:right;margin-top:10px"><button class="btn btn-s" style="background:#6366f1;color:#fff;font-weight:700" onclick="saveAligoCfg()">💾 저장</button> <button class="btn btn-s" style="background:#4f46e5;color:#fff" onclick="testAligoSend()">📱 테스트 발송</button></div>';
+    h+='</div>';
     // 렌더 후 저장된 값 자동 로드
     setTimeout(_loadSmsCfgIntoForm, 50);
+    setTimeout(_loadAligoCfgIntoForm, 80);
   }
   // super 전용: 메인 스프레드시트 바로가기
   if(isSuper()){
@@ -15471,6 +15502,31 @@ function dAcct(){
           '<td>'+esc(aU.nm||'-')+'</td>'+
           '<td class="mobile-hide" style="color:#666">'+esc(aU.tel||'-')+'</td>'+
           '<td><button class="btn btn-b btn-s" onclick="popEditAdm(\''+esc(aUid)+'\')">수정</button> <button class="btn btn-r btn-s" onclick="delAdm(\''+esc(aUid)+'\')">삭제</button></td>'+
+        '</tr>';
+      }
+    }
+    h+='</table></div></div>';
+
+    // 👁 전용 계정 (지정 화면 하나만 보이는 계정)
+    var viewList=[];for(var kV in US){var rV=US[kV].r||'';if(rV==='applyView'||rV.indexOf('view:')===0)viewList.push(kV);}
+    h+='<div class="card" style="border:2px solid #0ea5e9;background:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 100%);box-shadow:0 2px 8px rgba(14,165,233,.1)">';
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:8px">';
+    h+='<h3 style="margin:0;color:#0369a1;font-weight:800">👁 전용 계정</h3>';
+    h+='<button class="btn btn-s" style="background:#0ea5e9;color:#fff;font-weight:700" onclick="popAddApplyView()">+ 전용 계정 추가</button>';
+    h+='</div>';
+    h+='<div style="font-size:11px;color:#0369a1;margin-bottom:8px">선택한 화면 하나만 보이는 계정입니다 (외부 담당자에게 특정 화면만 보여줄 때). 다른 탭은 전부 숨김.</div>';
+    h+='<div class="scrollx"><table><tr><th>아이디</th><th class="mobile-hide">비번</th><th>이름</th><th>보일 화면</th><th>관리</th></tr>';
+    if(!viewList.length){
+      h+='<tr><td colspan="5" style="text-align:center;color:#999;padding:14px">등록된 전용 계정이 없습니다</td></tr>';
+    } else {
+      for(var v0=0;v0<viewList.length;v0++){
+        var vUid=viewList[v0],vU=US[vUid];
+        h+='<tr>'+
+          '<td style="font-family:monospace;font-weight:600">'+esc(vUid)+'</td>'+
+          '<td class="mobile-hide" style="font-family:monospace;color:#888">'+esc(vU.pw||'-')+'</td>'+
+          '<td>'+esc(vU.nm||'-')+'</td>'+
+          '<td style="color:#0369a1;font-weight:600">'+esc(_viewRoleLabel(vU.r))+'</td>'+
+          '<td><button class="btn btn-r btn-s" onclick="delViewAcct(\''+esc(vUid)+'\')">삭제</button></td>'+
         '</tr>';
       }
     }
@@ -15666,12 +15722,14 @@ async function saveFeeCfg(){
   draw();
 }
 async function saveAligoCfg(){
+  var proxy = ((document.getElementById("cfgAlProxy")||{}).value||"").trim();
   var key = ((document.getElementById("cfgAlKey")||{}).value||"").trim();
   var user = ((document.getElementById("cfgAlUser")||{}).value||"").trim();
   var send = ((document.getElementById("cfgAlSender")||{}).value||"").trim();
-  if(!key && !user && !send){ alert("하나라도 입력하세요"); return; }
+  if(!proxy && !key && !user && !send){ alert("하나라도 입력하세요"); return; }
   showLoading("저장 중...");
   var results = [];
+  if(proxy) results.push(await api("setConfigValue",{id:CID,key:"SMS_PROXY_URL",value:proxy}));
   if(key)  results.push(await api("setConfigValue",{id:CID,key:"ALIGO_API_KEY",value:key}));
   if(user) results.push(await api("setConfigValue",{id:CID,key:"ALIGO_USER_ID",value:user}));
   if(send) results.push(await api("setConfigValue",{id:CID,key:"ALIGO_SENDER",value:send}));
@@ -15686,8 +15744,32 @@ async function saveAligoCfg(){
   var ok = results.every(function(r){return r&&r.ok;});
   if(!ok){ toast("저장 실패",true); return; }
   toast("알리고 설정 저장됨");
-  // 입력란 마스킹
-  if(key){ var ke=document.getElementById("cfgAlKey"); if(ke)ke.value=""; ke.placeholder="✅ 저장됨 (변경시에만 입력)"; }
+  if(key){ var ke=document.getElementById("cfgAlKey"); if(ke){ke.value=""; ke.placeholder="✅ 저장됨 (변경시에만 입력)";} }
+  if(proxy){ var pe=document.getElementById("cfgAlProxy"); if(pe){pe.value=""; pe.placeholder="✅ 저장됨 (변경시에만 입력)";} }
+}
+function _loadAligoCfgIntoForm(){
+  api("getAligoCfg", {}).then(function(r){
+    if(!r||!r.ok) return;
+    var setPlace = function(id, txt){ var el=document.getElementById(id); if(el && txt) el.placeholder=txt; };
+    var setVal   = function(id, val){ var el=document.getElementById(id); if(el && val) el.value=val; };
+    if(r.proxyUrl) setPlace("cfgAlProxy", "✅ "+r.proxyUrl+" — 변경 시에만 입력");
+    if(r.hasKey)   setPlace("cfgAlKey", "✅ 저장됨 ("+r.aligoKeyMask+") — 변경 시에만 입력");
+    setVal("cfgAlUser", r.aligoUser);
+    setVal("cfgAlSender", r.aligoSender);
+    var k=document.getElementById("cfgAlKakaoOn"); if(k) k.checked=!!r.kakaoOn;
+    setVal("cfgAlTplCode", r.tplCode);
+  });
+}
+async function testAligoSend(){
+  var tel = prompt("테스트 수신번호 (본인 번호)를 입력하세요:", ((ME&&ME.tel)||""));
+  if(!tel) return;
+  tel = tel.replace(/[^0-9]/g,"");
+  if(tel.length<10){ alert("번호가 올바르지 않습니다"); return; }
+  showLoading("발송 중...");
+  var r = await api("sendSmsAligo",{id:CID, tels:[tel], msg:"[테스트] 알리고 SMS 연동 테스트입니다 - "+new Date().toLocaleString()});
+  hideLoading();
+  if(r&&r.ok) toast("✅ 테스트 발송 성공 ("+r.msgType+")");
+  else toast("❌ "+(r&&r.err||"실패"), true);
 }
 // 저장된 SMS 설정을 입력 폼에 자동 채워넣기 (네이버 SENS)
 function _loadSmsCfgIntoForm(){
@@ -16023,7 +16105,7 @@ function popEditAcct(areaName,curId){
     roleHtml='<div style="margin-bottom:12px"><label>역할</label><select id="eaRole">'+
       '<option value="super"'+(u.r==="super"?' selected':'')+'>super (최상위 관리자)</option>'+
       '<option value="admin"'+(u.r==="admin"?' selected':'')+'>admin (관리자)</option>'+
-      '<option value="subAdm"'+(u.r==="subAdm"?' selected':'')+'>subAdm (청년회)</option>'+
+      '<option value="subAdm"'+(u.r==="subAdm"?' selected':'')+'>subAdm (단오보존회)</option>'+
       '<option value="area"'+(u.r==="area"?' selected':'')+'>area (부서 담당자)</option>'+
       '</select></div>';
   }
@@ -16056,14 +16138,14 @@ async function saveAcctX(oldId,areaName){
   closePopup();toast("수정 완료");draw();
 }
 
-// ===== 청년회 (subAdm) 계정 관리 — admin 전용 =====
+// ===== 단오제보존회 (subAdm) 계정 관리 — admin 전용 =====
 function popAddSub(){
   if(!isGlobalAdmin()){toast("관리자만 가능합니다",true);return}
-  openPopup('<h3>🛡️ 청년회 계정 추가 <button class="close-x" onclick="closePopup()">&times;</button></h3>'+
-    '<div style="font-size:12px;color:#7c3aed;margin-bottom:10px">청년회 소속 계정은 거의 모든 권한을 가지나, 위험 작업은 admin만 가능합니다.</div>'+
+  openPopup('<h3>🛡️ 단오제보존회 계정 추가 <button class="close-x" onclick="closePopup()">&times;</button></h3>'+
+    '<div style="font-size:12px;color:#7c3aed;margin-bottom:10px">단오제보존회 소속 계정은 거의 모든 권한을 가지나, 위험 작업은 admin만 가능합니다.</div>'+
     '<div class="frow fr2"><div><label>아이디 *</label><input type="text" id="sbId" placeholder="예: dano01"></div>'+
     '<div><label>비밀번호 *</label><input type="text" id="sbPw" value="1234"></div></div>'+
-    '<div class="frow fr2"><div><label>이름</label><input type="text" id="sbNm" placeholder="예: 청년회"></div>'+
+    '<div class="frow fr2"><div><label>이름</label><input type="text" id="sbNm" placeholder="예: 단오제보존회"></div>'+
     '<div><label>연락처</label><input type="text" id="sbTel" placeholder="010-0000-0000" oninput="this.value=fmTel(this.value)"></div></div>'+
     '<div style="text-align:right;margin-top:14px"><button class="btn" style="background:#7c3aed;color:#fff" onclick="addSubX()">추가</button></div>');
 }
@@ -16074,16 +16156,68 @@ async function addSubX(){
   if(pw.length<4){alert("비번 4자 이상");return}
   if(US[id]){alert("이미 사용 중인 아이디입니다");return}
   showLoading("추가 중...");
-  var r=await api("addAcct",{id:id,pw:pw,r:"subAdm",ar:"",nm:nm||"청년회",tel:tel,_who:CID});
+  var r=await api("addAcct",{id:id,pw:pw,r:"subAdm",ar:"",nm:nm||"단오제보존회",tel:tel,_who:CID});
   hideLoading();
   if(!r.ok){alert(r.err||"실패");return}
-  US[id]={pw:pw,r:"subAdm",ar:"",nm:nm||"청년회",tel:tel};
-  closePopup();toast("청년회 계정 추가 완료");draw();
+  US[id]={pw:pw,r:"subAdm",ar:"",nm:nm||"단오제보존회",tel:tel};
+  closePopup();toast("단오제보존회 계정 추가 완료");draw();
+}
+// 참가자 전용 계정 (로그인 시 참가자 관리 탭만 표시)
+function _viewOptsHtml(sel){
+  var o='<option value="apply"'+(sel==='apply'?' selected':'')+'>참가자 관리</option>';
+  if(typeof _modDefs!=='undefined') Object.keys(_modDefs).forEach(function(k){
+    var v='mod_'+k; o+='<option value="'+v+'"'+(sel===v?' selected':'')+'>'+esc(_modDefs[k].label)+' (모듈)</option>';
+  });
+  return o;
+}
+function popAddApplyView(){
+  if(!isGlobalAdmin()){toast("관리자만 가능합니다",true);return}
+  openPopup('<h3>👁 전용 계정 추가 <button class="close-x" onclick="closePopup()">&times;</button></h3>'+
+    '<div style="font-size:12px;color:#0369a1;margin-bottom:10px">선택한 <b>화면 하나만</b> 보이는 계정입니다. (다른 탭은 전부 숨김 — 외부 담당자에게 특정 화면만 보여줄 때)</div>'+
+    '<div class="fr"><label>보일 화면 *</label><select id="avView" style="width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:8px">'+_viewOptsHtml('')+'</select></div>'+
+    '<div class="frow fr2"><div><label>아이디 *</label><input type="text" id="avId" placeholder="예: view01"></div>'+
+    '<div><label>비밀번호 *</label><input type="text" id="avPw" value="1234"></div></div>'+
+    '<div class="frow fr2"><div><label>이름</label><input type="text" id="avNm" placeholder="예: 조회용"></div>'+
+    '<div><label>연락처</label><input type="text" id="avTel" placeholder="010-0000-0000" oninput="this.value=fmTel(this.value)"></div></div>'+
+    '<div style="text-align:right;margin-top:14px"><button class="btn" style="background:#0ea5e9;color:#fff" onclick="addApplyViewX()">추가</button></div>');
+}
+async function addApplyViewX(){
+  if(!isGlobalAdmin()){toast("관리자만 가능합니다",true);return}
+  var view=(document.getElementById("avView")||{}).value||"apply";
+  var id=document.getElementById("avId").value.trim(),pw=document.getElementById("avPw").value,nm=document.getElementById("avNm").value.trim(),tel=document.getElementById("avTel").value;
+  if(!id||!pw){alert("아이디/비번 필수");return}
+  if(pw.length<4){alert("비번 4자 이상");return}
+  if(US[id]){alert("이미 사용 중인 아이디입니다");return}
+  var role="view:"+view;
+  showLoading("추가 중...");
+  var r=await api("addAcct",{id:id,pw:pw,r:role,ar:"",nm:nm||"전용계정",tel:tel,_who:CID});
+  hideLoading();
+  if(!r.ok){alert(r.err||"실패");return}
+  US[id]={pw:pw,r:role,ar:"",nm:nm||"전용계정",tel:tel};
+  closePopup();toast("전용 계정 추가 완료");draw();
+}
+// 전용 계정 역할 → 보일 화면 이름
+function _viewRoleLabel(r){
+  if(!r) return '';
+  var vt = r==='applyView' ? 'apply' : (r.indexOf('view:')===0 ? r.slice(5) : '');
+  if(vt==='apply') return '참가자 관리';
+  if(vt.indexOf('mod_')===0){ var d=(typeof _modDefs!=='undefined')?_modDefs[vt.slice(4)]:null; return d?d.label:vt; }
+  return '';
+}
+async function delViewAcct(uid){
+  if(!isGlobalAdmin()){toast("관리자만 가능합니다",true);return}
+  if(!confirm("전용 계정 '"+uid+"'을(를) 삭제할까요?"))return;
+  showLoading("삭제 중...");
+  var r=await api("deleteAcct",{id:uid,_who:CID});
+  hideLoading();
+  if(!r.ok){toast(r.err||"실패",true);return}
+  delete US[uid];
+  toast("삭제 완료");draw();
 }
 function popEditSub(curId){
   if(!isGlobalAdmin()){toast("관리자만 가능합니다",true);return}
   var u=US[curId]||{pw:"",nm:"",tel:""};
-  openPopup('<h3>🛡️ 청년회 계정 수정 <button class="close-x" onclick="closePopup()">&times;</button></h3>'+
+  openPopup('<h3>🛡️ 단오제보존회 계정 수정 <button class="close-x" onclick="closePopup()">&times;</button></h3>'+
     '<div class="frow fr2"><div><label>아이디 *</label><input type="text" id="esId" value="'+esc(curId)+'"></div>'+
     '<div><label>비밀번호 *</label><input type="text" id="esPw" value="'+esc(u.pw)+'"></div></div>'+
     '<div class="frow fr2"><div><label>이름</label><input type="text" id="esNm" value="'+esc(u.nm||"")+'"></div>'+
@@ -16334,11 +16468,9 @@ function tmplExpBG(){
 async function tmplInc(){
   if(typeof XLSX=="undefined"){toast("엑셀 라이브러리 로딩중",true);return}
   var wb=XLSX.utils.book_new();
-  // 대분류 첫값, 카드 첫값으로 예시
   var tp0=(incTypes||[])[0]||"이월금";
-  var cn0=(incCards||[])[0]?(incCards[0].name||""):"청년회통장";
+  var cn0=(incCards||[])[0]?(incCards[0].name||""):"보존회통장";
   var pm0=(incCards||[])[0]&&incCards[0].pays&&incCards[0].pays[0]?incCards[0].pays[0]:"계좌이체";
-  // 기존 inc에서 중분류 목록 추출 (대분류별)
   var allSubs=[];
   (inc||[]).forEach(function(r){ if(r.sub && allSubs.indexOf(r.sub)<0) allSubs.push(r.sub); });
   tmplSheet(wb,"세입관리",["대분류","중분류","금액(원)","카드/계좌","결제방법","비고"],
@@ -16349,13 +16481,11 @@ async function tmplInc(){
       [(incTypes||[])[2]||tp0,"","50000",cn0,"","예금 이자"]
     ],
     [18,24,14,16,14,28]);
-  // 드롭다운 유효성 검사
   var vals=[];
   if((incTypes||[]).length) vals.push({sheet:"세입관리",col:"A",fromRow:2,toRow:500,list:incTypes.join(",")});
   if(allSubs.length) vals.push({sheet:"세입관리",col:"B",fromRow:2,toRow:500,list:allSubs.join(",")});
   var cardNames=(incCards||[]).map(function(c){return c.name||""}).filter(Boolean);
   if(cardNames.length) vals.push({sheet:"세입관리",col:"D",fromRow:2,toRow:500,list:cardNames.join(",")});
-  // 결제방법 — 모든 카드의 결제방법 합집합
   var allPays={};
   (incCards||[]).forEach(function(c){(c.pays||[]).forEach(function(p){allPays[p]=1})});
   var payList=Object.keys(allPays);
@@ -16988,16 +17118,11 @@ async function doImp(inp){
           var _qt=Number(String(x["수량"]||"1").replace(/,/g,""))||1;
           var _un=Number(String(x["단가(원)"]||x["단가"]||"0").replace(/,/g,""))||0;
           var _tot=Number(String(x["합계(원)"]||x["합계(천원)"]||x["합계"]||"0").replace(/,/g,""))||0;
-          // 합계(천원)이면 ×1000
           if(!x["합계(원)"]&&!x["합계"]&&x["합계(천원)"]&&_tot) _tot=_tot*1000;
-          // 단가 비어있으면 합계÷수량으로 역산
           if(!_un && _tot && _qt) _un=Math.round(_tot/_qt);
-          // 합계 비어있으면 단가×수량
           if(!_tot && _un && _qt) _tot=_un*_qt;
-          // 날짜 처리 (엑셀 날짜 숫자→문자열)
           var _dt=x["구매일"]||"";
           if(typeof _dt==="number"){ var d=XLSX.SSF.parse_date_code(_dt); _dt=d?d.y+"-"+String(d.m).padStart(2,"0")+"-"+String(d.d).padStart(2,"0"):""; }
-          // 세출/카드/거래처 매핑
           var _expTp=String(x["세출대분류"]||x["세출 대분류"]||"").trim();
           var _expMid=String(x["세출중분류"]||x["세출 중분류"]||"").trim();
           var _card=String(x["카드/계좌"]||x["카드"]||x["계좌"]||"").trim();
@@ -17244,7 +17369,7 @@ function _evtMgrHtml(){
     + (isSuper ? '' : '  • 부관리자는 슈퍼관리자 계정은 수정할 수 없습니다.');
   var saveBar = '<div class="exbar" style="margin-top:8px;display:flex;justify-content:flex-end;gap:6px;align-items:center">'
     +'<span id="matrixPendMsg" style="color:#b45309;font-weight:600;font-size:12px;margin-right:8px"></span>'
-    +'<button class="btn" onclick="matrixCancel()">취소</button>'
+    +'<button class="btn" style="background:#64748b;color:#fff" onclick="matrixCancel()">취소</button>'
     +'<button class="btn btn-b" id="matrixSaveBtn" onclick="matrixSave()" disabled>저장</button>'
     +'</div>';
   var matrix = '<div class="card"><h3>👥 계정 × 행사 권한 매트릭스</h3>'
@@ -17307,16 +17432,6 @@ function _evtMgrHtml(){
 var ALL_MODS = ["apply","budget","purchase","act","mem","fee","rental","files","groups","vehicle"];
 
 // 행사 추가/수정 팝업
-function toggleFieldMenu(){
-  var next = FIELD_MENU==="on" ? "off" : "on";
-  api("setConfigValue",{id:CID,key:"FIELD_MENU",value:next}).then(function(r){
-    if(!r||!r.ok){ toast("저장 실패",true); return; }
-    FIELD_MENU=next;
-    mkTabs();
-    draw();
-    toast("현장 메뉴 "+(next==="on"?"켜짐":"꺼짐"));
-  });
-}
 function saveDriveProxy(){
   var url=(document.getElementById("driveProxyUrl").value||"").trim();
   if(!url){toast("URL을 입력하세요",true);return;}
@@ -17340,6 +17455,16 @@ function testDriveProxy(){
     })
     .catch(function(e){el.style.color="#dc2626";el.textContent="❌ 통신 실패: "+e.message;});
 }
+function toggleFieldMenu(){
+  var next = FIELD_MENU==="on" ? "off" : "on";
+  api("setConfigValue",{id:CID,key:"FIELD_MENU",value:next}).then(function(r){
+    if(!r||!r.ok){ toast("저장 실패",true); return; }
+    FIELD_MENU=next;
+    mkTabs();
+    draw();
+    toast("현장 메뉴 "+(next==="on"?"켜짐":"꺼짐"));
+  });
+}
 function toggleLinkTabs(){
   var next = LINK_TABS==="on" ? "off" : "on";
   api("setConfigValue",{id:CID,key:"LINK_TABS",value:next}).then(function(r){
@@ -17349,6 +17474,185 @@ function toggleLinkTabs(){
     draw();
     toast("연동 탭 "+(next==="on"?"켜짐":"꺼짐"));
   });
+}
+
+// ===== 연동 탭 관리 (CustomTabs) =====
+function _getCustomTabs(){ return (_cache && _cache.CustomTabs) || []; }
+function _saveCustomTabs(tabs){ return fbDb.ref('/main/CustomTabs').set(tabs); }
+function _ctUid(){ return 'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
+
+function dLinkTabs(){
+  var tabs=_getCustomTabs();
+  var h='<div class="card"><h3 style="margin-bottom:12px">🔗 연동 탭 관리</h3>';
+  h+='<p style="color:#64748b;font-size:13px;margin-bottom:16px">외부 사이트를 iframe으로 연동하는 탭을 추가/편집할 수 있습니다.<br>카테고리 = 상단 탭 그룹, 항목 = 서브 탭 (각각 URL 지정)</p>';
+  h+='<button class="btn btn-b" onclick="popLinkCat(-1)" style="margin-bottom:16px">➕ 카테고리 추가</button>';
+  if(!tabs.length){
+    h+='<div class="empty2" style="padding:40px">등록된 연동 탭이 없습니다</div>';
+  } else {
+    tabs.forEach(function(cat,ci){
+      h+='<div style="border:1.5px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:12px;background:#f8fafc">';
+      h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">';
+      h+='<div style="display:flex;align-items:center;gap:10px"><span style="font-size:16px;font-weight:700">'+(cat.icon||"🔗")+' '+esc(cat.label||"")+'</span>';
+      h+='<button onclick="toggleLinkCat('+ci+')" style="padding:4px 12px;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;'+(cat.hidden?'background:#fecaca;color:#dc2626':'background:#bbf7d0;color:#16a34a')+'">'+(cat.hidden?'❌ OFF':'✅ ON')+'</button></div>';
+      h+='<div style="display:flex;gap:6px">';
+      h+='<button class="btn btn-s" onclick="popLinkCat('+ci+')" style="font-size:11px">✏️ 수정</button>';
+      h+='<button class="btn btn-s" onclick="delLinkCat('+ci+')" style="font-size:11px;color:#dc2626">🗑 삭제</button>';
+      h+='</div></div>';
+      var items=cat.items||[];
+      if(items.length){
+        h+='<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="background:#e2e8f0"><th style="padding:6px 8px;text-align:left;width:30px">#</th><th style="padding:6px 8px;text-align:left">이름</th><th style="padding:6px 8px;text-align:left">URL</th><th style="padding:6px 8px;width:90px"></th></tr></thead><tbody>';
+        items.forEach(function(it,ii){
+          h+='<tr style="border-bottom:1px solid #e5e7eb">';
+          h+='<td style="padding:6px 8px;color:#94a3b8">'+(ii+1)+'</td>';
+          h+='<td style="padding:6px 8px;font-weight:600">'+(it.icon?it.icon+' ':'')+esc(it.label||"")+'</td>';
+          h+='<td style="padding:6px 8px;max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#2563eb;font-size:11px">'+esc(it.url||"")+'</td>';
+          h+='<td style="padding:6px 8px;text-align:right">';
+          h+='<button class="btn btn-s" onclick="popLinkItem('+ci+','+ii+')" style="font-size:11px">✏️</button> ';
+          h+='<button class="btn btn-s" onclick="delLinkItem('+ci+','+ii+')" style="font-size:11px;color:#dc2626">🗑</button>';
+          if(ii>0) h+=' <button class="btn btn-s" onclick="moveLinkItem('+ci+','+ii+',-1)" style="font-size:11px">▲</button>';
+          if(ii<items.length-1) h+=' <button class="btn btn-s" onclick="moveLinkItem('+ci+','+ii+',1)" style="font-size:11px">▼</button>';
+          h+='</td></tr>';
+        });
+        h+='</tbody></table>';
+      } else {
+        h+='<div style="color:#94a3b8;font-size:12px;padding:8px">항목 없음</div>';
+      }
+      h+='<button class="btn btn-s" onclick="popLinkItem('+ci+',-1)" style="margin-top:8px;font-size:12px;color:#2563eb">➕ 항목 추가</button>';
+      h+='</div>';
+    });
+  }
+  h+='</div>';
+  return h;
+}
+
+var EMOJI_LIST=["","🔗","🦠","📋","🗺️","📊","📦","🚗","🏠","📷","💰","📝","🎪","👥","⚙️","📁","🔔","📌","🎯","🛒","💳","🏷️","📞","🌐","🔧","📅","🎵","🎬","🏆","🍽️","☀️","🌙","⭐","❤️","🔥","💡","🚀","✈️"];
+function _emojiSelect(id, cur){
+  // 직접 입력(붙여넣기) + 추천 이모지 버튼
+  var h='<span style="display:inline-flex;gap:3px;align-items:center;flex-wrap:wrap;max-width:100%;vertical-align:top">';
+  h+='<input id="'+id+'" value="'+esc(cur||"")+'" maxlength="6" placeholder="📦" style="width:54px;font-size:22px;text-align:center;padding:5px;border:1px solid #d1d5db;border-radius:8px" title="이모지를 직접 붙여넣거나 아래 버튼에서 고르세요">';
+  EMOJI_LIST.forEach(function(e){
+    if(!e) return;
+    h+='<button type="button" onclick="var _el=document.getElementById(\''+id+'\');if(_el)_el.value=this.textContent;" style="font-size:16px;border:1px solid #e5e7eb;border-radius:6px;background:#fff;cursor:pointer;padding:2px 4px;line-height:1.3">'+e+'</button>';
+  });
+  h+='</span>';
+  return h;
+}
+
+function popLinkCat(idx){
+  var tabs=_getCustomTabs();
+  var isNew=idx<0;
+  var cat=isNew?{id:"",label:"",icon:"🔗"}:tabs[idx]||{};
+  var h='<div class="pop-head"><h3>'+(isNew?"➕ 카테고리 추가":"✏️ 카테고리 수정")+'</h3></div>';
+  h+='<div style="padding:14px">';
+  h+='<div class="fr"><label>아이콘</label>'+_emojiSelect("lc_icon",cat.icon||"🔗")+'</div>';
+  h+='<div class="fr"><label>이름</label><input id="lc_label" value="'+esc(cat.label||"")+'" placeholder="예: 방역"></div>';
+  h+='<div class="fr"><label>노출</label><label style="font-weight:400;font-size:13px;display:flex;align-items:center;gap:6px"><input type="checkbox" id="lc_admin"'+(cat.admin?' checked':'')+'> 관리자(SUBADMIN 이상)만 보기 <span style="color:#94a3b8;font-size:11px">(미체크: 모든 사용자)</span></label></div>';
+  h+='<div style="text-align:right;margin-top:12px"><button class="btn" style="background:#64748b;color:#fff" onclick="closePopup()">취소</button> <button class="btn btn-b" onclick="saveLinkCat('+idx+')">저장</button></div>';
+  h+='</div>';
+  openPopup(h,400);
+}
+
+function saveLinkCat(idx){
+  var icon=(document.getElementById("lc_icon").value||"🔗").trim();
+  var label=(document.getElementById("lc_label").value||"").trim();
+  var admin=((document.getElementById("lc_admin")||{}).checked)||false;
+  if(!label) return toast("이름을 입력하세요",true);
+  var tabs=JSON.parse(JSON.stringify(_getCustomTabs()));
+  if(idx<0){
+    tabs.push({id:_ctUid(), label:label, icon:icon, admin:admin, items:[]});
+  } else {
+    tabs[idx].label=label;
+    tabs[idx].icon=icon;
+    tabs[idx].admin=admin;
+  }
+  showLoading("저장 중...");
+  _saveCustomTabs(tabs).then(function(){
+    hideLoading(); closePopup(); toast(idx<0?"카테고리 추가됨":"카테고리 수정됨");
+    setTimeout(function(){ draw(); },300);
+  });
+}
+
+function toggleLinkCat(idx){
+  var tabs=JSON.parse(JSON.stringify(_getCustomTabs()));
+  if(!tabs[idx]) return;
+  tabs[idx].hidden = !tabs[idx].hidden;
+  showLoading("저장 중...");
+  _saveCustomTabs(tabs).then(function(){
+    hideLoading(); toast(tabs[idx].label+" "+(tabs[idx].hidden?"OFF":"ON"));
+    setTimeout(function(){ draw(); },300);
+  });
+}
+
+function delLinkCat(idx){
+  var tabs=_getCustomTabs();
+  if(!tabs[idx]) return;
+  if(!confirm("'"+tabs[idx].label+"' 카테고리와 하위 항목을 모두 삭제할까요?")) return;
+  var copy=JSON.parse(JSON.stringify(tabs));
+  copy.splice(idx,1);
+  showLoading("삭제 중...");
+  _saveCustomTabs(copy).then(function(){
+    hideLoading(); toast("카테고리 삭제됨");
+    setTimeout(function(){ draw(); },300);
+  });
+}
+
+function popLinkItem(catIdx, itemIdx){
+  var tabs=_getCustomTabs();
+  var cat=tabs[catIdx]; if(!cat) return;
+  var isNew=itemIdx<0;
+  var it=isNew?{label:"",icon:"",url:""}:(cat.items||[])[itemIdx]||{};
+  var h='<div class="pop-head"><h3>'+(isNew?"➕ 항목 추가":"✏️ 항목 수정")+' — '+esc(cat.label)+'</h3></div>';
+  h+='<div style="padding:14px">';
+  h+='<div class="fr"><label>아이콘</label>'+_emojiSelect("li_icon",it.icon||"🔗")+'</div>';
+  h+='<div class="fr"><label>이름</label><input id="li_label" value="'+esc(it.label||"")+'" placeholder="예: 오늘의 운영"></div>';
+  h+='<div class="fr"><label>URL</label><input id="li_url" value="'+esc(it.url||"")+'" placeholder="https://example.com/page.html" style="font-size:12px"></div>';
+  h+='<div class="mut" style="font-size:11px;margin-top:-6px;color:#6366f1">💡 구글 드라이브 폴더/사이트/외부 시스템 URL을 입력하세요</div>';
+  h+='<div style="text-align:right;margin-top:12px"><button class="btn" style="background:#64748b;color:#fff" onclick="closePopup()">취소</button> <button class="btn btn-b" onclick="saveLinkItem('+catIdx+','+itemIdx+')">저장</button></div>';
+  h+='</div>';
+  openPopup(h,460);
+}
+
+function saveLinkItem(catIdx, itemIdx){
+  var icon=(document.getElementById("li_icon").value||"🔗").trim();
+  var label=(document.getElementById("li_label").value||"").trim();
+  var url=(document.getElementById("li_url").value||"").trim();
+  if(!label) return toast("이름을 입력하세요",true);
+  if(!url) return toast("URL을 입력하세요",true);
+  var tabs=JSON.parse(JSON.stringify(_getCustomTabs()));
+  if(!tabs[catIdx].items) tabs[catIdx].items=[];
+  if(itemIdx<0){
+    tabs[catIdx].items.push({icon:icon, label:label, url:url});
+  } else {
+    tabs[catIdx].items[itemIdx]={icon:icon, label:label, url:url};
+  }
+  showLoading("저장 중...");
+  _saveCustomTabs(tabs).then(function(){
+    hideLoading(); closePopup(); toast(itemIdx<0?"항목 추가됨":"항목 수정됨");
+    setTimeout(function(){ draw(); },300);
+  });
+}
+
+function delLinkItem(catIdx, itemIdx){
+  var tabs=_getCustomTabs();
+  var cat=tabs[catIdx]; if(!cat) return;
+  var it=(cat.items||[])[itemIdx]; if(!it) return;
+  if(!confirm("'"+it.label+"' 항목을 삭제할까요?")) return;
+  var copy=JSON.parse(JSON.stringify(tabs));
+  copy[catIdx].items.splice(itemIdx,1);
+  showLoading("삭제 중...");
+  _saveCustomTabs(copy).then(function(){
+    hideLoading(); toast("항목 삭제됨");
+    setTimeout(function(){ draw(); },300);
+  });
+}
+
+function moveLinkItem(catIdx, itemIdx, dir){
+  var tabs=JSON.parse(JSON.stringify(_getCustomTabs()));
+  var items=tabs[catIdx].items;
+  var newIdx=itemIdx+dir;
+  if(newIdx<0||newIdx>=items.length) return;
+  var tmp=items[itemIdx]; items[itemIdx]=items[newIdx]; items[newIdx]=tmp;
+  _saveCustomTabs(tabs).then(function(){ draw(); });
 }
 
 function popEvtEdit(evtId){
@@ -17371,7 +17675,7 @@ function popEvtEdit(evtId){
   var modSection = grpBox("📋 행사 운영",        cb("apply","참가자")    +cb("budget","세입세출")+cb("purchase","구매")+cb("act","활동"))
                  + grpBox("👥 회원 관리",        cb("mem","인원관리")    +cb("fee","💵 회비"))
                  + grpBox("📦 조직 공용",        cb("rental","📦 대여자산")+cb("files","📁 자료실"))
-                 + grpBox("📍 현장 운영",        cb("groups","🏷 조 편성")+cb("vehicle","🚗 행사차량"));
+                 + grpBox("📍 현장 운영",        cb("groups","🏷 조 편성"));
   var ssHint = isNew ? '' : '<div class="fr"><label>데이터</label><button type="button" class="btn btn-s" style="background:#10b981;color:#fff" onclick="closePopup();openSheet(\'Mems\')">📊 시트 보기</button></div>';
   var h='<div class="pop-head"><h3>'+(isNew?"➕ 새 행사 추가":"✏️ 행사 수정 — "+esc(e.evtId))+'</h3></div>'
     +'<div style="padding:14px">'
@@ -17383,7 +17687,7 @@ function popEvtEdit(evtId){
     +'  <div class="fr"><label>인원공유</label><label><input type="checkbox" id="evShareMems" '+(e.shareMems?"checked":"")+'> 메인 인원관리 공유 <span style="color:#888;font-size:11px">(체크 시 메인 행사의 회원 명단을 그대로 사용)</span></label></div>'
     +'  '+ssHint
     +'  <div class="fr"><label>비고</label><input id="evNote" value="'+esc(e.note||"")+'"></div>'
-    +'  <div style="text-align:right;margin-top:12px"><button class="btn" onclick="closePopup()">취소</button> <button class="btn btn-b" onclick="doEvtSave('+(isNew?"true":"false")+',\''+esc(e.evtId)+'\')">저장</button></div>'
+    +'  <div style="text-align:right;margin-top:12px"><button class="btn" style="background:#64748b;color:#fff" onclick="closePopup()">취소</button> <button class="btn btn-b" onclick="doEvtSave('+(isNew?"true":"false")+',\''+esc(e.evtId)+'\')">저장</button></div>'
     +'</div>';
   openPopup(h, 560);
 }
@@ -17460,187 +17764,6 @@ async function doEvtDelete(evtId){
   draw();
   toast(r.trashedSS ? "행사 + 스프레드시트 휴지통으로 이동됨" : "행사 삭제됨 (스프레드시트는 보존)");
 }
-// ===== 연동 탭 관리 (CustomTabs) =====
-function _getCustomTabs(){ return (_cache && _cache.CustomTabs) || []; }
-function _saveCustomTabs(tabs){ return fbDb.ref('/main/CustomTabs').set(tabs); }
-function _ctUid(){ return 'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
-
-function dLinkTabs(){
-  var tabs=_getCustomTabs();
-  var h='<div class="card"><h3 style="margin-bottom:12px">🔗 연동 탭 관리</h3>';
-  h+='<p style="color:#64748b;font-size:13px;margin-bottom:16px">외부 사이트를 iframe으로 연동하는 탭을 추가/편집할 수 있습니다.<br>카테고리 = 상단 탭 그룹, 항목 = 서브 탭 (각각 URL 지정)</p>';
-  h+='<button class="btn btn-b" onclick="popLinkCat(-1)" style="margin-bottom:16px">➕ 카테고리 추가</button>';
-
-  if(!tabs.length){
-    h+='<div class="empty2" style="padding:40px">등록된 연동 탭이 없습니다</div>';
-  } else {
-    tabs.forEach(function(cat,ci){
-      h+='<div style="border:1.5px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:12px;background:#f8fafc">';
-      h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">';
-      h+='<div style="display:flex;align-items:center;gap:10px"><span style="font-size:16px;font-weight:700">'+(cat.icon||"🔗")+' '+esc(cat.label||"")+'</span>';
-      h+='<button onclick="toggleLinkCat('+ci+')" style="padding:4px 12px;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;'+(cat.hidden?'background:#fecaca;color:#dc2626':'background:#bbf7d0;color:#16a34a')+'">'+(cat.hidden?'❌ OFF':'✅ ON')+'</button></div>';
-      h+='<div style="display:flex;gap:6px">';
-      h+='<button class="btn btn-s" onclick="popLinkCat('+ci+')" style="font-size:11px">✏️ 수정</button>';
-      h+='<button class="btn btn-s" onclick="delLinkCat('+ci+')" style="font-size:11px;color:#dc2626">🗑 삭제</button>';
-      h+='</div></div>';
-
-      var items=cat.items||[];
-      if(items.length){
-        h+='<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="background:#e2e8f0"><th style="padding:6px 8px;text-align:left;width:30px">#</th><th style="padding:6px 8px;text-align:left">이름</th><th style="padding:6px 8px;text-align:left">URL</th><th style="padding:6px 8px;width:90px"></th></tr></thead><tbody>';
-        items.forEach(function(it,ii){
-          h+='<tr style="border-bottom:1px solid #e5e7eb">';
-          h+='<td style="padding:6px 8px;color:#94a3b8">'+(ii+1)+'</td>';
-          h+='<td style="padding:6px 8px;font-weight:600">'+(it.icon?it.icon+' ':'')+esc(it.label||"")+'</td>';
-          h+='<td style="padding:6px 8px;max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#2563eb;font-size:11px">'+esc(it.url||"")+'</td>';
-          h+='<td style="padding:6px 8px;text-align:right">';
-          h+='<button class="btn btn-s" onclick="popLinkItem('+ci+','+ii+')" style="font-size:11px">✏️</button> ';
-          h+='<button class="btn btn-s" onclick="delLinkItem('+ci+','+ii+')" style="font-size:11px;color:#dc2626">🗑</button>';
-          if(ii>0) h+=' <button class="btn btn-s" onclick="moveLinkItem('+ci+','+ii+',-1)" style="font-size:11px">▲</button>';
-          if(ii<items.length-1) h+=' <button class="btn btn-s" onclick="moveLinkItem('+ci+','+ii+',1)" style="font-size:11px">▼</button>';
-          h+='</td></tr>';
-        });
-        h+='</tbody></table>';
-      } else {
-        h+='<div style="color:#94a3b8;font-size:12px;padding:8px">항목 없음</div>';
-      }
-      h+='<button class="btn btn-s" onclick="popLinkItem('+ci+',-1)" style="margin-top:8px;font-size:12px;color:#2563eb">➕ 항목 추가</button>';
-      h+='</div>';
-    });
-  }
-  h+='</div>';
-  return h;
-}
-
-var EMOJI_LIST=["","🔗","🦠","📋","🗺️","📊","📦","🚗","🏠","📷","💰","📝","🎪","👥","⚙️","📁","🔔","📌","🎯","🛒","💳","🏷️","📞","🌐","🔧","📅","🎵","🎬","🏆","🍽️","☀️","🌙","⭐","❤️","🔥","💡","🚀","✈️"];
-function _emojiSelect(id, cur){
-  // 직접 입력(붙여넣기) + 추천 이모지 버튼
-  var h='<span style="display:inline-flex;gap:3px;align-items:center;flex-wrap:wrap;max-width:100%;vertical-align:top">';
-  h+='<input id="'+id+'" value="'+esc(cur||"")+'" maxlength="6" placeholder="📦" style="width:54px;font-size:22px;text-align:center;padding:5px;border:1px solid #d1d5db;border-radius:8px" title="이모지를 직접 붙여넣거나 아래 버튼에서 고르세요">';
-  EMOJI_LIST.forEach(function(e){
-    if(!e) return;
-    h+='<button type="button" onclick="var _el=document.getElementById(\''+id+'\');if(_el)_el.value=this.textContent;" style="font-size:16px;border:1px solid #e5e7eb;border-radius:6px;background:#fff;cursor:pointer;padding:2px 4px;line-height:1.3">'+e+'</button>';
-  });
-  h+='</span>';
-  return h;
-}
-function popLinkCat(idx){
-  var tabs=_getCustomTabs();
-  var isNew=idx<0;
-  var cat=isNew?{id:"",label:"",icon:"🔗"}:tabs[idx]||{};
-  var h='<div class="pop-head"><h3>'+(isNew?"➕ 카테고리 추가":"✏️ 카테고리 수정")+'</h3></div>';
-  h+='<div style="padding:14px">';
-  h+='<div class="fr"><label>아이콘</label>'+_emojiSelect("lc_icon",cat.icon||"🔗")+'</div>';
-  h+='<div class="fr"><label>이름</label><input id="lc_label" value="'+esc(cat.label||"")+'" placeholder="예: 방역"></div>';
-  h+='<div class="fr"><label>노출</label><label style="font-weight:400;font-size:13px;display:flex;align-items:center;gap:6px"><input type="checkbox" id="lc_admin"'+(cat.admin?' checked':'')+'> 관리자(SUBADMIN 이상)만 보기 <span style="color:#94a3b8;font-size:11px">(미체크: 모든 사용자)</span></label></div>';
-  h+='<div style="text-align:right;margin-top:12px"><button class="btn" onclick="closePopup()">취소</button> <button class="btn btn-b" onclick="saveLinkCat('+idx+')">저장</button></div>';
-  h+='</div>';
-  openPopup(h,400);
-}
-
-function saveLinkCat(idx){
-  var icon=(document.getElementById("lc_icon").value||"🔗").trim();
-  var label=(document.getElementById("lc_label").value||"").trim();
-  var admin=((document.getElementById("lc_admin")||{}).checked)||false;
-  if(!label) return toast("이름을 입력하세요",true);
-  var tabs=JSON.parse(JSON.stringify(_getCustomTabs()));
-  if(idx<0){
-    tabs.push({id:_ctUid(), label:label, icon:icon, admin:admin, items:[]});
-  } else {
-    tabs[idx].label=label;
-    tabs[idx].icon=icon;
-    tabs[idx].admin=admin;
-  }
-  showLoading("저장 중...");
-  _saveCustomTabs(tabs).then(function(){
-    hideLoading(); closePopup(); toast(idx<0?"카테고리 추가됨":"카테고리 수정됨");
-    setTimeout(function(){ draw(); },300);
-  });
-}
-
-function toggleLinkCat(idx){
-  var tabs=JSON.parse(JSON.stringify(_getCustomTabs()));
-  if(!tabs[idx]) return;
-  tabs[idx].hidden = !tabs[idx].hidden;
-  showLoading("저장 중...");
-  _saveCustomTabs(tabs).then(function(){
-    hideLoading(); toast(tabs[idx].label+" "+(tabs[idx].hidden?"OFF":"ON"));
-    setTimeout(function(){ draw(); },300);
-  });
-}
-
-function delLinkCat(idx){
-  var tabs=_getCustomTabs();
-  if(!tabs[idx]) return;
-  if(!confirm("'"+tabs[idx].label+"' 카테고리와 하위 항목을 모두 삭제할까요?")) return;
-  var copy=JSON.parse(JSON.stringify(tabs));
-  copy.splice(idx,1);
-  showLoading("삭제 중...");
-  _saveCustomTabs(copy).then(function(){
-    hideLoading(); toast("카테고리 삭제됨");
-    setTimeout(function(){ draw(); },300);
-  });
-}
-
-function popLinkItem(catIdx, itemIdx){
-  var tabs=_getCustomTabs();
-  var cat=tabs[catIdx]; if(!cat) return;
-  var isNew=itemIdx<0;
-  var it=isNew?{label:"",icon:"",url:""}:(cat.items||[])[itemIdx]||{};
-  var h='<div class="pop-head"><h3>'+(isNew?"➕ 항목 추가":"✏️ 항목 수정")+' — '+esc(cat.label)+'</h3></div>';
-  h+='<div style="padding:14px">';
-  h+='<div class="fr"><label>아이콘</label>'+_emojiSelect("li_icon",it.icon||"🔗")+'</div>';
-  h+='<div class="fr"><label>이름</label><input id="li_label" value="'+esc(it.label||"")+'" placeholder="예: 오늘의 운영"></div>';
-  h+='<div class="fr"><label>URL</label><input id="li_url" value="'+esc(it.url||"")+'" placeholder="https://example.com/page.html" style="font-size:12px"></div>';
-  h+='<div class="mut" style="font-size:11px;margin-top:-6px;color:#6366f1">💡 구글 드라이브 폴더/사이트/외부 시스템 URL을 입력하세요</div>';
-  h+='<div style="text-align:right;margin-top:12px"><button class="btn" onclick="closePopup()">취소</button> <button class="btn btn-b" onclick="saveLinkItem('+catIdx+','+itemIdx+')">저장</button></div>';
-  h+='</div>';
-  openPopup(h,460);
-}
-
-function saveLinkItem(catIdx, itemIdx){
-  var icon=(document.getElementById("li_icon").value||"").trim();
-  var label=(document.getElementById("li_label").value||"").trim();
-  var url=(document.getElementById("li_url").value||"").trim();
-  if(!label) return toast("이름을 입력하세요",true);
-  if(!url) return toast("URL을 입력하세요",true);
-  if(url.indexOf("http")!==0) url="https://"+url;
-  var tabs=JSON.parse(JSON.stringify(_getCustomTabs()));
-  if(!tabs[catIdx].items) tabs[catIdx].items=[];
-  if(itemIdx<0){
-    tabs[catIdx].items.push({label:label, icon:icon, url:url});
-  } else {
-    tabs[catIdx].items[itemIdx]={label:label, icon:icon, url:url};
-  }
-  showLoading("저장 중...");
-  _saveCustomTabs(tabs).then(function(){
-    hideLoading(); closePopup(); toast(itemIdx<0?"항목 추가됨":"항목 수정됨");
-    setTimeout(function(){ draw(); },300);
-  });
-}
-
-function delLinkItem(catIdx, itemIdx){
-  var tabs=_getCustomTabs();
-  var it=(tabs[catIdx]&&tabs[catIdx].items||[])[itemIdx];
-  if(!it) return;
-  if(!confirm("'"+it.label+"' 항목을 삭제할까요?")) return;
-  var copy=JSON.parse(JSON.stringify(tabs));
-  copy[catIdx].items.splice(itemIdx,1);
-  showLoading("삭제 중...");
-  _saveCustomTabs(copy).then(function(){
-    hideLoading(); toast("항목 삭제됨");
-    setTimeout(function(){ draw(); },300);
-  });
-}
-
-function moveLinkItem(catIdx, itemIdx, dir){
-  var tabs=JSON.parse(JSON.stringify(_getCustomTabs()));
-  var items=tabs[catIdx].items;
-  var newIdx=itemIdx+dir;
-  if(newIdx<0||newIdx>=items.length) return;
-  var tmp=items[itemIdx]; items[itemIdx]=items[newIdx]; items[newIdx]=tmp;
-  _saveCustomTabs(tabs).then(function(){ draw(); });
-}
-
 // ----- 매트릭스 일괄 저장 방식 -----
 // 드롭다운 변경 → pending 으로 표시만 (서버 호출 X)
 // [저장] 버튼 → pending 전체를 순차 API 호출
@@ -17745,7 +17868,7 @@ function popEvtAcctCreate(){
     +'  <div class="fr"><label>이름</label><input id="nuNm" placeholder="홍길동"></div>'
     +'  <div class="fr"><label>전화</label><input id="nuTel" placeholder="010-0000-0000"></div>'
     +'  <div class="fr"><label>전역 권한</label>'+globalRoleHtml+'</div>'
-    +'  <div style="text-align:right;margin-top:12px"><button class="btn" onclick="closePopup()">취소</button> <button class="btn btn-b" onclick="doEvtAcctCreate()">저장</button></div>'
+    +'  <div style="text-align:right;margin-top:12px"><button class="btn" style="background:#64748b;color:#fff" onclick="closePopup()">취소</button> <button class="btn btn-b" onclick="doEvtAcctCreate()">저장</button></div>'
     +'</div>';
   openPopup(h, 520);
 }
@@ -19646,7 +19769,7 @@ function smsTplEdit(tid){
       '</div>'+
       '<div style="margin-bottom:12px">'+
         '<label style="display:block;font-weight:600;font-size:13px;margin-bottom:4px">📨 LMS 제목 <span class="mut" style="font-size:11px;font-weight:400">(선택) 본문이 긴 LMS 발송 시 수신자에게 표시됨</span></label>'+
-        '<input type="text" id="stLmsTitle" placeholder="예: 청년회 공지" value="'+esc(existing&&existing.lmsTitle?existing.lmsTitle:"")+'" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:14px">'+
+        '<input type="text" id="stLmsTitle" placeholder="예: 단오제 공지" value="'+esc(existing&&existing.lmsTitle?existing.lmsTitle:"")+'" style="width:100%;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:14px">'+
       '</div>'+
       '<div style="margin-bottom:8px">'+
         '<label style="display:block;font-weight:600;font-size:13px;margin-bottom:4px">본문 <span style="color:#dc2626">*</span></label>'+
