@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>법성포단오제 보존회 관리시스템</title>
-<meta name="description" content="법성포단오제 보존회 관리시스템">
-<meta property="og:title" content="법성포단오제 보존회 관리시스템">
+<title>법성포청년회 관리시스템</title>
+<meta name="description" content="법성포청년회 관리시스템">
+<meta property="og:title" content="법성포청년회 관리시스템">
 <meta property="og:description" content="축제 운영 통합 관리 시스템">
 <meta property="og:type" content="website">
 <style>
@@ -245,8 +245,8 @@ label{display:block;font-size:10px;color:#999;margin-bottom:3px}
 
 <div id="loginPage">
   <div id="loginBox">
-    <h1>🎎 법성포단오제 보존회 관리시스템</h1>
-    <p>2026 법성포단오제 | 축제 참가자·운영 통합 관리</p>
+    <h1>🏛️ 법성포청년회 관리시스템</h1>
+    <p>2026 법성포청년회 | 운영 통합 관리</p>
     <label>아이디</label>
     <input type="text" id="lId" placeholder="아이디" autocomplete="username">
     <label>비밀번호</label>
@@ -421,14 +421,14 @@ label{display:block;font-size:10px;color:#999;margin-bottom:3px}
     <div style="color:#6b7280;font-size:13px" id="apfDoneTs"></div>
     <div style="margin-top:22px"><button class="apf-btn-s" onclick="apfResetForm()">새로 접수하기</button></div>
   </div>
-  <div class="apf-footer" id="apfFooter">법성포단오제보존회</div>
+  <div class="apf-footer" id="apfFooter">법성포청년회</div>
 </div>
 <div id="apfLoading"><div class="box"><div class="spin"></div><div id="apfLoadMsg" style="margin-top:10px;color:#333">제출 중...</div></div></div>
 </div>
 
 <div id="mainPage">
   <div class="topBar">
-    <div><h2>🎎 법성포단오제 보존회 관리시스템</h2><small>법성포단오제보존회 | 축제 운영 통합시스템</small></div>
+    <div><h2>🏛️ 법성포청년회 관리시스템</h2><small>법성포청년회 | 운영 통합시스템</small></div>
     <div class="userArea"><span id="uBadge" class="badge2"></span><button id="vendorBtn" class="logoutBtn" style="background:#7c3aed;display:none" onclick="openVendorManage()" title="거래처 관리">🏢 거래처</button><button id="mainSSBtn" class="logoutBtn" style="background:#10b981;display:none" onclick="openSheet('Users')" title="데이터 시트 열기 (super 전용)">📊 시트</button><button class="logoutBtn" style="background:#0ea5e9" onclick="refreshData(true)" title="서버에서 최신 데이터 다시 가져오기">🔄 새로고침</button><button class="logoutBtn" onclick="logout()">로그아웃</button></div>
   </div>
   <div id="evtBar" class="evtBar"></div>
@@ -494,11 +494,11 @@ label{display:block;font-size:10px;color:#999;margin-bottom:3px}
 // ★★★ 시스템 브랜딩 — 여기 6줄만 바꾸면 모든 화면에 반영됩니다 ★★★
 // ============================================================
 var SYS_YEAR      = "2026";                   // 년도
-var SYS_NAME      = "법성포단오제";            // 행사명
-var SYS_PARENT    = "법성포단오제보존회";       // 주관단체 (SMS 서명, 지출결의서 발행처 등에 사용)
-var SYS_ICON      = "🎎";                    // 상단 아이콘 이모지 (예: 🎎/🌿/🎭/🏛️)
-var SYS_TAGLINE   = "축제 운영 통합시스템";    // 상단 부제
-var SYS_LOGIN_SUB = SYS_YEAR+" "+SYS_NAME+" | 축제 참가자·운영 통합 관리"; // 로그인 화면 부제
+var SYS_NAME      = "법성포청년회";            // 행사명
+var SYS_PARENT    = "법성포청년회";             // 주관단체 (SMS 서명, 지출결의서 발행처 등에 사용)
+var SYS_ICON      = "🏛️";                    // 상단 아이콘 이모지 (예: 🎎/🌿/🎭/🏛️)
+var SYS_TAGLINE   = "운영 통합시스템";          // 상단 부제
+var SYS_LOGIN_SUB = SYS_YEAR+" "+SYS_NAME+" | 운영 통합 관리"; // 로그인 화면 부제
 // ============================================================
 // 아래는 자동 조합 — 수정 불필요
 var SYS_TITLE    = SYS_YEAR + " " + SYS_NAME + " 관리시스템";
