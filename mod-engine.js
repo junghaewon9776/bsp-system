@@ -3572,18 +3572,18 @@ function _saveModLabelLayout(key,mode,layout){ try{ localStorage.setItem('modLab
 
 function _modLabelOpt(key){
   var def=_modDefs[key]||{};
-  var mode='label', titleKey='', fields=null;
-  try{ var s=localStorage.getItem('modLabelOpt_'+key); if(s){ var o=JSON.parse(s); mode=o.mode||'label'; titleKey=o.titleKey||''; fields=o.fields||null; } }catch(e){}
+  var mode='label', titleKey='', fields=null, suffix='';
+  try{ var s=localStorage.getItem('modLabelOpt_'+key); if(s){ var o=JSON.parse(s); mode=o.mode||'label'; titleKey=o.titleKey||''; fields=o.fields||null; suffix=o.suffix||''; } }catch(e){}
   if(!titleKey){ var c0=(def.columns||[]).filter(function(c){return !c.adminOnly&&c.key!=='status'&&!c.hideTable})[0]; titleKey=c0?c0.key:''; }
   var sizes=_modLabelSizes(key);
   var cur=sizes[mode]||sizes.label;
-  var d=Object.assign({mode:mode,titleKey:titleKey,fields:fields,sizes:sizes}, cur);
+  var d=Object.assign({mode:mode,titleKey:titleKey,suffix:suffix,fields:fields,sizes:sizes}, cur);
   d.layout=_modLabelLayout(key,mode);
   return d;
 }
 function _saveModLabelOpt(key,opt){
   try{
-    var save={mode:opt.mode,titleKey:opt.titleKey,fields:opt.fields,sizes:opt.sizes};
+    var save={mode:opt.mode,titleKey:opt.titleKey,suffix:opt.suffix||'',fields:opt.fields,sizes:opt.sizes};
     localStorage.setItem('modLabelOpt_'+key, JSON.stringify(save));
   }catch(e){}
 }
@@ -3621,7 +3621,7 @@ function _mlCurrentPreset(name){
     name:name, mode:opt.mode,
     w:opt.w,h:opt.h,pt:opt.pt,pr:opt.pr,pb:opt.pb,pl:opt.pl,
     gap:opt.gap,sheetMargin:opt.sheetMargin,border:opt.border,qr:opt.qr,orientation:opt.orientation,
-    titleKey:opt.titleKey, fields:opt.fields, layout:opt.layout
+    titleKey:opt.titleKey, suffix:opt.suffix||'', fields:opt.fields, layout:opt.layout
   };
 }
 function _mlPresetSaveNew(){
@@ -3675,6 +3675,7 @@ function _mlPresetLoad(){
   var a4=document.getElementById('ml_a4opts'); if(a4) a4.style.display=(mode==='a4')?'block':'none';
   _mlSetSizeInputs(window.__mlSizes[mode]);
   var t=document.getElementById('ml_title'); if(t&&p.titleKey) t.value=p.titleKey;
+  var sfx=document.getElementById('ml_suffix'); if(sfx){ sfx.value=p.suffix||''; if(sfx.value!==(p.suffix||'')) sfx.value=''; }
   document.querySelectorAll('.ml_field').forEach(function(cb){ cb.checked = p.fields ? (p.fields.indexOf(cb.value)>=0) : true; });
   if(p.layout) _saveModLabelLayout(key, mode, p.layout);
   else { try{ localStorage.removeItem('modLabelLayout_'+key+'_'+mode); }catch(e){} }
@@ -3716,6 +3717,14 @@ function _mlElemFit(p, plain, baseFs, labelWmm, labelHmm){
   return {css:css, fs:fs};
 }
 
+// 이름 뒤에 붙일 말 — opt.suffix: ''(없음) / '귀하' / '님' / '_pos'(직책 칸 값)
+function _mlPosCol(def){ return (def.columns||[]).find(function(c){return /^(직책|직위|직함|직급)$/.test(String(c.label||'').trim());})||null; }
+function _mlTitleSuffix(def,row,opt,titleV){
+  var s=opt.suffix||''; var t=String(titleV==null?'':titleV).trim();
+  if(!s||!t) return titleV;
+  if(s==='_pos'){ var pc=_mlPosCol(def); var pv=pc?String(row[pc.key]==null?'':row[pc.key]).trim():''; return pv?t+' '+pv:t; }
+  return t+' '+s;
+}
 function _modLabelHtml(def,row,opt){
   var allc=(def.columns||[]).filter(function(c){return c.key!=='status'&&!c.hideTable&&c.type!=='file'&&c.type!=='consent'});
   var hasFields=!!(opt.fields&&opt.fields.length);
@@ -3726,6 +3735,7 @@ function _modLabelHtml(def,row,opt){
   var url=_modViewUrl(def,row);
   var qr='https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=0&data='+encodeURIComponent(url);
   var titleV = opt.titleKey ? (row[opt.titleKey]||'') : (cols[0]?row[cols[0].key]:'');
+  titleV = _mlTitleSuffix(def,row,opt,titleV);
   // QR 크기: 지정(opt.qr>0)하면 그 mm로 정사각형, 아니면 자동. 라벨 안 넘치게 제한
   var qrmm = (opt.qr&&opt.qr>0) ? opt.qr : Math.min((opt.h-opt.pt-opt.pb), opt.w*0.34);
   qrmm = Math.max(8, Math.min(qrmm, opt.h-opt.pt-opt.pb, opt.w-opt.pl-opt.pr));
@@ -3849,7 +3859,14 @@ function popModLabel(key,singleId,idsList){
   h+='<div id="ml_a4info" style="font-size:11px;color:#64748b;margin-top:6px"></div>';
   h+='</div>';
 
-  h+='<label style="font-size:12px;color:#475569;display:block;margin-bottom:10px">크게 표시할 항목<select id="ml_title" style="width:100%;padding:6px;border:1px solid #cbd5e1;border-radius:6px" onchange="_modLabelPreview()">'+fieldOpts+'</select></label>';
+  h+='<div style="display:flex;gap:8px;margin-bottom:10px">';
+  h+='<label style="flex:2;font-size:12px;color:#475569">크게 표시할 항목<select id="ml_title" style="width:100%;padding:6px;border:1px solid #cbd5e1;border-radius:6px" onchange="_modLabelPreview()">'+fieldOpts+'</select></label>';
+  var _posCol=_mlPosCol(def), _sf=opt.suffix||'';
+  if(_sf==='_pos'&&!_posCol) _sf='';
+  h+='<label style="flex:1;font-size:12px;color:#475569">뒤에 붙일 말<select id="ml_suffix" style="width:100%;padding:6px;border:1px solid #cbd5e1;border-radius:6px" onchange="_modLabelPreview()">';
+  if(_posCol) h+='<option value="_pos"'+(_sf==='_pos'?' selected':'')+'>'+esc(_posCol.label)+' (예: 홍길동 회장)</option>';
+  [['','없음'],['귀하','귀하'],['님','님']].forEach(function(o){ h+='<option value="'+o[0]+'"'+(_sf===o[0]?' selected':'')+'>'+o[1]+'</option>'; });
+  h+='</select></label></div>';
   h+='<div style="font-size:12px;color:#475569;margin-bottom:10px">라벨에 표시할 항목 <span style="font-size:10px;color:#94a3b8">(체크한 것만, 컬럼 순서대로 · 위치/글씨크기는 「📐 배치 편집」)</span>';
   h+='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:5px">';
   allCols.forEach(function(c){
@@ -4022,6 +4039,7 @@ function _modLabelReadOpt(){
   return Object.assign({
     mode:mode,
     titleKey:(document.getElementById('ml_title')||{}).value||'',
+    suffix:(document.getElementById('ml_suffix')||{}).value||'',
     fields:fields,
     layout:layout,
     sizes:sizes
@@ -5467,6 +5485,7 @@ function _modStatDate(c, data){
 // ═══════════════════════════════════════════
 var EPOST_COLS=[
   {key:'nm',   label:'받는분',  type:'text', required:true, search:true, aliases:['이름','성명','수취인','받는사람','받는 분','수신인','수신자']},
+  {key:'pos',  label:'직책',    type:'text', search:true, aliases:['직위','직함','직급']},
   {key:'zip',  label:'우편번호',type:'text', search:true, placeholder:'12345', aliases:['우편','새우편번호','우편번호(5자리)']},
   {key:'addr1',label:'기본주소',type:'text', required:true, search:true, addrSearch:true, zipKey:'zip', detailKey:'addr2', placeholder:'주소검색을 누르거나 직접 입력', aliases:['주소','도로명주소','주소1','받는분주소','받는분 주소']},
   {key:'addr2',label:'상세주소',type:'text', placeholder:'동·호수 등', aliases:['주소2','상세','나머지주소']},
