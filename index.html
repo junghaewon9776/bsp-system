@@ -6874,6 +6874,7 @@ function popPur(){
   h+='<div id="purRowBox" style="margin-bottom:10px">';
   h+=purCardHtml(1,bo);
   h+='</div>';
+  h+='<div id="purGrandTot" style="text-align:right;margin:-4px 0 10px;font-size:14px;color:#334155"></div>';
   h+='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><button class="btn btn-g" onclick="addPurRow()">+ 항목 추가</button><button class="btn btn-b" style="padding:12px 32px;font-size:15px" onclick="addP()">등록하기</button></div>';
   openPopup(h,720);
 }
@@ -7298,10 +7299,10 @@ function purCardHtml(n,bo){
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-weight:700;color:#2563eb;font-size:13px">물품 '+n+'</span>'+rm+'</div>'+
     '<div style="margin-bottom:8px"><label style="font-size:12px;color:#666">물품명 *</label><input type="text" class="pIt" placeholder="예: 집게, 장갑, 쓰레기봉투" style="width:100%;font-size:15px;padding:10px"></div>'+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">'+
-      '<div><label style="font-size:12px;color:#666">수량</label><input type="number" inputmode="numeric" class="pQt" placeholder="개" style="width:100%;font-size:15px;padding:10px"></div>'+
-      '<div><label style="font-size:12px;color:#666">단가(원)</label><input type="text" inputmode="numeric" class="pUn" placeholder="원" style="width:100%;font-size:15px;padding:10px" oninput="this.value=this.value.replace(/[^0-9]/g,\'\').replace(/\\B(?=(\\d{3})+(?!\\d))/g,\',\')" onblur="calcPurCard(this)"></div>'+
+      '<div><label style="font-size:12px;color:#666">수량</label><input type="number" inputmode="numeric" class="pQt" placeholder="개" style="width:100%;font-size:15px;padding:10px" oninput="calcPurCard(this)"></div>'+
+      '<div><label style="font-size:12px;color:#666">단가(원)</label><input type="text" inputmode="numeric" class="pUn" placeholder="원" style="width:100%;font-size:15px;padding:10px" oninput="this.value=this.value.replace(/[^0-9]/g,\'\').replace(/\\B(?=(\\d{3})+(?!\\d))/g,\',\');calcPurCard(this)"></div>'+
     '</div>'+
-    '<div style="margin-bottom:8px"><label style="font-size:12px;color:#666">합계(원) *</label><input type="text" inputmode="numeric" class="pTot" placeholder="합계 금액" style="width:100%;font-size:15px;padding:10px;font-weight:600" oninput="this.value=this.value.replace(/[^0-9]/g,\'\').replace(/\\B(?=(\\d{3})+(?!\\d))/g,\',\')"></div>'+
+    '<div style="margin-bottom:8px"><label style="font-size:12px;color:#666">합계(원) * <span style="color:#94a3b8;font-weight:400">— 수량×단가 자동, 직접 고쳐도 됨</span></label><input type="text" inputmode="numeric" class="pTot" placeholder="합계 금액" style="width:100%;font-size:15px;padding:10px;font-weight:600" oninput="this.value=this.value.replace(/[^0-9]/g,\'\').replace(/\\B(?=(\\d{3})+(?!\\d))/g,\',\');_purGrandTotal()"></div>'+
     '</div>';
 }
 function addPurRow(){
@@ -7311,18 +7312,24 @@ function addPurRow(){
   div.innerHTML=purCardHtml(purRowCnt);
   box.appendChild(div.firstChild);
 }
-function rmPurRow(n){var r=document.getElementById("pRow"+n);if(r)r.remove()}
+function rmPurRow(n){var r=document.getElementById("pRow"+n);if(r)r.remove();_purGrandTotal()}
 function calcPurCard(el){
-  var card=el.closest(".pRowCard");
-  var qt=String(card.querySelector(".pQt").value||"").replace(/,/g,"");
-  var un=String(card.querySelector(".pUn").value||"").replace(/,/g,"");
-  if(qt&&un){
-    var total=parseInt(qt)*parseInt(un);
-    if(isFinite(total)){
-      // 천단위 콤마 적용
-      card.querySelector(".pTot").value=total.toString().replace(/\B(?=(\d{3})+(?!\d))/g,",");
-    }
+  var card=el.closest(".pRowCard"); if(!card) return;
+  var qt=parseFloat(String(card.querySelector(".pQt").value||"").replace(/,/g,""));
+  var un=parseFloat(String(card.querySelector(".pUn").value||"").replace(/,/g,""));
+  if(isFinite(qt)&&isFinite(un)){
+    var total=Math.round(qt*un);
+    // 천단위 콤마 적용
+    card.querySelector(".pTot").value=total.toString().replace(/\B(?=(\d{3})+(?!\d))/g,",");
   }
+  _purGrandTotal();
+}
+// 등록 화면 — 물품 전체 총 합계
+function _purGrandTotal(){
+  var el=document.getElementById("purGrandTot"); if(!el) return;
+  var sum=0, n=0;
+  document.querySelectorAll("#purRowBox .pTot").forEach(function(t){ var v=parseFloat(String(t.value||"").replace(/,/g,"")); if(isFinite(v)){ sum+=v; n++; } });
+  el.innerHTML=n?('🧮 총 합계 <b style="font-size:17px;color:#7c3aed">'+sum.toLocaleString()+'원</b> <span style="color:#94a3b8;font-size:12px">(물품 '+n+'개)</span>'):'';
 }
 // 기존 함수명 호환
 function calcPurRow(el){calcPurCard(el)}
@@ -7413,8 +7420,8 @@ function edPur(id){
     '<div><label>세출 중분류</label><select id="epExpMid" onchange="onPurExpMidChg(\'ep\')">'+actExpMidOpts(p.expTp||"",p.expMid||"")+'</select></div></div>'+
     '<div id="epBudgetInfo" style="padding:8px 12px;background:#f0f9ff;border:1px solid #bfdbfe;border-radius:6px;margin-top:8px;font-size:13px"></div>'+
     '<div class="frow fr2"><div><label>물품명</label><input type="text" id="epI" value="'+esc(p.it)+'"></div>'+
-    '<div><label>수량</label><input type="number" id="epQ" value="'+esc(p.qt)+'"></div></div>'+
-    '<div class="frow fr2"><div><label>단가(원)</label><input type="number" id="epU" value="'+esc(p.un)+'"></div>'+
+    '<div><label>수량</label><input type="number" id="epQ" value="'+esc(p.qt)+'" oninput="_epCalcTot()"></div></div>'+
+    '<div class="frow fr2"><div><label>단가(원)</label><input type="number" id="epU" value="'+esc(p.un)+'" oninput="_epCalcTot()"></div>'+
     '<div><label>합계(원)</label><input type="number" id="epT" value="'+esc(p.tot)+'"></div></div>'+
     '<div class="frow fr2" style="margin-top:10px"><div><label>사용 카드/통장</label><select id="epCard" onchange="_refreshEpPayM()">'+purCardOpts(p.card||"")+'</select></div>'+
     '<div><label>결제방법</label><select id="epPayM" onchange="_taxToggle(\'ep\')">'+incPayOpts(p.card||"", p.payM||"")+'</select></div></div>'+
@@ -7434,6 +7441,10 @@ function edPur(id){
     '<input type="text" id="epMgmtNo" placeholder="관리번호" value="'+esc(p.mgmtNo||"")+'" style="font-size:13px;padding:8px;margin-top:4px;width:100%"></div></div>'+
     '<div style="text-align:right;margin-top:14px"><button class="btn btn-b" onclick="savePur(\''+id+'\')">저장</button></div>');
   _taxToggle("ep");
+}
+function _epCalcTot(){
+  var q=parseFloat((document.getElementById("epQ")||{}).value), u=parseFloat((document.getElementById("epU")||{}).value);
+  var t=document.getElementById("epT"); if(t && isFinite(q) && isFinite(u)) t.value=Math.round(q*u);
 }
 async function savePur(id){
   var pv=function(i){var e=document.getElementById(i);return e?e.value:""};
