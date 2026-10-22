@@ -12486,7 +12486,7 @@ function dMem(){
     h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:8px">'+
        '<h3 style="margin:0"><span class="tag tag-b">'+esc(area)+"</span> "+ms.length+'명</h3>'+
        (SHARE_MEMS?'':'<button class="btn btn-s" style="background:#0ea5e9;color:#fff" onclick="popAddMem(\''+esc(area).replace(/\'/g,"\\'")+'\')">+ 이 소속에 추가</button>')+
-       '</div><div class="scrollx"><table><tr><th>No</th><th>이름</th><th>소속</th><th>연락처</th><th class="mobile-hide">생년월일</th><th class="mobile-hide">주소</th><th class="mobile-hide">전승구분</th><th>관리자</th><th></th></tr>';
+       '</div><div class="scrollx"><table><tr><th>No</th><th>이름</th><th>소속</th><th>연락처</th><th class="mobile-hide">생년월일</th><th class="mobile-hide">주소</th><th class="mobile-hide">비고</th><th>관리자</th><th></th></tr>';
     for(var i=0;i<ms.length;i++){
       var m=ms[i];
       var st=_memStatus(m);
@@ -12920,7 +12920,7 @@ function popAddMem(presetAr){
     '<div><label>생년월일</label><input type="date" id="amBd"></div></div>'+
     '<div class="frow fr1"><div><label>주소</label><input type="text" id="amAddr" placeholder="전남 영광군 법성면 ..."></div></div>'+
     '<div class="frow fr2"><div><label>우편번호</label><input type="text" id="amZip" maxlength="5" placeholder="12345" style="font-family:monospace"></div>'+
-    '<div><label>전승구분</label><input type="text" id="amTrad" placeholder="예: 용왕제.난장트기(제례)"></div></div>'+
+    '<div><label>비고</label><input type="text" id="amTrad" placeholder="메모"></div></div>'+
     '<div class="frow fr2"><div><label>입회일자</label><input type="date" id="amJoinDt"></div>'+
     '<div><label>탈퇴일자</label><input type="date" id="amLeftDt"></div></div>'+
     '<div class="frow fr1"><div><label style="display:flex;align-items:center;gap:8px;padding:6px 0"><input type="checkbox" id="amAdm" style="width:18px;height:18px"> <span style="font-weight:600;color:#2563eb">관리자 표시</span> <span style="font-size:11px;color:#888">(소속은 그대로, 표시만 추가 — 문자 발송용)</span></label></div></div>'+
@@ -12967,7 +12967,7 @@ function edM(id){
     '<div><label>생년월일</label><input type="date" id="emBd" value="'+esc(m.bd||"")+'"></div></div>'+
     '<div class="frow fr1"><div><label>주소</label><input type="text" id="emAddr" value="'+esc(m.addr||"")+'"></div></div>'+
     '<div class="frow fr2"><div><label>우편번호</label><input type="text" id="emZip" maxlength="5" value="'+esc(m.zip||"")+'" style="font-family:monospace"></div>'+
-    '<div><label>전승구분</label><input type="text" id="emTrad" value="'+esc(m.trad||"")+'"></div></div>'+
+    '<div><label>비고</label><input type="text" id="emTrad" value="'+esc(m.trad||"")+'"></div></div>'+
     '<div class="frow fr2"><div><label>입회일자</label><input type="date" id="emJoinDt" value="'+esc(m.joinDt||"")+'"></div>'+
     '<div><label>탈퇴일자</label><input type="date" id="emLeftDt" value="'+esc(m.leftDt||"")+'"></div></div>'+
     '<div class="frow fr1"><div><label style="display:flex;align-items:center;gap:8px;padding:6px 0"><input type="checkbox" id="emAdm"'+(m.adm?' checked':'')+' style="width:18px;height:18px"> <span style="font-weight:600;color:#2563eb">관리자 표시</span> <span style="font-size:11px;color:#888">(소속은 그대로, 표시만 — 문자 발송용)</span></label></div></div>'+
@@ -13623,7 +13623,7 @@ async function _fbSyncApply(){
     var a=pick[i]; showLoading("맞추는 중 ("+(i+1)+"/"+pick.length+")");
     try{
       var r={ok:true};
-      if(a.t==="add") r=await api("addMem",{nm:a.f.nm, tel:a.f.tel||"", bd:a.f.tel||"", ar:a.f.role||"회원", joinDt:(a.f.startYm||_fbStartYm())+"-01", leftDt:""});
+      if(a.t==="add") r=await api("addMem",{nm:a.f.nm, tel:a.f.tel||"", ar:a.f.role||"회원", joinDt:(a.f.startYm||_fbStartYm())+"-01", leftDt:""});
       else if(a.t==="left"||a.t==="unleft") r=await api("updateMem",{id:a.mm.id, leftDt:a.f.endYm?_ymLastDay(a.f.endYm):""});
       else if(a.t==="roleAll"){ for(var q=0;q<a.items.length;q++){ var y=a.items[q], old=String(y.mm.ar||""), nar=old.trim()?old.replace(old.trim(),y.f.role):y.f.role; showLoading("직책 맞추는 중 — "+y.f.nm); var r3=await api("updateMem",{id:y.mm.id, ar:nar}); if(!(r3&&r3.ok)) fail++; } }
       else if(a.t==="joinAll"||a.t==="telAll"){ for(var j=0;j<a.items.length;j++){ var x=a.items[j]; showLoading("맞추는 중 — "+x.f.nm); var rr=await api("updateMem",a.t==="joinAll"?{id:x.mm.id, joinDt:x.f.startYm+"-01"}:{id:x.mm.id, tel:x.f.tel}); if(!(rr&&rr.ok)) fail++; } }
@@ -20729,7 +20729,7 @@ function expMem(){
       주소:m.addr||"",
       우편번호:m.zip||"",
       연락처:m.tel||"",
-      전승구분:m.trad||"",
+      비고:m.trad||"",
       관리자:m.adm?"O":""
     };
   })),"인원관리");
@@ -20911,7 +20911,7 @@ async function tmplMem(){
   if(typeof XLSX=="undefined"){toast("엑셀 라이브러리 로딩중",true);return}
   var wb=XLSX.utils.book_new();
   tmplSheet(wb,"인원관리",
-    ["No","소속","이름","생년월일","주소","우편번호","연락처","전승구분","관리자"],
+    ["No","소속","이름","생년월일","주소","우편번호","연락처","비고","관리자"],
     [[1,"제전위원회","박종현","650616","전남 영광군 법성면 진굴비길 88-1","57009","010-9850-9279","용왕제.난장트기(제례.소도구)",""],
      [2,"제전위원회","강원영","670723","전남 영광군 법성면 굴비로4길 14","57014","010-4911-4022","용왕제.난장트기(제례)","O"],
      [3,"공연단","이영희","720305","전남 영광군 법성면 영광로 327","57021","010-3456-7890","민요","O"]],
@@ -21558,7 +21558,7 @@ async function doImp(inp){
             bd:String(x["생년월일"]||""),
             addr:String(x["주소"]||""),
             zip:String(x["우편번호"]||""),
-            trad:String(x["전승구분"]||""),
+            trad:String(x["비고"]||x["전승구분"]||""),
             adm:(admStr==="O"||admStr==="Y"||admStr==="TRUE"||admStr==="1"||admStr==="관리자")
           });
         }
