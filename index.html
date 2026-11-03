@@ -498,6 +498,7 @@ label{display:block;font-size:10px;color:#999;margin-bottom:3px}
 <script src="tabperm.js?v=20261103u"></script>
 <script>var TH_BASE = { c1: "#2563eb", c2: "#1d4ed8", bar: "#2563eb", accent: "#2563eb", label: "🔵 기본 (파란색)", ph: "예: 함께 만드는 법성포, 법성포청년회", sky: false };</script>
 <script src="theme.js?v=20261103b"></script>
+<script src="seal.js?v=20261103a"></script>
 
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" onerror="console.warn('XLSX CDN load failed')"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js" onerror="console.warn('xlsx-js-style CDN load failed')"></script>
@@ -542,6 +543,7 @@ label{display:block;font-size:10px;color:#999;margin-bottom:3px}
 var SYS_YEAR      = "2026";                   // 년도
 var SYS_NAME      = "법성포청년회";            // 행사명
 var SYS_PARENT    = "법성포청년회";             // 주관단체 (SMS 서명, 지출결의서 발행처 등에 사용)
+var SYS_LOGO      = "logo.png?v=1";              // 로고 그림 (로그인 화면·상단바) — 비우면 아이콘 이모지
 var SYS_ICON      = "🏛️";                    // 상단 아이콘 이모지 (예: 🎎/🌿/🎭/🏛️)
 var SYS_TAGLINE   = "방역·예산·운영 통합 관리";   // 상단 부제
 var SYS_LOGIN_SUB = SYS_NAME+" | 방역·예산·운영 통합 관리"; // 로그인 화면 부제
@@ -649,9 +651,9 @@ function nowKST(full){ var d=new Date(); var s=todayKST()+" "+("0"+d.getHours())
 document.addEventListener("DOMContentLoaded", function(){
   try{
     document.title = SYS_TITLE;
-    var lh=document.querySelector("#loginBox h1"); if(lh) lh.textContent=SYS_ICON+" "+SYS_TITLE;
+    var lh=document.querySelector("#loginBox h1"); if(lh){ lh.textContent=SYS_ICON+" "+SYS_TITLE; if(SYS_LOGO) lh.innerHTML='<img src="'+SYS_LOGO+'" alt="" style="display:block;height:76px;margin:0 auto 10px">'+esc(SYS_TITLE); }
     var lp=document.querySelector("#loginBox p");  if(lp) lp.textContent=SYS_LOGIN_SUB;
-    var mh=document.querySelector(".topBar h2");  if(mh) mh.textContent=SYS_ICON+" "+SYS_TITLE;
+    var mh=document.querySelector(".topBar h2");  if(mh){ mh.textContent=SYS_ICON+" "+SYS_TITLE; if(SYS_LOGO) mh.innerHTML='<img src="'+SYS_LOGO+'" alt="" style="height:30px;vertical-align:-7px;margin-right:7px;background:#fff;border-radius:50%;padding:2px">'+esc(SYS_TITLE); }
     var ms=document.querySelector(".topBar small"); if(ms) ms.textContent=SYS_SUBTITLE;
     if (window.IS_FEE_MODE) { _fbPubInit(); return; }
 
@@ -20686,6 +20688,7 @@ function dAcct(){
     }
     h+='</table></div></div>';
   }
+  if(typeof _sealCard==='function') h+=_sealCard();
   h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:8px"><h3 style="margin:0">부서 및 담당자 계정</h3><div style="display:flex;gap:6px;flex-wrap:wrap">'+(_isGlobalAdm()?'<button class="btn btn-g btn-s" onclick="popAddArea()">+ 부서 추가</button> <button class="btn-out btn-tp btn-s" onclick="tmplAcct()">📋 양식</button> <button class="btn-out btn-ex btn-s" onclick="expAcct()">📥 엑셀 내보내기</button> <button class="btn-out btn-im btn-s" onclick="impClick(\'acct\')">📤 엑셀 가져오기</button>':'')+(isSuper()?' <button class="btn btn-s" style="background:#10b981;color:#fff" onclick="openSheet(\'Users\')">📊 스프레드시트 열기</button>':'')+'</div></div>';
   h+='<div style="font-size:11px;color:#888;margin-bottom:8px">한 부서에 담당자를 여러 명 추가할 수 있습니다. 모두 동일 권한(해당 부서 자료 등록/수정)을 갖습니다. 예: 사무국 · 홍보팀 · 운영팀 · 진행팀 · 재무팀</div>';
   h+='<div class="scrollx"><table><tr><th>부서</th><th>아이디</th><th class="mobile-hide">비번</th><th class="mobile-hide">이름</th><th class="mobile-hide">연락처</th><th>관리</th></tr>';
