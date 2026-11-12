@@ -19768,6 +19768,14 @@ function dReport(){
   h+='<button class="btn" style="background:#15803d;color:#fff;flex:1" onclick="event.stopPropagation();rptSettleExcel()">📥 엑셀 다운로드</button></div>';
   h+='</div>';
 
+  // 바) 🏛 정산서 (관공서 문서 양식) — 회비통장 정산서와 같은 모양
+  h+='<div class="card" style="border:2px solid #111;cursor:pointer" onclick="RPT_SHOW=(RPT_SHOW===\'gov\'?\'\':\'gov\');draw()">';
+  h+='<div style="font-size:13px;color:#111;font-weight:700;margin-bottom:4px">바) '+(RPT_SHOW==="gov"?"▲":"▼")+'</div>';
+  h+='<h3 style="margin:0 0 8px">🏛 정산서 (문서 양식)</h3>';
+  h+='<div class="mut" style="font-size:12px;margin-bottom:10px">결재란 · □ 집행현황(예산액·집행액·잔액) · □ 집행내역(비목·항목·내역)</div>';
+  h+='<button class="btn" style="background:#111827;color:#fff;width:100%" onclick="event.stopPropagation();rptGovPrint()">🖨️ 인쇄 / PDF</button>';
+  h+='</div>';
+
   h+='</div>';
 
   // 데이터 상태 요약
@@ -19793,6 +19801,7 @@ function dReport(){
   else if(RPT_SHOW==="expCat") h+=_rptExpCatPreview();
   else if(RPT_SHOW==="expSrc") h+=_rptExpSrcPreview();
   else if(RPT_SHOW==="settle") h+=_rptSettlePreview();
+  else if(RPT_SHOW==="gov") h+='<div class="card" style="margin-top:12px;border-left:4px solid #111"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px"><h3 style="margin:0">🏛 정산서 미리보기</h3><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn" style="background:#0f766e;color:#fff;font-weight:700" onclick="rptGovRoles()">✍ 결재란 바꾸기</button><button class="btn" style="background:#111827;color:#fff;font-weight:700" onclick="rptGovPrint()">🖨️ 인쇄 / PDF</button></div></div><div style="overflow:auto;background:#fff;border:1px solid #e5e7eb;padding:14px">'+_rptGovHtml()+'</div></div>';
 
   return h;
 }
@@ -20368,6 +20377,114 @@ function _rptSettlePreview(){
   }
   h+='</div></div>';
   return h;
+}
+
+// ===== 바) 🏛 정산서 (관공서 문서 양식) =====
+//   결재란(빈칸 — 인쇄해서 펜 서명) · □ 집행현황: 세입(예산·수입) / 세출 대분류별(예산·집행·잔액)
+//   □ 집행내역: - 수입 / - 지출 — 비목(대분류) · 항목(중분류) · 금액 · 합계 · 내역 · 비고  (같은 대분류는 칸 병합)
+function _rptGovHtml(){
+  var d=_settleData();
+  var B='border:1px solid #000;padding:4px 6px', C=B+';text-align:center', N=B+';text-align:right', H=C+';background:#f1f5f9;font-weight:700';
+  var pc=function(v,t){ return t?Math.round(v/t*1000)/10:0; }, dash=function(v){ return v?fm(v):'-'; };
+  var evt=(typeof CUR_EVT!=="undefined"&&CUR_EVT&&CUR_EVT.nm)||"";
+  var ttl=(evt||(typeof SYS_NAME!=="undefined"?SYS_NAME:""))+" 정산서";
+  // 결재란 — 회비통장 정산서와 같은 결재선 직책
+  var R=_rgRoles(), bd='border:1.5px solid #111;text-align:center;vertical-align:middle;padding:0', W=26+R.length*84;
+  var h='<div style="font-family:\'Malgun Gothic\',sans-serif;color:#000">';
+  h+='<div style="display:flex;justify-content:flex-end;margin:0 0 14px"><table style="border-collapse:collapse;table-layout:fixed;width:'+W+'px"><colgroup><col style="width:26px">'+R.map(function(){ return '<col style="width:84px">'; }).join('')+'</colgroup>'
+    +'<tr><td rowspan="2" style="'+bd+';font-size:13px;font-weight:800;line-height:1.6">결<br><br>재</td>'+R.map(function(x){ return '<td style="'+bd+';height:28px;font-size:13px;font-weight:700;white-space:nowrap">'+esc(x)+'</td>'; }).join('')+'</tr>'
+    +'<tr>'+R.map(function(){ return '<td style="'+bd+';height:62px"></td>'; }).join('')+'</tr></table></div>';
+  h+='<div style="text-align:center;font-size:26px;font-weight:900;margin:6px 0 14px;letter-spacing:1px">'+esc(ttl)+'</div>';
+
+  // 세출 예산: 대분류 planAm (없으면 중분류 합), 중분류 planAm
+  var bgBig={}, bgMid={}, order=[];
+  (expBG||[]).forEach(function(r){ var t=r.tp||"(미분류)"; if(order.indexOf(t)<0) order.push(t);
+    if(!r.mid) bgBig[t]=(bgBig[t]||0)+pn(r.planAm); else { bgMid[t+"|"+r.mid]=(bgMid[t+"|"+r.mid]||0)+pn(r.planAm); if(!(t+"|__s" in bgMid)) bgMid[t+"|__s"]=0; bgMid[t+"|__s"]+=pn(r.planAm); } });
+  var budOf=function(t){ return bgBig[t]!=null&&bgBig[t]>0?bgBig[t]:(bgMid[t+"|__s"]||0); };
+  Object.keys(d.expByTp).forEach(function(t){ if(order.indexOf(t)<0) order.push(t); });
+  var incPlanTp={}; (inc||[]).forEach(function(r){ var t=r.tp||"(미분류)"; incPlanTp[t]=(incPlanTp[t]||0)+pn(r.am); });
+  var budT=0; order.forEach(function(t){ budT+=budOf(t); });
+
+  // □ 집행현황
+  h+='<div style="font-weight:800;font-size:15px;margin:8px 0 2px">□ 집행현황</div><div style="text-align:right;font-size:11.5px">(단위:원)</div>';
+  h+='<table style="border-collapse:collapse;width:100%;font-size:13px"><tr><td style="'+H+'">구  분</td><td style="'+H+'">예 산 액</td><td style="'+H+'">수 입 액</td><td style="'+H+'">집 행 액</td><td style="'+H+'">집행률(%)</td><td style="'+H+'">집행잔액</td><td style="'+H+'">비 고<br>(잔액사유)</td></tr>';
+  h+='<tr style="font-weight:800"><td style="'+C+'">계</td><td style="'+N+'">'+dash(budT)+'</td><td style="'+N+'">'+dash(d.incTotal)+'</td><td style="'+N+'">'+dash(d.expTotal)+'</td><td style="'+C+'">'+pc(d.expTotal,budT||d.incTotal)+'</td><td style="'+N+'">'+fm(d.incTotal-d.expTotal)+'</td><td style="'+B+'">수입액 − 집행액</td></tr>';
+  order.forEach(function(t){ var bu=budOf(t), ex=d.expByTp[t]||0; if(!bu&&!ex) return;
+    h+='<tr><td style="'+C+'">'+esc(t)+'</td><td style="'+N+'">'+dash(bu)+'</td><td style="'+N+'">-</td><td style="'+N+'">'+dash(ex)+'</td><td style="'+C+'">'+(bu?pc(ex,bu):'-')+'</td><td style="'+N+'">'+(bu?fm(bu-ex):'-')+'</td><td style="'+B+'"></td></tr>'; });
+  h+='</table>';
+
+  // 세입 현황 (재원별)
+  var incKeys=Object.keys(incPlanTp); Object.keys(d.incByTp).forEach(function(t){ if(incKeys.indexOf(t)<0) incKeys.push(t); });
+  if(incKeys.length){
+    h+='<div style="font-weight:700;margin:12px 0 2px">- 세입 (재원별)</div><div style="text-align:right;font-size:11.5px">(단위:원)</div>';
+    h+='<table style="border-collapse:collapse;width:100%;font-size:13px"><tr><td style="'+H+'">재  원</td><td style="'+H+'">예 산 액</td><td style="'+H+'">수 입 액</td><td style="'+H+'">%</td><td style="'+H+'">차  액</td><td style="'+H+'">비 고</td></tr>';
+    var ipT=0; incKeys.forEach(function(t){ ipT+=incPlanTp[t]||0; });
+    h+='<tr style="font-weight:800"><td style="'+C+'">계</td><td style="'+N+'">'+dash(ipT)+'</td><td style="'+N+'">'+dash(d.incTotal)+'</td><td style="'+C+'">'+(ipT?pc(d.incTotal,ipT):'-')+'</td><td style="'+N+'">'+fm(d.incTotal-ipT)+'</td><td style="'+B+'"></td></tr>';
+    incKeys.forEach(function(t){ var pl=incPlanTp[t]||0, ac=d.incByTp[t]||0;
+      h+='<tr><td style="'+C+'">'+esc(t)+'</td><td style="'+N+'">'+dash(pl)+'</td><td style="'+N+'">'+dash(ac)+'</td><td style="'+C+'">'+(pl?pc(ac,pl):'-')+'</td><td style="'+N+'">'+fm(ac-pl)+'</td><td style="'+B+'"></td></tr>'; });
+    h+='</table>';
+  }
+
+  // □ 집행내역
+  var sec=function(title,rows,total){
+    var G={}, GO=[];
+    rows.forEach(function(r){ var t=r.tp||"(미분류)", m=r.sub||"-"; if(!G[t]){ G[t]={t:0,mids:{},mo:[]}; GO.push(t); } G[t].t+=r.am; if(!G[t].mids[m]){ G[t].mids[m]={t:0,list:[]}; G[t].mo.push(m); } G[t].mids[m].t+=r.am; G[t].mids[m].list.push(r); });
+    var s='<div style="font-weight:700;margin:12px 0 2px">- '+title+'</div><div style="text-align:right;font-size:11.5px">(단위:원)</div><table style="border-collapse:collapse;width:100%;font-size:12.5px">';
+    s+='<tr><td style="'+H+';width:15%">비 목</td><td style="'+H+';width:15%">항 목</td><td style="'+H+';width:12%">'+title+' 금액</td><td style="'+H+';width:12%">합계</td><td style="'+H+'">'+title+' 내역</td><td style="'+H+';width:9%">비고</td></tr>';
+    s+='<tr style="font-weight:800"><td style="'+C+'" colspan="2">총  계</td><td style="'+N+'">'+fm(total)+'</td><td style="'+B+'"></td><td style="'+B+'"></td><td style="'+B+'"></td></tr>';
+    if(!GO.length) s+='<tr><td colspan="6" style="'+C+';color:#64748b">내역 없음</td></tr>';
+    GO.forEach(function(t){ var g=G[t];
+      g.mo.forEach(function(m,j){ var x=g.mids[m], grp={}, go=[], pays={};
+        x.list.forEach(function(r){ var k=r.ds||"(내역 없음)"; if(!grp[k]){ grp[k]={n:0,v:0}; go.push(k); } grp[k].n++; grp[k].v+=r.am; if(r.pay&&r.pay!=="(미지정)") pays[r.pay]=1; });
+        var lines=go.map(function(k){ var v=grp[k]; return esc(k)+(v.n>1?' ('+v.n+'건)':'')+' : '+fm(v.v)+'원'; });
+        s+='<tr>';
+        if(j===0) s+='<td rowspan="'+g.mo.length+'" style="'+C+';vertical-align:middle;font-weight:700">'+esc(t)+'</td>';
+        s+='<td style="'+C+';vertical-align:middle">'+esc(m)+'</td><td style="'+N+';vertical-align:middle">'+fm(x.t)+'</td>';
+        if(j===0) s+='<td rowspan="'+g.mo.length+'" style="'+N+';vertical-align:middle;font-weight:700">'+fm(g.t)+'</td>';
+        s+='<td style="'+B+';font-size:11.5px;line-height:1.5">'+lines.join('<br>')+'</td><td style="'+C+';vertical-align:middle;font-size:11px">'+esc(Object.keys(pays).join(', '))+'</td></tr>';
+      });
+    });
+    return s+'</table>';
+  };
+  h+='<div style="font-weight:800;font-size:15px;margin:16px 0 2px">□ 집행내역</div>';
+  if(d.incRows.length) h+=sec("수입",d.incRows,d.incTotal);
+  h+=sec("지출",d.expRows,d.expTotal);
+  h+='<div style="text-align:center;font-size:15px;margin-top:26px;line-height:2">위와 같이 정산합니다.<br>'+today().replace(/-/g,". ")+'.<br><b style="font-size:18px;letter-spacing:4px">'+esc(typeof SYS_NAME!=="undefined"?SYS_NAME:"")+'</b></div>';
+  // 붙임: 세부 집행내역 — 한 건씩 날짜순 (언제·어디에·무엇을·어떻게 냈는지)
+  var det=function(title,rows,total){
+    var s='<div style="font-weight:700;margin:12px 0 2px">- '+title+' 세부내역 ('+rows.length+'건)</div><table style="border-collapse:collapse;width:100%;font-size:12px">';
+    s+='<tr><td style="'+H+';width:6%">번호</td><td style="'+H+';width:11%">일 자</td><td style="'+H+';width:14%">비 목</td><td style="'+H+';width:14%">항 목</td><td style="'+H+'">내  역</td><td style="'+H+';width:14%">결제수단</td><td style="'+H+';width:12%">금 액</td></tr>';
+    rows.forEach(function(r,i){ s+='<tr><td style="'+C+'">'+(i+1)+'</td><td style="'+C+';white-space:nowrap">'+esc(String(r.dt||"").slice(0,10))+'</td><td style="'+C+'">'+esc(r.tp||"")+'</td><td style="'+C+'">'+esc(r.sub||"")+'</td><td style="'+B+'">'+esc(r.ds||"")+(r.src==="지출"?' <span style="font-size:10.5px;color:#475569">(기타지출)</span>':'')+'</td><td style="'+C+';font-size:11px">'+esc(r.pay&&r.pay!=="(미지정)"?r.pay:"")+'</td><td style="'+N+'">'+fm(r.am)+'</td></tr>'; });
+    s+='<tr style="font-weight:800"><td style="'+C+'" colspan="6">합  계</td><td style="'+N+'">'+fm(total)+'</td></tr>';
+    return s+'</table>';
+  };
+  h+='<div style="page-break-before:always;font-weight:800;font-size:15px;margin:26px 0 2px">□ 붙임 : 세부 집행내역 (일자순)</div><div style="text-align:right;font-size:11.5px">(단위:원)</div>';
+  if(d.incRows.length) h+=det("수입",d.incRows,d.incTotal);
+  h+=det("지출",d.expRows,d.expTotal);
+  var preN=0, preT=0; (purs||[]).forEach(function(p){ if(_isPre(p)){ preN++; preT+=pn(p.tot); } });
+  if(preN) h+='<div style="font-size:12px;margin-top:6px">※ 결제 전(계약·예정) '+preN+'건 '+fm(preT)+'원은 집행액에 넣지 않았어요.</div>';
+  return h+'</div>';
+}
+// 결재란 직책 — 세입세출 정산서 전용 (회비통장 결재선과 따로). /main/RptGovRoles = ["담당","사무국장",...]
+var _RGR = null;
+function _rgRoles(){
+  if(_RGR===null){ _RGR=false; fbDb.ref('/main/RptGovRoles').once('value').then(function(s){ var v=s.val(); _RGR=Array.isArray(v)&&v.length?v:false; if(_RGR) draw(); }).catch(function(){}); }
+  if(_RGR&&_RGR.length) return _RGR;
+  return (typeof _bkEsgRoles==="function")?_bkEsgRoles():["재무국장","사무국장","감사","회장"];
+}
+function rptGovRoles(){
+  var cur=_rgRoles().join(", ");
+  var v=prompt("결재란에 들어갈 직책을 왼쪽부터 쉼표(,)로 적어 주세요\n예: 담당, 사무국장, 감사, 회장\n(비우고 확인 = 회비통장 결재선과 같게)", cur); if(v===null) return;
+  var L=String(v).split(/[,，、\n]+/).map(function(x){ return x.trim(); }).filter(Boolean).slice(0,8);
+  fbDb.ref('/main/RptGovRoles').set(L.length?L:null).then(function(){ _RGR=L.length?L:false; toast("✍ 결재란 바꿨어요"+(L.length?" — "+L.join(" · "):" (회비통장과 같게)")); draw(); })
+    .catch(function(e){ toast("저장 실패: "+(e.message||e),true); });
+}
+function rptGovPrint(){
+  var w=window.open('','_blank','width=900,height=1000'); if(!w){ toast("팝업이 막혔어요 — 허용 후 다시",true); return; }
+  w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+esc(((typeof CUR_EVT!=="undefined"&&CUR_EVT&&CUR_EVT.nm)||SYS_NAME)+' 정산서')+'</title><style>@page{size:A4;margin:12mm}body{font-family:"Malgun Gothic","맑은 고딕",sans-serif;margin:0;padding:16px;color:#000}table{page-break-inside:auto}tr{page-break-inside:avoid}@media print{body{padding:0}.no-print{display:none}td[style*="#f1f5f9"]{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style></head><body>'
+    +'<div class="no-print" style="text-align:right;margin-bottom:10px"><button onclick="window.print()" style="padding:8px 20px;font-size:14px;background:#111827;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:700">🖨️ 인쇄 / PDF</button></div>'
+    +_rptGovHtml()+'</body></html>');
+  w.document.close();
 }
 
 function rptSettlePrint(){
