@@ -19771,8 +19771,8 @@ function dReport(){
   // 바) 🏛 정산서 (관공서 문서 양식) — 회비통장 정산서와 같은 모양
   h+='<div class="card" style="border:2px solid #111;cursor:pointer" onclick="RPT_SHOW=(RPT_SHOW===\'gov\'?\'\':\'gov\');draw()">';
   h+='<div style="font-size:13px;color:#111;font-weight:700;margin-bottom:4px">바) '+(RPT_SHOW==="gov"?"▲":"▼")+'</div>';
-  h+='<h3 style="margin:0 0 8px">🏛 정산서 (문서 양식)</h3>';
-  h+='<div class="mut" style="font-size:12px;margin-bottom:10px">결재란 · □ 집행현황(예산액·집행액·잔액) · □ 집행내역(비목·항목·내역)</div>';
+  h+='<h3 style="margin:0 0 8px">🏛 문서 양식 보고서</h3>';
+  h+='<div class="mut" style="font-size:12px;margin-bottom:10px">정산서 · 항목별 · 재원별 · 결제수단별 · 거래처별 · 증빙 점검표 · 일자별 — 골라서 인쇄</div>';
   h+='<button class="btn" style="background:#111827;color:#fff;width:100%" onclick="event.stopPropagation();rptGovPrint()">🖨️ 인쇄 / PDF</button>';
   h+='</div>';
 
@@ -19801,7 +19801,7 @@ function dReport(){
   else if(RPT_SHOW==="expCat") h+=_rptExpCatPreview();
   else if(RPT_SHOW==="expSrc") h+=_rptExpSrcPreview();
   else if(RPT_SHOW==="settle") h+=_rptSettlePreview();
-  else if(RPT_SHOW==="gov") h+='<div class="card" style="margin-top:12px;border-left:4px solid #111"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px"><h3 style="margin:0">🏛 정산서 미리보기</h3><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn" style="background:#0f766e;color:#fff;font-weight:700" onclick="rptGovRoles()">✍ 결재란 바꾸기</button><button class="btn" style="background:#111827;color:#fff;font-weight:700" onclick="rptGovPrint()">🖨️ 인쇄 / PDF</button></div></div><div style="overflow:auto;background:#fff;border:1px solid #e5e7eb;padding:14px">'+_rptGovHtml()+'</div></div>';
+  else if(RPT_SHOW==="gov") h+='<div class="card" style="margin-top:12px;border-left:4px solid #111"><h3 style="margin:0 0 10px">🏛 문서 양식 보고서</h3>'+_rgToolbar()+'<div style="overflow:auto;background:#fff;border:1px solid #e5e7eb;padding:14px">'+_rptGovHtml()+'</div></div>';
 
   return h;
 }
@@ -20382,19 +20382,13 @@ function _rptSettlePreview(){
 // ===== 바) 🏛 정산서 (관공서 문서 양식) =====
 //   결재란(빈칸 — 인쇄해서 펜 서명) · □ 집행현황: 세입(예산·수입) / 세출 대분류별(예산·집행·잔액)
 //   □ 집행내역: - 수입 / - 지출 — 비목(대분류) · 항목(중분류) · 금액 · 합계 · 내역 · 비고  (같은 대분류는 칸 병합)
-function _rptGovHtml(){
+function _rgSettle(){
   var d=_settleData();
   var B='border:1px solid #000;padding:4px 6px', C=B+';text-align:center', N=B+';text-align:right', H=C+';background:#f1f5f9;font-weight:700';
   var pc=function(v,t){ return t?Math.round(v/t*1000)/10:0; }, dash=function(v){ return v?fm(v):'-'; };
   var evt=(typeof CUR_EVT!=="undefined"&&CUR_EVT&&CUR_EVT.nm)||"";
-  var ttl=(evt||(typeof SYS_NAME!=="undefined"?SYS_NAME:""))+" 정산서";
-  // 결재란 — 회비통장 정산서와 같은 결재선 직책
-  var R=_rgRoles(), bd='border:1.5px solid #111;text-align:center;vertical-align:middle;padding:0', W=26+R.length*84;
-  var h='<div style="font-family:\'Malgun Gothic\',sans-serif;color:#000">';
-  h+='<div style="display:flex;justify-content:flex-end;margin:0 0 14px"><table style="border-collapse:collapse;table-layout:fixed;width:'+W+'px"><colgroup><col style="width:26px">'+R.map(function(){ return '<col style="width:84px">'; }).join('')+'</colgroup>'
-    +'<tr><td rowspan="2" style="'+bd+';font-size:13px;font-weight:800;line-height:1.6">결<br><br>재</td>'+R.map(function(x){ return '<td style="'+bd+';height:28px;font-size:13px;font-weight:700;white-space:nowrap">'+esc(x)+'</td>'; }).join('')+'</tr>'
-    +'<tr>'+R.map(function(){ return '<td style="'+bd+';height:62px"></td>'; }).join('')+'</tr></table></div>';
-  h+='<div style="text-align:center;font-size:26px;font-weight:900;margin:6px 0 14px;letter-spacing:1px">'+esc(ttl)+'</div>';
+  var ttl=(evt||(typeof SYS_NAME!=="undefined"?SYS_NAME:""))+(RG_FOCUS?" "+RG_FOCUS:"")+" 정산서";
+  var h=_rgHead(ttl);
 
   // 세출 예산: 대분류 planAm (없으면 중분류 합), 중분류 planAm
   var bgBig={}, bgMid={}, order=[];
@@ -20458,13 +20452,224 @@ function _rptGovHtml(){
     s+='<tr style="font-weight:800"><td style="'+C+'" colspan="6">합  계</td><td style="'+N+'">'+fm(total)+'</td></tr>';
     return s+'</table>';
   };
+  if(RG_ATT){
   h+='<div style="page-break-before:always;font-weight:800;font-size:15px;margin:26px 0 2px">□ 붙임 : 세부 집행내역 (일자순)</div><div style="text-align:right;font-size:11.5px">(단위:원)</div>';
   if(d.incRows.length) h+=det("수입",d.incRows,d.incTotal);
   h+=det("지출",d.expRows,d.expTotal);
+  }
   var preN=0, preT=0; (purs||[]).forEach(function(p){ if(_isPre(p)){ preN++; preT+=pn(p.tot); } });
   if(preN) h+='<div style="font-size:12px;margin-top:6px">※ 결제 전(계약·예정) '+preN+'건 '+fm(preT)+'원은 집행액에 넣지 않았어요.</div>';
   return h+'</div>';
 }
+// ===== 🏛 문서 양식 보고서 모음 — 골라서 뽑기 =====
+//   RG_KIND: 보고서 종류 · RG_FOCUS: 대분류 하나만 집중(비우면 전체) · RG_SIGN 결재란 · RG_ATT 붙임
+//   목적·개요 글은 행사마다 /main/RptGovDoc/{행사id} = {purpose, period, place, ppl, host, note}
+var RG_KIND="settle", RG_FOCUS="", RG_SIGN=true, RG_ATT=true;
+var RG_LIST=[
+  ["settle","🏛 정산서","결재란 · 집행현황 · 세입 · 집행내역(비목·항목) · 붙임 세부내역 — 기본 정산 문서"],
+  ["item","📊 항목별 집행보고","어느 항목에 얼마가 들어갔나 — 비목·항목마다 예산·집행·잔액·집행률·건수·주요 내역"],
+  ["src","💰 재원별 집행보고","회비·지원금 같은 재원(돈 나온 곳)마다 들어온 돈과 어디에 썼는지"],
+  ["pay","💳 결제수단별 집행보고","카드·계좌이체·현금마다 얼마 썼는지 (보탬e·통장 맞춰 볼 때)"],
+  ["vendor","🏪 거래처별 집행보고","어느 업체에 얼마를 냈는지 — 업체별 합계·건수·내역"],
+  ["evid","🧾 증빙 점검표","건마다 영수증·세금계산서·사진이 있는지 ○ / ✕ — 빠진 것 한눈에"],
+  ["date","📅 일자별 집행내역","날짜 순서대로 한 건씩 — 수입·지출 대장"]
+];
+function _rgEvtKey(){ var e=(typeof CUR_EVT!=="undefined"&&CUR_EVT&&CUR_EVT.evtId)||"_"; return String(e).replace(/[.#$\[\]\/]/g,"_"); }
+var _RGM=null, _RGMK="";
+function _rgMeta(){
+  var k=_rgEvtKey();
+  if(_RGMK!==k){ _RGMK=k; _RGM={}; fbDb.ref('/main/RptGovDoc/'+k).once('value').then(function(s){ if(_RGMK!==k) return; _RGM=s.val()||{}; if(Object.keys(_RGM).length) draw(); }).catch(function(){}); }
+  return _RGM||{};
+}
+function rptGovMeta(){
+  var m=_rgMeta(), f=function(id,lb,ph,big){ return '<div style="margin-bottom:8px"><label style="font-weight:700">'+lb+'</label>'+(big?'<textarea id="rgm_'+id+'" rows="3" placeholder="'+esc(ph)+'" style="width:100%;box-sizing:border-box">'+esc(m[id]||"")+'</textarea>':'<input type="text" id="rgm_'+id+'" value="'+esc(m[id]||"")+'" placeholder="'+esc(ph)+'" style="width:100%;box-sizing:border-box">')+'</div>'; };
+  openPopup('<h3>✏ 목적·개요 쓰기 <button class="close-x" onclick="closePopup()">&times;</button></h3>'
+    +'<div style="font-size:12.5px;color:#475569;margin-bottom:10px">여기 쓴 내용이 모든 보고서 맨 위 「□ 목적」「□ 사업개요」에 들어가요. 이 행사에만 저장돼요. 비운 칸은 안 나와요.</div>'
+    +f("purpose","□ 목적 (이 보고서를 왜 만드나)","예: 2026 단오제 한수원 지원금 집행 결과를 보고하기 위함",true)
+    +f("period","사업기간","예: 2026. 5. 30. ~ 6. 1. (비우면 거래 날짜로 자동)")
+    +f("place","장소","예: 법성포 단오제 행사장 일원")
+    +f("ppl","참가인원","예: 연인원 3,000명")
+    +f("host","주최 / 주관","예: 법성포청년회")
+    +f("note","맺음 · 특기사항","예: 집행잔액은 차기 이월 예정",true)
+    +'<div style="text-align:right;margin-top:10px"><button class="btn" style="background:#15803d;color:#fff;font-weight:700" onclick="rptGovMetaSave()">💾 저장</button></div>', 560);
+}
+function rptGovMetaSave(){
+  var o={}; ["purpose","period","place","ppl","host","note"].forEach(function(k){ var el=document.getElementById("rgm_"+k); var v=el?String(el.value).trim():""; if(v) o[k]=v; });
+  var k=_rgEvtKey();
+  fbDb.ref('/main/RptGovDoc/'+k).set(Object.keys(o).length?o:null).then(function(){ _RGM=o; _RGMK=k; closePopup(); toast("✏ 목적·개요 저장했어요"); draw(); })
+    .catch(function(e){ toast("저장 실패: "+(e.message||e),true); });
+}
+var _RG_B='border:1px solid #000;padding:4px 6px', _RG_C=_RG_B+';text-align:center', _RG_N=_RG_B+';text-align:right', _RG_H=_RG_C+';background:#f1f5f9;font-weight:700';
+function _rgTh(cols){ return '<tr>'+cols.map(function(c){ return '<td style="'+_RG_H+(c[1]?';width:'+c[1]:'')+'">'+c[0]+'</td>'; }).join('')+'</tr>'; }
+function _rgTbl(){ return '<div style="text-align:right;font-size:11.5px">(단위:원)</div><table style="border-collapse:collapse;width:100%;font-size:12.5px">'; }
+function _rgSec(t){ return '<div style="font-weight:800;font-size:15px;margin:16px 0 2px">□ '+t+'</div>'; }
+function _rgPc(v,t){ return t?Math.round(v/t*1000)/10:0; }
+// 결재란 · 제목 · □ 목적 · □ 사업개요 (공통 머리)
+function _rgHead(ttl){
+  var h='<div style="font-family:\'Malgun Gothic\',sans-serif;color:#000">';
+  if(RG_SIGN){
+    var R=_rgRoles(), bd='border:1.5px solid #111;text-align:center;vertical-align:middle;padding:0', W=26+R.length*84;
+    h+='<div style="display:flex;justify-content:flex-end;margin:0 0 14px"><table style="border-collapse:collapse;table-layout:fixed;width:'+W+'px"><colgroup><col style="width:26px">'+R.map(function(){ return '<col style="width:84px">'; }).join('')+'</colgroup>'
+      +'<tr><td rowspan="2" style="'+bd+';font-size:13px;font-weight:800;line-height:1.6">결<br><br>재</td>'+R.map(function(x){ return '<td style="'+bd+';height:28px;font-size:13px;font-weight:700;white-space:nowrap">'+esc(x)+'</td>'; }).join('')+'</tr>'
+      +'<tr>'+R.map(function(){ return '<td style="'+bd+';height:62px"></td>'; }).join('')+'</tr></table></div>';
+  }
+  h+='<div style="text-align:center;font-size:26px;font-weight:900;margin:6px 0 14px;letter-spacing:1px">'+esc(ttl)+'</div>';
+  var m=_rgMeta();
+  if(m.purpose) h+=_rgSec("목  적")+'<div style="padding:2px 0 4px 14px;font-size:14px;line-height:1.7;white-space:pre-wrap">'+esc(m.purpose)+'</div>';
+  var per=m.period;
+  if(!per){ var ds=[]; (purs||[]).forEach(function(p){ if(!_isPre(p)&&p.dt) ds.push(String(p.dt).slice(0,10)); }); (exps||[]).forEach(function(e){ if(e.dt) ds.push(String(e.dt).slice(0,10)); }); (dpst||[]).forEach(function(d){ if(d.dt) ds.push(String(d.dt).slice(0,10)); }); ds.sort(); if(ds.length) per=ds[0].replace(/-/g,". ")+". ~ "+ds[ds.length-1].replace(/-/g,". ")+"."; }
+  var ov=[["사 업 명",(typeof CUR_EVT!=="undefined"&&CUR_EVT&&CUR_EVT.nm)||""],["사업기간",per||""],["장    소",m.place||""],["참가인원",m.ppl||""],["주최·주관",m.host||""]].filter(function(r){ return r[1]; });
+  if(m.place||m.ppl||m.host||m.period){
+    h+=_rgSec("사업개요")+'<table style="border-collapse:collapse;width:100%;font-size:13px">'+ov.map(function(r){ return '<tr><td style="'+_RG_H+';width:18%">'+r[0]+'</td><td style="'+_RG_B+'">'+esc(r[1])+'</td></tr>'; }).join('')+'</table>';
+  }
+  return h;
+}
+function _rgFoot(){
+  var m=_rgMeta(), h='';
+  if(m.note) h+=_rgSec("특기사항")+'<div style="padding:2px 0 4px 14px;font-size:13.5px;line-height:1.7;white-space:pre-wrap">'+esc(m.note)+'</div>';
+  return h+'<div style="text-align:center;font-size:15px;margin-top:26px;line-height:2">위와 같이 보고합니다.<br>'+today().replace(/-/g,". ")+'.<br><b style="font-size:18px;letter-spacing:4px">'+esc(typeof SYS_NAME!=="undefined"?SYS_NAME:"")+'</b></div>';
+}
+// 지출 한 건씩 (구매 + 기타지출, 결제 전 제외) — 거래처·재원·증빙까지
+function _rgExpRows(){
+  var R=[];
+  (purs||[]).forEach(function(p){ if(_isPre(p)) return; R.push({dt:String(p.dt||"").slice(0,10),tp:p.expTp||"(미분류)",sub:p.expMid||"-",ds:p.it||"",am:pn(p.tot),pay:_settlePay(p.card,p.payM),payM:p.payM||"",vendor:p.vendorName||p.vendor||"",src:p.incTp||"",srcSub:p.incSub||"",inv:p.inv||p.id||"",p:p,k:"구매"}); });
+  (exps||[]).forEach(function(e){ R.push({dt:String(e.dt||"").slice(0,10),tp:e.expTp||"(미분류)",sub:e.expMid||"-",ds:e.ds||e.nm||"",am:pn(e.am),pay:_settlePay(e.card,e.payM),payM:e.payM||"",vendor:e.vendorName||e.vendor||"",src:e.incTp||"",srcSub:e.incSub||"",inv:"x"+(e.id||Math.random()),p:e,k:"기타지출"}); });
+  R.sort(function(a,b){ return a.dt.localeCompare(b.dt); });
+  return R;
+}
+function _rgGroup(rows,key){ var G={}, O=[]; rows.forEach(function(r){ var k=key(r)||"(없음)"; if(!G[k]){ G[k]={t:0,n:0,list:[]}; O.push(k); } G[k].t+=r.am; G[k].n++; G[k].list.push(r); }); return {G:G,O:O}; }
+function _rgTopLines(list,max){ var g=_rgGroup(list,function(r){ return r.ds||"(내역 없음)"; }); g.O.sort(function(a,b){ return g.G[b].t-g.G[a].t; }); var L=g.O.slice(0,max||5).map(function(k){ return esc(k)+(g.G[k].n>1?' ('+g.G[k].n+'건)':'')+' : '+fm(g.G[k].t)+'원'; }); if(g.O.length>(max||5)) L.push('<span style="color:#475569">외 '+(g.O.length-(max||5))+'가지</span>'); return L.join('<br>'); }
+function _rgName(){ return ((typeof CUR_EVT!=="undefined"&&CUR_EVT&&CUR_EVT.nm)||(typeof SYS_NAME!=="undefined"?SYS_NAME:""))+(RG_FOCUS?" "+RG_FOCUS:""); }
+
+// 📊 항목별 집행보고
+function _rgItem(){
+  var rows=_rgExpRows(), tot=0; rows.forEach(function(r){ tot+=r.am; });
+  var bgBig={}, bgMid={}, order=[];
+  (expBG||[]).forEach(function(r){ var t=r.tp||"(미분류)"; if(order.indexOf(t)<0) order.push(t); if(!r.mid) bgBig[t]=(bgBig[t]||0)+pn(r.planAm); else bgMid[t+"|"+r.mid]=(bgMid[t+"|"+r.mid]||0)+pn(r.planAm); });
+  var g=_rgGroup(rows,function(r){ return r.tp; }); g.O.forEach(function(t){ if(order.indexOf(t)<0) order.push(t); });
+  var h=_rgHead(_rgName()+" 항목별 집행 보고서");
+  // 요약: 비목별 비중
+  h+=_rgSec("비목별 집행 요약")+_rgTbl()+_rgTh([["비 목","22%"],["예 산 액"],["집 행 액"],["집행률(%)"],["집행잔액"],["전체 중 비중(%)"],["건수","8%"]]);
+  var bT=0; order.forEach(function(t){ var mids=0; Object.keys(bgMid).forEach(function(k){ if(k.indexOf(t+"|")===0) mids+=bgMid[k]; }); var bu=bgBig[t]||mids; bT+=bu; });
+  h+='<tr style="font-weight:800"><td style="'+_RG_C+'">계</td><td style="'+_RG_N+'">'+fm(bT)+'</td><td style="'+_RG_N+'">'+fm(tot)+'</td><td style="'+_RG_C+'">'+(bT?_rgPc(tot,bT):'-')+'</td><td style="'+_RG_N+'">'+(bT?fm(bT-tot):'-')+'</td><td style="'+_RG_C+'">100</td><td style="'+_RG_C+'">'+rows.length+'</td></tr>';
+  order.forEach(function(t){ var x=g.G[t]||{t:0,n:0}, mids=0; Object.keys(bgMid).forEach(function(k){ if(k.indexOf(t+"|")===0) mids+=bgMid[k]; }); var bu=bgBig[t]||mids; if(!bu&&!x.t) return;
+    h+='<tr><td style="'+_RG_C+'">'+esc(t)+'</td><td style="'+_RG_N+'">'+(bu?fm(bu):'-')+'</td><td style="'+_RG_N+'">'+(x.t?fm(x.t):'-')+'</td><td style="'+_RG_C+'">'+(bu?_rgPc(x.t,bu):'-')+'</td><td style="'+_RG_N+'">'+(bu?fm(bu-x.t):'-')+'</td><td style="'+_RG_C+'">'+_rgPc(x.t,tot)+'</td><td style="'+_RG_C+'">'+(x.n||'-')+'</td></tr>'; });
+  h+='</table>';
+  // 상세: 비목 → 항목
+  h+=_rgSec("항목별 집행 상세")+_rgTbl()+_rgTh([["비 목","13%"],["항 목","13%"],["예 산 액","11%"],["집 행 액","11%"],["잔 액","10%"],["집행률","7%"],["주요 집행내역"]]);
+  order.forEach(function(t){ var x=g.G[t]; if(!x) return; var m=_rgGroup(x.list,function(r){ return r.sub; });
+    Object.keys(bgMid).forEach(function(k){ if(k.indexOf(t+"|")===0){ var mm=k.slice(t.length+1); if(m.O.indexOf(mm)<0){ m.O.push(mm); m.G[mm]={t:0,n:0,list:[]}; } } });
+    m.O.forEach(function(mm,j){ var y=m.G[mm], bu=bgMid[t+"|"+mm]||0;
+      h+='<tr>'+(j===0?'<td rowspan="'+m.O.length+'" style="'+_RG_C+';vertical-align:middle;font-weight:700">'+esc(t)+'<div style="font-size:11px;font-weight:600">'+fm(x.t)+'원</div></td>':'')
+        +'<td style="'+_RG_C+'">'+esc(mm)+'</td><td style="'+_RG_N+'">'+(bu?fm(bu):'-')+'</td><td style="'+_RG_N+'">'+(y.t?fm(y.t):'-')+'</td><td style="'+_RG_N+'">'+(bu?fm(bu-y.t):'-')+'</td><td style="'+_RG_C+'">'+(bu?_rgPc(y.t,bu):'-')+'</td><td style="'+_RG_B+';font-size:11.5px;line-height:1.5">'+(y.list.length?_rgTopLines(y.list,6):'<span style="color:#64748b">집행 없음</span>')+'</td></tr>'; });
+  });
+  return h+'</table>'+_rgFoot()+'</div>';
+}
+// 💰 재원별
+function _rgSrc(){
+  var rows=_rgExpRows(), d=_settleData();
+  var g=_rgGroup(rows,function(r){ return r.src||"(재원 안 고름)"; });
+  var keys=Object.keys(d.incByTp); g.O.forEach(function(k){ if(keys.indexOf(k)<0) keys.push(k); });
+  var h=_rgHead(_rgName()+" 재원별 집행 보고서");
+  h+=_rgSec("재원별 수입·집행 현황")+_rgTbl()+_rgTh([["재  원","20%"],["수 입 액"],["집 행 액"],["집행률(%)"],["잔  액"],["비 고","14%"]]);
+  var iT=0, eT=0; keys.forEach(function(k){ iT+=d.incByTp[k]||0; eT+=(g.G[k]||{t:0}).t; });
+  h+='<tr style="font-weight:800"><td style="'+_RG_C+'">계</td><td style="'+_RG_N+'">'+fm(iT)+'</td><td style="'+_RG_N+'">'+fm(eT)+'</td><td style="'+_RG_C+'">'+(iT?_rgPc(eT,iT):'-')+'</td><td style="'+_RG_N+'">'+fm(iT-eT)+'</td><td style="'+_RG_B+'"></td></tr>';
+  keys.forEach(function(k){ var a=d.incByTp[k]||0, e=(g.G[k]||{t:0}).t;
+    h+='<tr><td style="'+_RG_C+'">'+esc(k)+'</td><td style="'+_RG_N+'">'+(a?fm(a):'-')+'</td><td style="'+_RG_N+'">'+(e?fm(e):'-')+'</td><td style="'+_RG_C+'">'+(a?_rgPc(e,a):'-')+'</td><td style="'+_RG_N+'">'+(a?fm(a-e):'-')+'</td><td style="'+_RG_C+';font-size:11px">'+(k==="(재원 안 고름)"?'구매에 재원 미선택':'')+'</td></tr>'; });
+  h+='</table>';
+  h+=_rgSec("재원별 사용처")+_rgTbl()+_rgTh([["재  원","16%"],["비 목","15%"],["항 목","15%"],["금  액","12%"],["주요 집행내역"]]);
+  g.O.forEach(function(k){ var x=g.G[k], b=_rgGroup(x.list,function(r){ return r.tp+"|"+r.sub; });
+    b.O.forEach(function(bk,j){ var y=b.G[bk], pp=bk.split("|");
+      h+='<tr>'+(j===0?'<td rowspan="'+b.O.length+'" style="'+_RG_C+';vertical-align:middle;font-weight:700">'+esc(k)+'<div style="font-size:11px;font-weight:600">'+fm(x.t)+'원</div></td>':'')+'<td style="'+_RG_C+'">'+esc(pp[0])+'</td><td style="'+_RG_C+'">'+esc(pp[1])+'</td><td style="'+_RG_N+'">'+fm(y.t)+'</td><td style="'+_RG_B+';font-size:11.5px;line-height:1.5">'+_rgTopLines(y.list,4)+'</td></tr>'; }); });
+  return h+'</table>'+_rgFoot()+'</div>';
+}
+// 💳 결제수단별
+function _rgPay(){
+  var rows=_rgExpRows(), tot=0; rows.forEach(function(r){ tot+=r.am; });
+  var g=_rgGroup(rows,function(r){ return r.pay; }); g.O.sort(function(a,b){ return g.G[b].t-g.G[a].t; });
+  var h=_rgHead(_rgName()+" 결제수단별 집행 보고서");
+  h+=_rgSec("결제수단별 집행 현황")+_rgTbl()+_rgTh([["결제수단","26%"],["건 수","9%"],["집 행 액","15%"],["비 중(%)","10%"],["사용 비목"]]);
+  h+='<tr style="font-weight:800"><td style="'+_RG_C+'">계</td><td style="'+_RG_C+'">'+rows.length+'</td><td style="'+_RG_N+'">'+fm(tot)+'</td><td style="'+_RG_C+'">100</td><td style="'+_RG_B+'"></td></tr>';
+  g.O.forEach(function(k){ var x=g.G[k], b=_rgGroup(x.list,function(r){ return r.tp; });
+    h+='<tr><td style="'+_RG_C+'">'+esc(k)+'</td><td style="'+_RG_C+'">'+x.n+'</td><td style="'+_RG_N+'">'+fm(x.t)+'</td><td style="'+_RG_C+'">'+_rgPc(x.t,tot)+'</td><td style="'+_RG_B+';font-size:11.5px">'+b.O.map(function(t){ return esc(t)+' '+fm(b.G[t].t)+'원'; }).join(' · ')+'</td></tr>'; });
+  h+='</table>';
+  if(RG_ATT){
+    h+='<div style="page-break-before:always"></div>'+_rgSec("붙임 : 결제수단별 세부내역");
+    g.O.forEach(function(k){ var x=g.G[k];
+      h+='<div style="font-weight:700;margin:10px 0 2px">- '+esc(k)+' ('+x.n+'건 · '+fm(x.t)+'원)</div><table style="border-collapse:collapse;width:100%;font-size:12px">'+_rgTh([["일 자","12%"],["비 목","14%"],["항 목","14%"],["내  역"],["거 래 처","16%"],["금 액","12%"]])
+        +x.list.map(function(r){ return '<tr><td style="'+_RG_C+'">'+esc(r.dt)+'</td><td style="'+_RG_C+'">'+esc(r.tp)+'</td><td style="'+_RG_C+'">'+esc(r.sub)+'</td><td style="'+_RG_B+'">'+esc(r.ds)+'</td><td style="'+_RG_C+';font-size:11px">'+esc(r.vendor)+'</td><td style="'+_RG_N+'">'+fm(r.am)+'</td></tr>'; }).join('')+'</table>'; });
+  }
+  return h+_rgFoot()+'</div>';
+}
+// 🏪 거래처별
+function _rgVendor(){
+  var rows=_rgExpRows(), tot=0; rows.forEach(function(r){ tot+=r.am; });
+  var g=_rgGroup(rows,function(r){ return r.vendor||"(거래처 안 적음)"; }); g.O.sort(function(a,b){ return g.G[b].t-g.G[a].t; });
+  var h=_rgHead(_rgName()+" 거래처별 집행 보고서");
+  h+=_rgSec("거래처별 집행 현황")+_rgTbl()+_rgTh([["번호","6%"],["거 래 처","22%"],["건 수","8%"],["집 행 액","14%"],["비 중(%)","9%"],["주요 내역"]]);
+  h+='<tr style="font-weight:800"><td style="'+_RG_C+'" colspan="2">계 ('+g.O.length+'곳)</td><td style="'+_RG_C+'">'+rows.length+'</td><td style="'+_RG_N+'">'+fm(tot)+'</td><td style="'+_RG_C+'">100</td><td style="'+_RG_B+'"></td></tr>';
+  g.O.forEach(function(k,i){ var x=g.G[k];
+    h+='<tr><td style="'+_RG_C+'">'+(i+1)+'</td><td style="'+_RG_C+'">'+esc(k)+'</td><td style="'+_RG_C+'">'+x.n+'</td><td style="'+_RG_N+'">'+fm(x.t)+'</td><td style="'+_RG_C+'">'+_rgPc(x.t,tot)+'</td><td style="'+_RG_B+';font-size:11.5px;line-height:1.5">'+_rgTopLines(x.list,4)+'</td></tr>'; });
+  return h+'</table>'+_rgFoot()+'</div>';
+}
+// 🧾 증빙 점검표 — 구매는 명세서(inv) 한 건 단위
+function _rgEvid(){
+  var rows=_rgExpRows(), G={}, O=[];
+  rows.forEach(function(r){ var k=r.inv; if(!G[k]){ G[k]={dt:r.dt,tp:r.tp,sub:r.sub,vendor:r.vendor,pay:r.pay,payM:r.payM,am:0,its:[],rc:0,tx:0,ph:0,k:r.k}; O.push(k); } var g=G[k]; g.am+=r.am; g.its.push(r.ds);
+    var p=r.p||{}; if((p.rc||[]).length) g.rc=1; if((p.taxDoc||[]).length||p.taxTp==="alt") g.tx=1; if((p.ph||[]).length) g.ph=1; });
+  var ok='<b style="color:#15803d">○</b>', no='<b style="color:#b91c1c">✕</b>', na='-';
+  var nRc=0,nTx=0,nPh=0;
+  O.forEach(function(k){ var g=G[k]; g.needTx=_isBankPay(g.payM); if(!g.rc) nRc++; if(g.needTx&&!g.tx) nTx++; if(g.k==="구매"&&!g.ph) nPh++; });
+  var h=_rgHead(_rgName()+" 증빙 점검표");
+  h+=_rgSec("점검 요약")+'<table style="border-collapse:collapse;width:100%;font-size:13px">'+_rgTh([["점검 건수"],["영수증 없음"],["세금계산서 없음<br><span style=\"font-weight:400;font-size:11px\">(계좌이체·현금만)</span>"],["사진 없음<br><span style=\"font-weight:400;font-size:11px\">(구매만)</span>"]])
+    +'<tr><td style="'+_RG_C+';font-weight:800">'+O.length+'건</td><td style="'+_RG_C+';font-weight:800;color:'+(nRc?'#b91c1c':'#15803d')+'">'+nRc+'건</td><td style="'+_RG_C+';font-weight:800;color:'+(nTx?'#b91c1c':'#15803d')+'">'+nTx+'건</td><td style="'+_RG_C+';font-weight:800;color:'+(nPh?'#b91c1c':'#15803d')+'">'+nPh+'건</td></tr></table>';
+  h+=_rgSec("건별 점검")+_rgTbl()+_rgTh([["번호","5%"],["일 자","10%"],["비목 / 항목","15%"],["내  역"],["거 래 처","13%"],["결제수단","12%"],["금 액","10%"],["영수증","6%"],["세금<br>계산서","6%"],["사진","5%"]]);
+  O.forEach(function(k,i){ var g=G[k], bad=!g.rc||(g.needTx&&!g.tx);
+    h+='<tr'+(bad?' style="background:#fff1f2"':'')+'><td style="'+_RG_C+'">'+(i+1)+'</td><td style="'+_RG_C+';white-space:nowrap">'+esc(g.dt)+'</td><td style="'+_RG_C+';font-size:11px">'+esc(g.tp)+'<br>'+esc(g.sub)+'</td><td style="'+_RG_B+';font-size:11.5px">'+esc(g.its.slice(0,3).join(", "))+(g.its.length>3?' 외 '+(g.its.length-3)+'개':'')+'</td><td style="'+_RG_C+';font-size:11px">'+esc(g.vendor)+'</td><td style="'+_RG_C+';font-size:11px">'+esc(g.pay)+'</td><td style="'+_RG_N+'">'+fm(g.am)+'</td>'
+      +'<td style="'+_RG_C+'">'+(g.rc?ok:no)+'</td><td style="'+_RG_C+'">'+(g.needTx?(g.tx?ok:no):na)+'</td><td style="'+_RG_C+'">'+(g.k==="구매"?(g.ph?ok:no):na)+'</td></tr>'; });
+  h+='</table><div style="font-size:11.5px;margin-top:4px">○ 있음 · ✕ 없음 · - 해당 없음 · 분홍 줄 = 영수증이나 세금계산서(대체증빙 포함)가 빠진 건</div>';
+  return h+_rgFoot()+'</div>';
+}
+// 📅 일자별
+function _rgDate(){
+  var rows=_rgExpRows(), d=_settleData(), tot=0, run=0; rows.forEach(function(r){ tot+=r.am; });
+  var h=_rgHead(_rgName()+" 일자별 집행 내역");
+  if(d.incRows.length&&!RG_FOCUS){
+    h+=_rgSec("수입 내역 ("+d.incRows.length+"건)")+_rgTbl()+_rgTh([["번호","6%"],["일 자","12%"],["재 원","16%"],["내  역"],["결제수단","16%"],["금 액","13%"]])
+      +d.incRows.map(function(r,i){ return '<tr><td style="'+_RG_C+'">'+(i+1)+'</td><td style="'+_RG_C+'">'+esc(String(r.dt||"").slice(0,10))+'</td><td style="'+_RG_C+'">'+esc(r.tp)+'</td><td style="'+_RG_B+'">'+esc(r.ds)+'</td><td style="'+_RG_C+';font-size:11px">'+esc(r.pay)+'</td><td style="'+_RG_N+'">'+fm(r.am)+'</td></tr>'; }).join('')
+      +'<tr style="font-weight:800"><td style="'+_RG_C+'" colspan="5">합  계</td><td style="'+_RG_N+'">'+fm(d.incTotal)+'</td></tr></table>';
+  }
+  h+=_rgSec("지출 내역 ("+rows.length+"건)")+_rgTbl()+_rgTh([["번호","5%"],["일 자","10%"],["비 목","12%"],["항 목","12%"],["내  역"],["거 래 처","13%"],["금 액","10%"],["누 계","11%"]]);
+  rows.forEach(function(r,i){ run+=r.am; h+='<tr><td style="'+_RG_C+'">'+(i+1)+'</td><td style="'+_RG_C+';white-space:nowrap">'+esc(r.dt)+'</td><td style="'+_RG_C+'">'+esc(r.tp)+'</td><td style="'+_RG_C+'">'+esc(r.sub)+'</td><td style="'+_RG_B+'">'+esc(r.ds)+'</td><td style="'+_RG_C+';font-size:11px">'+esc(r.vendor)+'</td><td style="'+_RG_N+'">'+fm(r.am)+'</td><td style="'+_RG_N+';color:#334155">'+fm(run)+'</td></tr>'; });
+  h+='<tr style="font-weight:800"><td style="'+_RG_C+'" colspan="6">합  계</td><td style="'+_RG_N+'">'+fm(tot)+'</td><td style="'+_RG_B+'"></td></tr></table>';
+  return h+_rgFoot()+'</div>';
+}
+// 대분류 집중: 잠깐 그 대분류 것만 남기고 그린 뒤 되돌림
+function _rptGovHtml(){
+  var fn={settle:_rgSettle,item:_rgItem,src:_rgSrc,pay:_rgPay,vendor:_rgVendor,evid:_rgEvid,date:_rgDate}[RG_KIND]||_rgSettle;
+  if(!RG_FOCUS) return fn();
+  var P=purs, E=exps, BG=expBG, D=dpst, I=inc;
+  try{
+    purs=(P||[]).filter(function(p){ return (p.expTp||"(미분류)")===RG_FOCUS; });
+    exps=(E||[]).filter(function(e){ return (e.expTp||"(미분류)")===RG_FOCUS; });
+    expBG=(BG||[]).filter(function(r){ return (r.tp||"(미분류)")===RG_FOCUS; });
+    dpst=[]; inc=[];
+    return fn();
+  } finally { purs=P; exps=E; expBG=BG; dpst=D; inc=I; }
+}
+function _rgToolbar(){
+  var tps=[]; (expBG||[]).forEach(function(r){ if(r.tp&&tps.indexOf(r.tp)<0) tps.push(r.tp); }); (purs||[]).forEach(function(p){ if(p.expTp&&tps.indexOf(p.expTp)<0) tps.push(p.expTp); });
+  var bt=function(on,l,t,js){ return '<button title="'+esc(t)+'" onclick="'+js+'" style="border:2px solid '+(on?'#111827':'#cbd5e1')+';border-radius:8px;padding:5px 10px;font-size:13px;font-weight:800;cursor:pointer;background:'+(on?'#111827':'#fff')+';color:'+(on?'#fff':'#0f172a')+'">'+l+'</button>'; };
+  var h='<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px"><b style="font-size:13px;color:#475569">보고서 종류</b>'+RG_LIST.map(function(o){ return bt(RG_KIND===o[0],o[1],o[2],"RG_KIND='"+o[0]+"';draw()"); }).join('')+'</div>';
+  h+='<div style="font-size:12.5px;color:#334155;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px;margin-bottom:8px">📄 '+esc((RG_LIST.filter(function(o){ return o[0]===RG_KIND; })[0]||[])[2]||'')+'</div>';
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">'
+    +'<label style="font-weight:800;font-size:13px">🔎 항목 집중 <select onchange="RG_FOCUS=this.value;draw()" style="font-size:13px;padding:4px"><option value="">전체 보기</option>'+tps.map(function(t){ return '<option'+(RG_FOCUS===t?' selected':'')+'>'+esc(t)+'</option>'; }).join('')+'</select></label>'
+    +'<label style="font-weight:800;font-size:13px;display:flex;gap:4px;align-items:center"><input type="checkbox" '+(RG_SIGN?'checked':'')+' onchange="RG_SIGN=this.checked;draw()"> 결재란</label>'
+    +'<label style="font-weight:800;font-size:13px;display:flex;gap:4px;align-items:center"><input type="checkbox" '+(RG_ATT?'checked':'')+' onchange="RG_ATT=this.checked;draw()"> 붙임(세부내역)</label>'
+    +'<span style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap"><button class="btn" style="background:#1d4ed8;color:#fff;font-weight:700" onclick="rptGovMeta()">✏ 목적·개요 쓰기</button><button class="btn" style="background:#0f766e;color:#fff;font-weight:700" onclick="rptGovRoles()">✍ 결재란 바꾸기</button><button class="btn" style="background:#111827;color:#fff;font-weight:700" onclick="rptGovPrint()">🖨️ 인쇄 / PDF</button></span></div>';
+  return h;
+}
+
 // 결재란 직책 — 세입세출 정산서 전용 (회비통장 결재선과 따로). /main/RptGovRoles = ["담당","사무국장",...]
 var _RGR = null;
 function _rgRoles(){
@@ -20481,7 +20686,7 @@ function rptGovRoles(){
 }
 function rptGovPrint(){
   var w=window.open('','_blank','width=900,height=1000'); if(!w){ toast("팝업이 막혔어요 — 허용 후 다시",true); return; }
-  w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+esc(((typeof CUR_EVT!=="undefined"&&CUR_EVT&&CUR_EVT.nm)||SYS_NAME)+' 정산서')+'</title><style>@page{size:A4;margin:12mm}body{font-family:"Malgun Gothic","맑은 고딕",sans-serif;margin:0;padding:16px;color:#000}table{page-break-inside:auto}tr{page-break-inside:avoid}@media print{body{padding:0}.no-print{display:none}td[style*="#f1f5f9"]{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style></head><body>'
+  w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+esc(_rgName()+' '+((RG_LIST.filter(function(o){ return o[0]===RG_KIND; })[0]||["",""])[1]).replace(/^\S+\s/,''))+'</title><style>@page{size:A4;margin:12mm}body{font-family:"Malgun Gothic","맑은 고딕",sans-serif;margin:0;padding:16px;color:#000}table{page-break-inside:auto}tr{page-break-inside:avoid}@media print{body{padding:0}.no-print{display:none}td[style*="#f1f5f9"]{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style></head><body>'
     +'<div class="no-print" style="text-align:right;margin-bottom:10px"><button onclick="window.print()" style="padding:8px 20px;font-size:14px;background:#111827;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:700">🖨️ 인쇄 / PDF</button></div>'
     +_rptGovHtml()+'</body></html>');
   w.document.close();
