@@ -14706,7 +14706,7 @@ function _bkEsgPop(){
   openPopup2(h,560);
 }
 // 🔗 결재 링크 — 기간·통장만 담김(개인정보 없음). 열면 로그인 → 그 정산서 결재 창. 서명은 결재선에 지정된 본인 계정만
-function _bkEsgQ(){ var rg=_bkRange(); return {f:rg.from||"",t:rg.to||"",y:BK_PY,m:BK_PM,s:_bkAccts().filter(function(a){ return !BK_SEL||BK_SEL[a._k]!==false; }).map(function(a){ return a._k; }),b:BK_BIG||""}; }
+function _bkEsgQ(){ var rg=_bkRange(); return {e:(!_bkMain()&&CUR_EVT)?CUR_EVT.evtId:"",f:rg.from||"",t:rg.to||"",y:BK_PY,m:BK_PM,s:_bkAccts().filter(function(a){ return !BK_SEL||BK_SEL[a._k]!==false; }).map(function(a){ return a._k; }),b:BK_BIG||""}; }
 function _bkEsgLink(){
   var o=_bkEsgQ();
   return location.href.split("?")[0].split("#")[0]+"?bkesign="+encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(o)))));
@@ -14722,9 +14722,18 @@ function _bkEsgOpenDeep(code){
   _bkEsgApply(o,true);
 }
 function _bkEsgApply(o,pop){
+  // 링크로 들어온 사람의 마지막 행사가 다른 행사면 → 정산서가 있는 행사(청년회 본회 또는 링크에 담긴 행사)로 먼저 바꿈
+  if(pop&&!o._sw&&typeof EVENTS!=="undefined"&&EVENTS.length){
+    var isMain=function(e){ var nm=String((e&&e.nm)||""), sp=(typeof SYS_PARENT!=="undefined"&&SYS_PARENT)||""; return (!!sp&&nm.indexOf(sp)>=0)||/청년회/.test(nm); };
+    var tg=o.e?EVENTS.filter(function(e){ return e.evtId===o.e; })[0]:(_bkMain()?null:EVENTS.filter(isMain)[0]);
+    if(tg&&(!CUR_EVT||CUR_EVT.evtId!==tg.evtId)&&typeof switchEvent==="function"){ o._sw=1; Promise.resolve(switchEvent(tg.evtId)).catch(function(){}).then(function(){ _bkEsgApply(o,pop); }); return; }
+  }
   CTAB="bank"; BK_ACC="_sum"; BK_SV="report"; BK_RS="gov"; BK_BIG=o.b||""; BK_PY=+o.y||BK_PY; BK_PM=(o.m==null?0:+o.m); BK_FROM=o.f||""; BK_TO=o.t||"";
   BK_SEL={}; _bkLoad();
-  var go=function(){ if(!BK.loaded||!FB.loaded){ setTimeout(go,300); return; } _bkAccts().forEach(function(a){ BK_SEL[a._k]=(o.s||[]).indexOf(a._k)>=0; }); try{ draw(); }catch(e){} if(pop) _bkEsgView(); };
+  var n=0, go=function(){ n++;
+    if((!BK.loaded||(_bkMain()&&!FB.loaded)||BK.esig===undefined)&&n<40){ setTimeout(go,300); return; }
+    _bkAccts().forEach(function(a){ BK_SEL[a._k]=(o.s||[]).indexOf(a._k)>=0; }); try{ draw(); }catch(e){}
+    if(pop){ try{ _bkEsgView(); }catch(e){ console.warn("esg view",e); toast("결재 화면을 못 열었어요 — 통장 > 정산서에서 ✍ 결재를 눌러 주세요",true); } } };
   go();
 }
 // ✍ 결재 링크로 들어오면 — 정산서 내용 전체를 보여 주고, 맨 아래(또는 위 버튼)에서 내 직책 서명만. 복잡한 화면 없이
