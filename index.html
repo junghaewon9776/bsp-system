@@ -14446,7 +14446,7 @@ function _bkSumView(){
   if(BK_SV==="evt"&&isA()) return h+_bkEvtView();
   if(BK_SV==="budget"&&isA()) return h+_bkBudgetView();
   if(BK_SV==="agm"&&isA()) return h+_bkAgmView();
-  if(BK_SV==="report") return h+_bkRsPicker()+'<div style="background:#fff;border:1px solid #cbd5e1;border-radius:10px;padding:18px;max-width:'+(BK_RS==="month"?'100%':'900px')+';margin:0 auto">'+_bkReportHtml()+'</div>';
+  if(BK_SV==="report") return h+_bkRsPicker()+'<div class="bkFitBox" style="background:#fff;border:1px solid #cbd5e1;border-radius:10px;padding:18px;max-width:'+(BK_RS==="month"?'100%':'900px')+';margin:0 auto;overflow:hidden"><div class="bkFit" data-w="'+(BK_RS==="month"?1000:640)+'">'+_bkReportHtml()+'</div></div>';
   var card=function(lb,v,col){ return '<div style="flex:1 1 150px;background:#fff;border:1px solid #cbd5e1;border-radius:8px;padding:8px 12px"><div style="font-size:12px;color:#475569;font-weight:700">'+lb+'</div><div style="font-size:19px;font-weight:900;color:'+col+'">'+fm(v)+'원</div></div>'; };
   var open=0,close=0; A.forEach(function(a){ open+=R.per[a._k].open; close+=R.per[a._k].close; });
   h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">'+(BK_BIG?card("「"+esc(BK_BIG)+"」 수입",R.incT,"#166534")+card("「"+esc(BK_BIG)+"」 지출",R.expT,"#b91c1c")+card("차액 (수입−지출)",R.incT-R.expT,"#1d4ed8")
@@ -14755,20 +14755,30 @@ function _bkEsgView(){
         :'<div style="margin-bottom:6px">'+B("#2563eb","✍ "+esc(r)+"(으)로 서명하기","_bkEsgSign('"+esc(r)+"')","width:100%")+'</div>'; }).join('');
   };
   var h='<div style="position:sticky;top:0;z-index:2;background:#0f172a;color:#fff;padding:10px 14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center"><b style="font-size:17px;flex:1">✍ 정산서 결재 — '+esc(_bkRepTitle())+'</b>'
-    +(todo.length?'<button onclick="document.getElementById(\'bkEsgMine\').scrollIntoView({behavior:\'smooth\'})" style="border:none;border-radius:8px;padding:8px 12px;font-weight:900;background:#2563eb;color:#fff;cursor:pointer">✍ 서명하러 가기</button>':'')
+    +(todo.length?'<button onclick="'+(todo.length===1?'_bkEsgSign(\''+esc(todo[0])+'\')':'document.getElementById(\'bkEsgMine\').scrollIntoView({behavior:\'smooth\'})')+'" style="border:none;border-radius:8px;padding:8px 12px;font-weight:900;background:#2563eb;color:#fff;cursor:pointer">✍ 바로 서명하기</button>':'')
     +((typeof isA==="function"&&isA())?'<button onclick="document.getElementById(\'bkEsgView\').remove();_bkEsgPop()" style="border:none;border-radius:8px;padding:8px 12px;font-weight:900;background:#0f766e;color:#fff;cursor:pointer">📨 텔레그램·🔗 링크 (관리)</button>':'')
     +'<button onclick="document.getElementById(\'bkEsgView\').remove()" style="border:none;border-radius:8px;padding:8px 12px;font-weight:800;background:#475569;color:#fff;cursor:pointer">✕ 닫기</button></div>';
   h+='<div style="max-width:880px;margin:0 auto;padding:12px">';
   h+='<div style="font-size:14px;color:#334155;margin-bottom:10px">📄 아래 정산서 내용을 읽어 보고, <b>맨 아래에서 서명</b>해 주세요.'+(todo.length?' (내 서명할 곳: <b>'+todo.map(esc).join(', ')+'</b>)':'')+'</div>';
-  h+='<div style="background:#fff;border:1px solid #cbd5e1;border-radius:10px;padding:16px;overflow-x:auto">'+_bkReportHtml()+'</div>';
+  h+='<div class="bkFitBox" style="background:#fff;border:1px solid #cbd5e1;border-radius:10px;padding:16px;overflow:hidden"><div class="bkFit" data-w="'+(BK_RS==="month"?1000:640)+'">'+_bkReportHtml()+'</div></div>';
   h+='<div id="bkEsgMine" style="margin-top:14px;padding-bottom:40px"><div style="font-weight:900;font-size:17px;margin-bottom:8px">✍ 내 서명</div>'+stat();
   h+='<div id="bkEsgPadBox" style="display:none;border:2px solid #2563eb;border-radius:10px;padding:10px;margin-top:8px;background:#fff"><div style="font-weight:800;margin-bottom:6px" id="bkEsgPadTtl"></div>';
   h+='<canvas id="bkEsgPad" style="width:100%;height:170px;border:1px dashed #94a3b8;border-radius:8px;background:#fff;display:block;touch-action:none"></canvas>';
   h+='<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px"><input id="bkEsgNm" placeholder="이름" style="padding:9px;width:130px;font-weight:700;font-size:16px"><label style="font-size:13px"><input type="checkbox" id="bkEsgRem" checked> 내 서명 기억</label><span style="flex:1"></span><button class="btn" style="background:#475569;color:#fff" onclick="window._bkEsgPadO&&window._bkEsgPadO.clear()">다시 쓰기</button><button class="btn" style="background:#16a34a;color:#fff;font-weight:900;font-size:17px;padding:10px 18px" onclick="_bkEsgSave()">✅ 서명 저장</button></div></div>';
   h+='</div></div>';
+  if(todo.length) h+='<div style="position:sticky;bottom:0;z-index:3;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:rgba(15,23,42,.92);display:flex;gap:8px;justify-content:center;flex-wrap:wrap">'+todo.map(function(r){ return '<button onclick="_bkEsgSign(\''+esc(r)+'\')" style="border:none;border-radius:10px;padding:12px 22px;font-size:17px;font-weight:900;background:#2563eb;color:#fff;cursor:pointer">✍ '+esc(r)+' 서명하기</button>'; }).join('')+'</div>';
   var v=document.createElement("div"); v.id="bkEsgView"; v.style.cssText="position:fixed;inset:0;z-index:9000;background:#f1f5f9;overflow:auto;-webkit-overflow-scrolling:touch"; v.innerHTML=h;
-  document.body.appendChild(v);
+  document.body.appendChild(v); _bkFitAll();
 }
+// 📱 폰에서 정산서(A4 문서)는 글자가 뒤죽박죽 줄바뀌지 않게 → 종이 폭(780px)으로 그린 뒤 화면 폭에 맞춰 통째로 축소. PC(넓은 화면)는 그대로
+function _bkFitAll(){
+  var L=document.querySelectorAll(".bkFit"); for(var i=0;i<L.length;i++){ var el=L[i], box=el.parentNode, W=+el.getAttribute("data-w")||780;
+    var cs=getComputedStyle(box), aw=box.clientWidth-parseFloat(cs.paddingLeft||0)-parseFloat(cs.paddingRight||0);
+    if(aw>0&&aw<W){ el.style.width=W+"px"; el.style.zoom=Math.max(aw/W,0.56).toFixed(4); box.style.overflowX="auto"; } else { el.style.width=""; el.style.zoom=""; } }
+}
+(function(){ var t=null, run=function(){ clearTimeout(t); t=setTimeout(_bkFitAll,60); };
+  window.addEventListener("resize",run);
+  try{ new MutationObserver(function(){ if(document.querySelector(".bkFit")) run(); }).observe(document.documentElement,{childList:true,subtree:true}); }catch(e){} })();
 // 📋 서명 받은 정산서 목록 — 열면 그 기간·통장 정산서(서명 찍힌 채)
 function _bkEsgList(){
   var E=BK.esig||{}, an={}; _bkAccts().forEach(function(a){ an[a._k]=a.nm; });
@@ -14839,7 +14849,7 @@ function _bkEsgReq(role){
 function _bkSignBox(){
   if(!BK_SIGNON) return '';
   var R=_bkEsgRoles(), sg=_bkEsgOf().roles||{}, bd='border:1.5px solid #111;text-align:center;vertical-align:middle;padding:0', W=26+R.length*84;
-  return '<div style="display:flex;justify-content:flex-end;margin:0 0 14px"><table style="border-collapse:collapse;table-layout:fixed;width:'+W+'px;min-width:'+W+'px;max-width:'+W+'px"><colgroup><col style="width:26px">'+R.map(function(){ return '<col style="width:84px">'; }).join('')+'</colgroup>'
+  return '<div style="display:flex;justify-content:flex-end;margin:0 0 14px"><table style="margin-left:auto;border-collapse:collapse;table-layout:fixed;width:'+W+'px;min-width:'+W+'px;max-width:'+W+'px"><colgroup><col style="width:26px">'+R.map(function(){ return '<col style="width:84px">'; }).join('')+'</colgroup>'
     +'<tr><td rowspan="2" style="'+bd+';font-size:13px;font-weight:800;line-height:1.6">결<br><br>재</td>'
     +R.map(function(x){ return '<td style="'+bd+';height:28px;font-size:13px;font-weight:700;letter-spacing:1px;white-space:nowrap">'+esc(x)+'</td>'; }).join('')+'</tr><tr>'
     +R.map(function(x){ var g=_bkEsgHand(x)?null:sg[x]; return '<td style="'+bd+';height:62px">'+(g&&g.img?'<img src="'+g.img+'" style="max-width:80px;max-height:44px;display:block;margin:0 auto"><div style="font-size:9.5px;color:#334155;line-height:1.2">'+esc(g.nm||'')+' '+esc(String(g.at||'').slice(5,10).replace('-','/'))+'</div>':'')+'</td>'; }).join('')+'</tr></table></div>';
@@ -15392,7 +15402,7 @@ async function _bkXlsxOut(ak){
 function _bkAcctView(ak){
   var a=_bkAcct(ak), L=_bkTxList(ak), B=_bkBal(L), h='';
   var ok=B.last && Math.abs(B.last.bal-B.last.calc)<1;
-  h+='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px"><div style="flex:1;font-size:14px;color:#334155"><b style="font-size:16px">'+esc(a.nm)+'</b> '+esc(a.no||'')+'</div>';
+  h+='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px"><div style="flex:1 1 240px;min-width:200px;font-size:14px;color:#334155"><b style="font-size:16px">'+esc(a.nm)+'</b> '+esc(a.no||'')+'</div>';
   h+='<button class="btn btn-s" style="background:#1d4ed8;color:#fff;font-weight:900" onclick="_bkReg(\''+ak+'\')">＋ 거래 등록</button>';
   h+='<button class="btn btn-s" style="background:#b45309;color:#fff;font-weight:800" onclick="_bkEvPrintAsk(\''+ak+'\')" title="아래 기간·연도 그대로 (체크한 거래만 뽑으려면 표 위 「고른 거래 증빙 출력」)">📎 증빙 출력</button>';
   h+='<button class="btn btn-s" style="background:#15803d;color:#fff;font-weight:800" onclick="_bkXlsxOut(\''+ak+'\')" title="지금 보이는 거래(연도·필터·검색 그대로) — 분류 채워서 다시 가져오기">📗 엑셀 내보내기</button>';
