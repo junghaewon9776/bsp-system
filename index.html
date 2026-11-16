@@ -13388,7 +13388,9 @@ async function _fbPubSync(){
       var due=_fbDue(m,"",now), pd=_fbSumPaid(P[m._k]||{},"",now), bal=pd-due;
       if(m.endYm && m.endYm<now && bal>=0) return;  // 탈퇴하고 정리 끝난 회원은 빼기
       all.push({nm:String(m.nm), role:String(m.role||""), due:due, paid:pd, bal:bal, end:m.endYm||""}); });
-    var allV={now:now, amt:_fbAmt(), list:all};
+    var yrs={}; _fbYears().forEach(function(Y){ var YR=_fbYearRows(+Y), cv=function(r){ return {role:String(r.m.role||""), nm:String(r.m.nm||""), end:r.m.endYm||"", carry:r.carry, months:r.months, sum:r.sum, mis:r.mis}; };
+      yrs[Y]={ref:YR.ref, rows:YR.rows.map(cv), gone:YR.gone.map(cv)}; });
+    var allV={now:now, amt:_fbAmt(), list:all, yrs:yrs};
     Object.keys(out).forEach(function(h){ out[h].all=allV; });  // 본인 확인(이름+번호)한 회원만 전체 목록을 봄
     var js=JSON.stringify(out); if(js===_fbPubLast) return; _fbPubLast=js;
     fbDb.ref('/main/PubFee').set(out).catch(function(){ _fbPubLast=""; });
@@ -13477,23 +13479,33 @@ function _fbPubAllTog(){
   if(window._fbPubOpen) _fbPubAll();
 }
 function _fbPubAll(){
-  var d=document.getElementById("fbPubAllIn"); if(!d) return; d.innerHTML='<div style="text-align:center;padding:16px;color:#64748b">📡 불러오는 중...</div>';
-  Promise.resolve(window._fbPubAllV).then(function(v){
-    if(!v||!v.list){ d.innerHTML='<div style="padding:12px;color:#b45309;font-weight:700">전체 회원 목록이 아직 없어요 — 관리자가 시스템에서 회비 화면을 한 번 열면 생겨요</div>'; return; }
-    var amt=v.amt||20000, L=v.list.slice();
-    var nUn=L.filter(function(x){ return x.bal<0; }).length;
-    var mo=function(b){ return Math.floor(Math.abs(b)/amt); };
-    var h='<div style="font-size:13px;color:#64748b;margin:0 0 10px">월 '+fm(amt)+'원 · '+esc(v.now||"")+' 기준 · 회원 '+L.length+'명 중 <b style="color:#dc2626">미납 '+nUn+'명</b></div>';
-    h+='<div style="display:flex;gap:6px;margin-bottom:10px">'+[["all","전체"],["un","미납만"],["ok","완납만"]].map(function(x){ var on=(window._fbPubF||"all")===x[0]; return '<button onclick="window._fbPubF=\''+x[0]+'\';_fbPubAll()" style="flex:1;border:2px solid #0f766e;border-radius:8px;padding:8px;font-weight:800;cursor:pointer;background:'+(on?'#0f766e':'#fff')+';color:'+(on?'#fff':'#0f766e')+'">'+x[1]+'</button>'; }).join('')+'</div>';
-    var f=window._fbPubF||"all"; if(f==="un") L=L.filter(function(x){ return x.bal<0; }); if(f==="ok") L=L.filter(function(x){ return x.bal>=0; });
-    L.sort(function(a,b){ return a.bal-b.bal || String(a.nm).localeCompare(String(b.nm)); });
-    h+='<table style="width:100%;border-collapse:collapse;font-size:15px"><tr style="background:#f1f5f9"><th style="padding:8px 6px;text-align:left">이름</th><th style="padding:8px 6px;text-align:center">상태</th><th style="padding:8px 6px;text-align:right">금액</th></tr>';
-    L.forEach(function(x){ var b=x.bal;
-      h+='<tr style="border-bottom:1px solid #e2e8f0"><td style="padding:9px 6px;font-weight:800">'+esc(x.nm)+(x.role?' <span style="font-size:12px;color:#64748b;font-weight:600">'+esc(x.role)+'</span>':'')+(x.end?' <span style="font-size:11.5px;color:#94a3b8">(탈퇴)</span>':'')+'</td>'
-        +'<td style="padding:9px 6px;text-align:center;font-weight:800;color:'+(b<0?'#dc2626':'#15803d')+'">'+(b<0?'미납'+(mo(b)?' '+mo(b)+'개월':''):b>0?'✅ 완납 (선납'+(mo(b)?' '+mo(b)+'개월':'')+')':'✅ 완납')+'</td>'
-        +'<td style="padding:9px 6px;text-align:right;font-weight:800;color:'+(b<0?'#dc2626':b>0?'#15803d':'#334155')+'">'+(b<0?'-'+fm(-b):b>0?'+'+fm(b):'0')+'원</td></tr>'; });
-    d.innerHTML=h+'</table>';
-  }).catch(function(){ d.innerHTML='<div style="padding:12px;color:#b91c1c;font-weight:700">전체 회원 목록을 못 불러왔어요 — 잠시 뒤 다시 해 주세요</div>'; });
+  var d=document.getElementById("fbPubAllIn"); if(!d) return;
+  var v=window._fbPubAllV;
+  if(!v||!v.yrs){ d.innerHTML='<div style="padding:12px;color:#b45309;font-weight:700">전체 회원 표가 아직 없어요 — 관리자가 시스템에서 회비 화면을 한 번 열면 생겨요</div>'; return; }
+  var ys=Object.keys(v.yrs).sort().reverse(); if(!window._fbPubY||ys.indexOf(window._fbPubY)<0) window._fbPubY=ys[0];
+  var Y=window._fbPubY, D=v.yrs[Y], f=window._fbPubF||"all", refM=+String(D.ref||"").slice(5,7), yi=ys.indexOf(Y), yo=ys[yi+1], yn=ys[yi-1];
+  var rows=(D.rows||[]).filter(function(r){ return f==="un"?r.mis<0:f==="ok"?r.mis>=0:true; });
+  var nb=function(y,lb){ return '<button '+(y?'onclick="window._fbPubY=\''+y+'\';_fbPubAll()"':'disabled')+' style="border:2px solid '+(y?'#0f766e':'#e2e8f0')+';border-radius:8px;width:40px;height:36px;font-size:17px;font-weight:900;background:#fff;color:'+(y?'#0f766e':'#cbd5e1')+';cursor:pointer">'+lb+'</button>'; };
+  var h='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'+nb(yo,'◀')+'<b style="font-size:19px;color:#0f766e;min-width:80px;text-align:center">'+Y+'년</b>'+nb(yn,'▶')+'<span style="font-size:12.5px;color:#64748b">'+esc(D.ref||'')+'까지 기준</span></div>';
+  h+='<div style="display:flex;gap:6px;margin-bottom:8px">'+[["all","전체"],["un","미납만"],["ok","완납만"]].map(function(x){ var on=f===x[0]; return '<button onclick="window._fbPubF=\''+x[0]+'\';_fbPubAll()" style="flex:1;border:2px solid #0f766e;border-radius:8px;padding:7px;font-weight:800;cursor:pointer;background:'+(on?'#0f766e':'#fff')+';color:'+(on?'#fff':'#0f766e')+'">'+x[1]+'</button>'; }).join('')+'</div>';
+  h+='<div style="font-size:12px;color:#475569;margin-bottom:6px">이월 = 지난해까지 밀린 돈 · 미납금 <b style="color:#dc2626">−</b> 덜 낸 돈, <b style="color:#15803d">+</b> 미리 낸 돈 · 표는 옆으로 밀어서 보세요 ↔</div>';
+  h+='<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid #e2e8f0;border-radius:8px"><table style="border-collapse:collapse;font-size:13.5px;min-width:900px;width:100%">';
+  h+='<thead><tr style="background:#1e293b;color:#fff"><th style="padding:7px 6px">직책</th><th style="padding:7px 6px;text-align:left;position:sticky;left:0;background:#1e293b">성함</th><th style="padding:7px 6px;text-align:right">이월</th>';
+  for(var i=1;i<=12;i++) h+='<th style="padding:7px 4px;text-align:right'+(i>refM&&Y===String(D.ref||"").slice(0,4)?';opacity:.5':'')+'">'+i+'월</th>';
+  h+='<th style="padding:7px 6px;text-align:right">합계</th><th style="padding:7px 6px;text-align:right">미납금</th></tr></thead><tbody>';
+  var tC=0,tS=0,tMis=0,tM=[0,0,0,0,0,0,0,0,0,0,0,0];
+  var row=function(r,gray){ var bg=gray?'#f1f5f9':'#fff';
+    var s='<tr style="border-bottom:1px solid #e2e8f0;background:'+bg+(gray?';color:#64748b':'')+'"><td style="padding:6px;text-align:center;font-size:12px">'+esc(r.role||'')+'</td><td style="padding:6px;font-weight:800;white-space:nowrap;position:sticky;left:0;background:'+bg+'">'+esc(r.nm)+(r.end?' <span style="font-size:11px;color:#b91c1c">탈퇴</span>':'')+'</td>';
+    s+='<td style="padding:6px;text-align:right;color:'+(r.carry>0?'#b91c1c':r.carry<0?'#15803d':'#94a3b8')+'">'+(r.carry?fm(r.carry):'-')+'</td>';
+    (r.months||[]).forEach(function(x,i){ s+='<td style="padding:6px 4px;text-align:right;'+(x?'font-weight:700;color:#0f172a':'color:#cbd5e1')+'">'+(x?fm(x):'·')+'</td>'; tM[i]+=x||0; });
+    s+='<td style="padding:6px;text-align:right;font-weight:800">'+fm(r.sum)+'</td><td style="padding:6px;text-align:right;font-weight:900;color:'+(r.mis<0?'#dc2626':r.mis>0?'#15803d':'#0f172a')+'">'+(r.mis===0?'완납':(r.mis>0?'+':'')+fm(r.mis))+'</td></tr>';
+    tC+=r.carry||0; tS+=r.sum||0; tMis+=r.mis||0; return s; };
+  rows.forEach(function(r){ h+=row(r,false); });
+  h+='<tr style="background:#e2e8f0;font-weight:900;border-top:2px solid #334155"><td></td><td style="padding:7px 6px;position:sticky;left:0;background:#e2e8f0;white-space:nowrap">합계 ('+rows.length+'명)</td><td style="padding:7px 6px;text-align:right">'+fm(tC)+'</td>';
+  tM.forEach(function(x){ h+='<td style="padding:7px 4px;text-align:right">'+(x?fm(x):'')+'</td>'; });
+  h+='<td style="padding:7px 6px;text-align:right">'+fm(tS)+'</td><td style="padding:7px 6px;text-align:right;color:'+(tMis<0?'#dc2626':'#0f172a')+'">'+fm(tMis)+'</td></tr>';
+  if(f!=="ok"&&(D.gone||[]).length){ h+='<tr><td colspan="16" style="padding:10px 6px 4px;font-weight:800;color:#64748b">탈퇴 회원 — 남은 미납</td></tr>'; D.gone.forEach(function(r){ h+=row(r,true); }); }
+  d.innerHTML=h+'</tbody></table></div>';
 }
 function _fbPubGo(){
   var nm=_fbNm((document.getElementById("fbP_nm")||{}).value), t4=String((document.getElementById("fbP_tel")||{}).value||"").replace(/\D/g,"");
