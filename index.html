@@ -13388,10 +13388,10 @@ async function _fbPubSync(){
       var due=_fbDue(m,"",now), pd=_fbSumPaid(P[m._k]||{},"",now), bal=pd-due;
       if(m.endYm && m.endYm<now && bal>=0) return;  // 탈퇴하고 정리 끝난 회원은 빼기
       all.push({nm:String(m.nm), role:String(m.role||""), due:due, paid:pd, bal:bal, end:m.endYm||""}); });
-    var allV={now:now, amt:_fbAmt(), acct:FB.cfg.acct||"", list:all};
-    var js=JSON.stringify(out)+JSON.stringify(allV); if(js===_fbPubLast) return; _fbPubLast=js;
+    var allV={now:now, amt:_fbAmt(), list:all};
+    Object.keys(out).forEach(function(h){ out[h].all=allV; });  // 본인 확인(이름+번호)한 회원만 전체 목록을 봄
+    var js=JSON.stringify(out); if(js===_fbPubLast) return; _fbPubLast=js;
     fbDb.ref('/main/PubFee').set(out).catch(function(){ _fbPubLast=""; });
-    fbDb.ref('/main/PubFeeAll').set(allV).catch(function(){ _fbPubLast=""; });
   }catch(e){}
 }
 function _fbAmt(){ return Number(FB.cfg.amt)||20000; }
@@ -13467,7 +13467,7 @@ function _fbPubForm(err){
     +'<label style="font-weight:700;font-size:14px">휴대폰 뒷자리 4개</label><input id="fbP_tel" inputmode="numeric" maxlength="4" style="width:100%;padding:12px;font-size:17px;margin:4px 0 12px;border:2px solid #cbd5e1;border-radius:8px;box-sizing:border-box" onkeydown="if(event.key===\'Enter\')_fbPubGo()">'
     +(err?'<div style="color:#b91c1c;font-weight:700;margin-bottom:10px">'+esc(err)+'</div>':'')
     +'<button onclick="_fbPubGo()" style="width:100%;background:#1d4ed8;color:#fff;border:none;border-radius:10px;padding:14px;font-size:18px;font-weight:800;cursor:pointer">조회하기</button>'
-    +'</div>'+_fbPubAllBox();
+    +'</div>';
 }
 // 👥 전체 회원 회비 — 맨 아래 「펼치기」. 이름·완납/미납만 (전화번호·입금 내역은 안 보임)
 function _fbPubAllBox(){ window._fbPubOpen=false; return '<div style="margin-top:14px;background:#fff;border-radius:14px;box-shadow:0 4px 20px rgba(15,23,42,.08);overflow:hidden"><button onclick="_fbPubAllTog()" id="fbPubAllBtn" style="width:100%;background:#0f766e;color:#fff;border:none;padding:13px;font-size:16px;font-weight:800;cursor:pointer">👥 전체 회원 회비 펼치기 ▼</button><div id="fbPubAllIn" style="display:none;padding:12px"></div></div>'; }
@@ -13478,8 +13478,8 @@ function _fbPubAllTog(){
 }
 function _fbPubAll(){
   var d=document.getElementById("fbPubAllIn"); if(!d) return; d.innerHTML='<div style="text-align:center;padding:16px;color:#64748b">📡 불러오는 중...</div>';
-  fbDb.ref('/main/PubFeeAll').once('value').then(function(sn){
-    var v=sn.val(); if(!v||!v.list){ d.innerHTML='<div style="padding:12px;color:#b45309;font-weight:700">전체 회원 목록이 아직 준비 안 됐어요 — 재무국에 문의해 주세요</div>'; return; }
+  Promise.resolve(window._fbPubAllV).then(function(v){
+    if(!v||!v.list){ d.innerHTML='<div style="padding:12px;color:#b45309;font-weight:700">전체 회원 목록이 아직 없어요 — 관리자가 시스템에서 회비 화면을 한 번 열면 생겨요</div>'; return; }
     var amt=v.amt||20000, L=v.list.slice();
     var nUn=L.filter(function(x){ return x.bal<0; }).length;
     var mo=function(b){ return Math.floor(Math.abs(b)/amt); };
@@ -13501,7 +13501,7 @@ function _fbPubGo(){
   var NO="일치하는 회원이 없어요. 이름·번호를 확인하거나 재무국에 문의해 주세요";
   _fbPubHash(nm,t4).then(function(h){ return fbDb.ref('/main/PubFee/'+h).once('value'); }).then(function(sn){
     var v=sn.val();
-    if(v&&v.k){ FB.cfg=v.cfg||{}; FB.mems={}; FB.mems[v.k]=v.mem||{}; FB.tx=v.tx||{}; FB.loaded=true; _fbPubShow(v.k); return; }
+    if(v&&v.k){ window._fbPubAllV=v.all||null; FB.cfg=v.cfg||{}; FB.mems={}; FB.mems[v.k]=v.mem||{}; FB.tx=v.tx||{}; FB.loaded=true; _fbPubShow(v.k); return; }
     // 요약판이 아직 없을 때(옮기기 전): 예전처럼 장부에서 찾기 — 규칙을 잠그면 이 길은 막힘
     return _fbRef().once('value').then(function(s2){
       var w=s2.val()||{}; FB.cfg=w.cfg||{}; FB.mems=w.mems||{}; FB.tx=w.tx||{}; FB.loaded=true;
