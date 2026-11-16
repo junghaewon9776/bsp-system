@@ -14432,7 +14432,13 @@ function _bkSumView(){
   // 대분류 슬라이서
   var bl=Object.keys(R.bigs).sort(function(a,b){ return R.bigs[b]-R.bigs[a]; });
   if(BK_BIG && bl.indexOf(BK_BIG)<0) bl.unshift(BK_BIG);
-  h+='<div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center"><b style="width:60px">대분류</b>'+pill(!BK_BIG,'전체','BK_BIG=\'\';draw()','#7c3aed')+bl.map(function(b){ return pill(BK_BIG===b,esc(b),'BK_BIG='+_bkJs(b).replace(/"/g,'&quot;')+';draw()','#7c3aed'); }).join('')+'</div></div>';
+  // 대분류가 많아져도 깔끔하게 — 드롭다운 하나 (금액 큰 순, 옆에 금액)
+  window._bkBigL=bl;
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><b style="width:60px">대분류</b>'
+    +'<select onchange="BK_BIG=this.value===\'\'?\'\':window._bkBigL[+this.value];draw()" style="padding:8px 10px;font-size:15px;font-weight:800;border:2px solid #7c3aed;border-radius:8px;background:'+(BK_BIG?'#7c3aed':'#fff')+';color:'+(BK_BIG?'#fff':'#4c1d95')+';min-width:220px;max-width:100%;cursor:pointer">'
+    +'<option value=""'+(!BK_BIG?' selected':'')+' style="background:#fff;color:#0f172a">📂 전체 대분류 ('+bl.length+'개)</option>'
+    +bl.map(function(b,i){ return '<option value="'+i+'"'+(BK_BIG===b?' selected':'')+' style="background:#fff;color:#0f172a">'+esc(b)+(R.bigs[b]?'  ·  '+fm(R.bigs[b])+'원':'')+'</option>'; }).join('')+'</select>'
+    +(BK_BIG?'<button onclick="BK_BIG=\'\';draw()" style="border:none;border-radius:8px;padding:8px 12px;font-weight:800;background:#475569;color:#fff;cursor:pointer">✕ 전체로</button>':'')+'</div></div>';
   var sv=function(k,lb){ var on=BK_SV===k; return '<button onclick="BK_SV=\''+k+'\';draw()" style="border:none;border-radius:8px;padding:9px 16px;font-size:15px;font-weight:900;cursor:pointer;background:'+(on?'#1d4ed8':'#e2e8f0')+';color:'+(on?'#fff':'#0f172a')+'">'+lb+'</button>'; };
   h+='<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:12px">'+(isA()?sv("dash","📊 대시보드")+sv("report","📄 정산보고서")+(_bkMain()?sv("evt","🎪 사업별 결산")+sv("budget","📋 예산안")+sv("agm","🏛 총회 자료"):''):'')+(BK_SV==="report"?'<label style="display:flex;gap:5px;align-items:center;font-weight:700;margin-left:8px"><input type="checkbox" '+(BK_DET?'checked':'')+' onchange="BK_DET=this.checked;draw()" style="width:18px;height:18px"> 거래 상세 내역도 넣기</label>':'')+'</div>';
   if(!A.length) return h+'<div class="mut">통장을 하나 이상 골라 주세요</div>';
