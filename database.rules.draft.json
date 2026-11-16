@@ -26,6 +26,10 @@
         ".read": true,
         ".write": "auth != null && auth.token.sys === 'bsp'"
       },
+      "PubFeeAll": {
+        ".read": true,
+        ".write": "auth != null && auth.token.sys === 'bsp'"
+      },
       "PubFee": {
         "$h": {
           ".read": true
