@@ -15712,30 +15712,61 @@ function _bkReportPrint(){
 
 // ───────── 🖨 문서 인쇄 창 (정산서 공통) — 크기 확대/축소 · 여백 · 「한 장 줄이기」 · 한글(.doc) 받기 · 표 선 진하게 ─────────
 function _docPrintBoot(KEY, ORI, TTL){
-  var Z = 100, M = 12, W = ORI === "landscape" ? 297 : 210, H = ORI === "landscape" ? 210 : 297;
-  try { var sv = JSON.parse(localStorage.getItem(KEY) || "{}"); if(sv.z) Z = sv.z; if(sv.m != null) M = sv.m; } catch(e){}
+  var Z = 100, M = 12, SD = false, SP = false, W = ORI === "landscape" ? 297 : 210, H = ORI === "landscape" ? 210 : 297;
+  try { var sv = JSON.parse(localStorage.getItem(KEY) || "{}"); if(sv.z) Z = sv.z; if(sv.m != null) M = sv.m; SD = !!sv.sd; SP = !!sv.sp; } catch(e){}
+  var td = new Date(), DT = td.getFullYear() + "-" + ("0" + (td.getMonth() + 1)).slice(-2) + "-" + ("0" + td.getDate()).slice(-2);
   var $ = function(id){ return document.getElementById(id); };
   function px(mm){ return mm * 96 / 25.4; }
   function ap(){
-    $("pg").textContent = "@page{size:A4 " + ORI + ";margin:" + M + "mm}";
+    var nb = '"\\a0"';
+    $("pg").textContent = "@page{size:A4 " + ORI + ";margin:" + M + "mm;"
+      + "@top-left{content:" + nb + "}@top-center{content:" + nb + "}@top-right{content:" + nb + "}"
+      + "@bottom-left{content:" + (SD ? '"출력일자 ' + DT + '"' : nb) + ";font-size:9pt;color:#000}"
+      + "@bottom-center{content:" + nb + "}"
+      + "@bottom-right{content:" + (SP ? 'counter(page) " / " counter(pages)' : nb) + ";font-size:9pt;color:#000}}";
+    $("cd").checked = SD; $("cp").checked = SP;
     var d = $("doc"), pw = px(W - 2 * M);
     d.style.zoom = Z / 100; d.style.width = (pw / (Z / 100)) + "px";
     $("zv").textContent = Z + "%"; $("mv").value = M;
     var h = d.getBoundingClientRect().height, ph = px(H - 2 * M), n = Math.max(1, Math.ceil(h / ph - 0.01));
     $("pv").textContent = "약 " + n + "장";
     window._docFit = function(){ if(n <= 1 && h <= ph){ alert("이미 한 장이에요"); return; } var want = Math.max(1, Math.ceil(h / ph - 0.01) - 1); Z = Math.max(50, Math.floor(Z * (want * ph) / h * 0.97)); ap(); };
-    try { localStorage.setItem(KEY, JSON.stringify({ z: Z, m: M })); } catch(e){}
+    try { localStorage.setItem(KEY, JSON.stringify({ z: Z, m: M, sd: SD, sp: SP })); } catch(e){}
   }
   window._docZ = function(d){ Z = Math.min(150, Math.max(50, Z + d)); ap(); };
   window._docZ0 = function(){ Z = 100; ap(); };
+  window._docOpt = function(){ SD = $("cd").checked; SP = $("cp").checked; ap(); };
   window._docM = function(v){ M = Math.max(0, Math.min(30, Number(v) || 0)); ap(); };
   window._docDoc = function(){
-    // 한글·워드에서 열리는 문서(.doc) — 한글에서 열고 「다른 이름으로 저장 → 한글 문서(.hwp)」 하면 한글 파일
-    var body = $("doc").innerHTML;
-    var css = "@page WordSection1{size:" + (ORI === "landscape" ? "841.9pt 595.3pt;mso-page-orientation:landscape" : "595.3pt 841.9pt") + ";margin:" + M + "mm}div.WordSection1{page:WordSection1}body{font-family:'맑은 고딕','Malgun Gothic';font-size:10pt;color:#000}table{border-collapse:collapse}td,th{border:1px solid #000;padding:3px 5px}";
-    var html = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>" + TTL + "</title><style>" + css + "</style></head><body><div class='WordSection1'>" + body + "</div></body></html>";
-    var b = new Blob(["\ufeff" + html], { type: "application/msword" }), a = document.createElement("a");
+    // 한글에서 열리는 문서(.doc) — 한글은 HTML 의 style 을 잘 못 읽어서 옛날식 속성(width·align·bgcolor·border)으로 바꿔 줌
+    //  (2026-11-16 한컴오피스로 직접 열어 확인: charset 은 http-equiv 로 줘야 글자 안 깨짐)
+    var src = $("doc").cloneNode(true);
+    [].forEach.call(src.querySelectorAll(".noprint,.no-print,button,script"), function(e){ e.remove(); });
+    [].forEach.call(src.querySelectorAll("*"), function(e){
+      var st = e.style; if(!st) return;
+      var ta = st.textAlign, va = st.verticalAlign, bg = st.backgroundColor, w = st.width;
+      if(e.tagName === "TABLE"){
+        e.setAttribute("border", "1"); e.setAttribute("cellspacing", "0"); e.setAttribute("cellpadding", "3");
+        e.setAttribute("width", w && /%$/.test(w) ? w : (w && /px$/.test(w) ? parseInt(w, 10) : "100%"));
+        var pa = e.parentNode; if(pa && pa.style && pa.style.justifyContent === "flex-end"){ pa.setAttribute("align", "right"); e.setAttribute("align", "right"); }   // 결재란 오른쪽
+        var cs = e.querySelectorAll("col"), r0 = e.rows && e.rows[0];   // colgroup 칸 너비 → 첫 줄 칸 width
+        if(cs.length && r0){ var ci = 0; [].forEach.call(r0.cells, function(c){ var cw = cs[ci] && cs[ci].style.width; if(cw && /px$/.test(cw) && !c.getAttribute("width")) c.setAttribute("width", parseInt(cw, 10)); ci += c.colSpan || 1; }); }
+      }
+      if(ta === "center" || ta === "right") e.setAttribute("align", ta);
+      if((e.tagName === "TD" || e.tagName === "TH") && va === "middle") e.setAttribute("valign", "middle");
+      if((e.tagName === "TD" || e.tagName === "TH") && bg && bg !== "transparent" && bg !== "rgba(0, 0, 0, 0)"){
+        var m = bg.match(/\d+/g); if(m) e.setAttribute("bgcolor", "#" + m.slice(0, 3).map(function(x){ return ("0" + (+x).toString(16)).slice(-2); }).join(""));
+      }
+      if((e.tagName === "TD" || e.tagName === "TH") && w && /px$/.test(w)) e.setAttribute("width", parseInt(w, 10));
+      if(e.tagName === "DIV" && ta === "center" && !e.querySelector("table")){   // 제목 같은 가운데 줄 → 문단으로
+        var pp = document.createElement("p"); pp.setAttribute("align", "center"); pp.innerHTML = e.innerHTML; pp.style.cssText = e.style.cssText; e.parentNode.replaceChild(pp, e);
+      }
+    });
+    var css = "body{font-family:'맑은 고딕','Malgun Gothic';font-size:10pt;color:#000}table{border-collapse:collapse}td,th{border:1px solid #000;padding:3px 5px}";
+    var html = "<html><head><meta http-equiv='Content-Type' content='text/html; charset=utf-8'><title>" + (TTL || "") + "</title><style>" + css + "</style></head><body>" + src.innerHTML + "</body></html>";
+    var b = new Blob([html], { type: "application/msword" }), a = document.createElement("a");
     a.href = URL.createObjectURL(b); a.download = (TTL || "정산서").replace(/[\\\/:*?"<>|]/g, "_") + ".doc"; document.body.appendChild(a); a.click();
+    window._docLastHtml = html;
     setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
   };
   window.addEventListener("load", ap); setTimeout(ap, 300);
@@ -15758,8 +15789,10 @@ function _docPrint(o){
     + '<span style="margin-left:6px">크기</span><button style="' + B + '#475569" onclick="_docZ(-5)">➖</button><b id="zv" style="min-width:44px;text-align:center">100%</b><button style="' + B + '#475569" onclick="_docZ(5)">➕</button><button style="' + B + '#334155;font-size:12px" onclick="_docZ0()">원래대로</button>'
     + '<span style="margin-left:6px">여백</span><input id="mv" type="number" min="0" max="30" step="1" onchange="_docM(this.value)">mm'
     + '<b id="pv" style="margin-left:6px;color:#fde68a"></b><button style="' + B + '#b45309" onclick="_docFit()">📏 한 장 줄이기</button>'
+    + '<label style="display:flex;gap:4px;align-items:center;margin-left:6px;cursor:pointer"><input id="cd" type="checkbox" style="width:18px;height:18px" onchange="_docOpt()">출력일자</label>'
+    + '<label style="display:flex;gap:4px;align-items:center;cursor:pointer"><input id="cp" type="checkbox" style="width:18px;height:18px" onchange="_docOpt()">쪽 번호 (1/2)</label>'
     + '<button style="' + B + '#15803d" onclick="_docDoc()">📝 한글 파일로 받기</button>'
-    + '<span style="font-size:12px;color:#cbd5e1">마지막 한두 줄 때문에 장이 넘어가면 「📏 한 장 줄이기」 · 크기·여백은 기억해요</span></div>';
+    + '<span style="font-size:12px;color:#cbd5e1">마지막 한두 줄 때문에 장이 넘어가면 「📏 한 장 줄이기」 · 설정은 기억해요 · 그래도 위아래에 주소·날짜가 찍히면 인쇄 창 「설정 더보기 › 머리글과 바닥글」 체크를 꺼 주세요</span></div>';
   var h = '<!doctype html><html><head><meta charset="utf-8"><title>' + esc(o.title || "") + '</title><style id="pg"></style><style>' + css + '</style></head><body>' + bar + '<div id="doc">' + o.html + '</div>'
     + '<script>(' + _docPrintBoot.toString() + ')(' + JSON.stringify(key) + ',' + JSON.stringify(ori) + ',' + JSON.stringify(o.title || "") + ')<\/script></body></html>';
   var w = window.open("", "_blank", "width=1000,height=1000"); if(!w){ toast("팝업이 막혔어요 — 허용 후 다시", true); return; }
