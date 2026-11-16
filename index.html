@@ -14503,7 +14503,7 @@ function _bkDashCharts(R){
 var BK_RS="big", BK_MERGE=true;   // 같은 대분류·계정과목 칸 병합
 var BK_RS_LIST=[["gov","🏛 정산서","월례회 문서 양식 — 결재란 · 집행현황(이월금·수입금) · 집행내역(비목·항목·내역)"],["big","📂 대분류별","엑셀 「정산보고서」 — 대분류 비중 + 대분류별 상세"],["date","📅 일자순","엑셀 「정산보고」 — 날짜 순서대로 수입·지출"],["pnl","⚖ 사업별 수입·지출","대분류마다 들어온 돈·쓴 돈·남은 돈을 옆에 — 같은 대분류는 칸 병합"],["acct","🧾 계정과목별","엑셀 「항목별 정산보고」 — 계정과목 비율 + 내역"],["month","📈 월별 추이","기업식 손익 추이표 — 대분류 × 월"],["yoy","🔁 전년 대비","기업식 — 올해와 작년 같은 기간 비교, 증감·증감률"]];
 function _bkRsPicker(){
-  return '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:-4px 0 12px"><b style="font-size:13px;color:#475569">보고서 모양</b>'+BK_RS_LIST.map(function(o){ var on=BK_RS===o[0]; return '<button title="'+esc(o[2])+'" onclick="BK_RS=\''+o[0]+'\';draw()" style="border:2px solid '+(on?'#1d4ed8':'#cbd5e1')+';border-radius:8px;padding:5px 11px;font-size:13.5px;font-weight:800;cursor:pointer;background:'+(on?'#1d4ed8':'#fff')+';color:'+(on?'#fff':'#0f172a')+'">'+o[1]+'</button>'; }).join('')+(true?'<label style="display:flex;gap:5px;align-items:center;font-weight:800;margin-left:6px;background:#fff;border:2px solid #7c3aed;border-radius:8px;padding:4px 10px;cursor:pointer"><input type="checkbox" '+(BK_MERGE?'checked':'')+' onchange="BK_MERGE=this.checked;draw()" style="width:17px;height:17px"> 같은 '+(BK_RS==="date"?'날짜':(BK_RS==="acct"||BK_BIG?'계정과목':'대분류'))+' 칸 병합'+((BK_RS==="month"||BK_RS==="yoy")?' <span style="font-size:11px;font-weight:600;color:#64748b">(이 모양은 합칠 칸 없음)</span>':(BK_RS==="gov"?' <span style="font-size:11px;font-weight:600;color:#64748b">(정산서는 항상 병합)</span>':''))+'</label><label style="display:flex;gap:5px;align-items:center;font-weight:800;background:#fff;border:2px solid #0f766e;border-radius:8px;padding:4px 10px;cursor:pointer"><input type="checkbox" '+(BK_SIGNON?'checked':'')+' onchange="BK_SIGNON=this.checked;draw()" style="width:17px;height:17px"> ✍ 결재란</label>'+(BK_SIGNON?_bkEsgBtn():'')+'':'')+'<span style="font-size:12px;color:#64748b">'+esc((BK_RS_LIST.filter(function(o){ return o[0]===BK_RS; })[0]||[])[2]||'')+'</span></div>';
+  return '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:-4px 0 12px"><b style="font-size:13px;color:#475569">보고서 모양</b>'+BK_RS_LIST.map(function(o){ var on=BK_RS===o[0]; return '<button title="'+esc(o[2])+'" onclick="BK_RS=\''+o[0]+'\';draw()" style="border:2px solid '+(on?'#1d4ed8':'#cbd5e1')+';border-radius:8px;padding:5px 11px;font-size:13.5px;font-weight:800;cursor:pointer;background:'+(on?'#1d4ed8':'#fff')+';color:'+(on?'#fff':'#0f172a')+'">'+o[1]+'</button>'; }).join('')+(true?'<label style="display:flex;gap:5px;align-items:center;font-weight:800;margin-left:6px;background:#fff;border:2px solid #7c3aed;border-radius:8px;padding:4px 10px;cursor:pointer"><input type="checkbox" '+(BK_MERGE?'checked':'')+' onchange="BK_MERGE=this.checked;draw()" style="width:17px;height:17px"> 같은 '+(BK_RS==="date"?'날짜':(BK_RS==="acct"||BK_BIG?'계정과목':'대분류'))+' 칸 병합'+((BK_RS==="month"||BK_RS==="yoy")?' <span style="font-size:11px;font-weight:600;color:#64748b">(이 모양은 합칠 칸 없음)</span>':(BK_RS==="gov"?' <span style="font-size:11px;font-weight:600;color:#64748b">(정산서는 항상 병합)</span>':''))+'</label><label style="display:flex;gap:5px;align-items:center;font-weight:800;background:#fff;border:2px solid #0f766e;border-radius:8px;padding:4px 10px;cursor:pointer"><input type="checkbox" '+(BK_SIGNON?'checked':'')+' onchange="BK_SIGNON=this.checked;draw()" style="width:17px;height:17px"> ✍ 결재란</label>'+(BK_SIGNON?_bkEsgBtn()+_bkSgCtl():'')+'':'')+'<span style="font-size:12px;color:#64748b">'+esc((BK_RS_LIST.filter(function(o){ return o[0]===BK_RS; })[0]||[])[2]||'')+'</span></div>';
 }
 // 대분류(또는 대분류 하나 골랐으면 계정과목) → {이름:{t, list}}
 function _bkRsGroups(G, byMid){
@@ -14859,13 +14859,39 @@ function _bkEsgReq(role){
   _tgNotify("<b>✍ ["+esc(typeof SYS_NAME!=="undefined"?SYS_NAME:"")+"] 정산서 결재 요청</b>\n• "+esc(_bkRepTitle())+"\n• "+esc(role)+" 서명 부탁드려요\n• 아래 링크 누르고 로그인 → 바로 서명\n"+_bkEsgLink(), [uid]);
   toast("📨 "+_esgUserNm(uid)+"님께 텔레그램으로 요청했어요");
 }
+// ✍ 결재란 서명 크기·위치 — {s:크기%, x:좌우px, y:위아래px}, 이 기기에 기억
+var BK_SG=(function(){ try{ var v=JSON.parse(localStorage.getItem("bkSgSz")||"null"); if(v&&v.s) return v; }catch(e){} return {s:100,x:0,y:0}; })();
+function _bkSgSet(ds,dx,dy,reset){ if(reset) BK_SG={s:100,x:0,y:0}; else { BK_SG.s=Math.max(60,Math.min(260,BK_SG.s+(ds||0))); BK_SG.x=Math.max(-40,Math.min(40,BK_SG.x+(dx||0))); BK_SG.y=Math.max(-30,Math.min(30,BK_SG.y+(dy||0))); }
+  try{ localStorage.setItem("bkSgSz",JSON.stringify(BK_SG)); }catch(e){} draw(); if(document.getElementById("bkEsgView")&&typeof _bkEsgView==="function") _bkEsgView(); }
+function _bkSgCtl(){
+  var b=function(lb,js,t){ return '<button onclick="'+js+'" title="'+t+'" style="border:none;border-radius:6px;padding:4px 9px;font-weight:900;background:#0f766e;color:#fff;cursor:pointer">'+lb+'</button>'; };
+  return '<span style="display:inline-flex;gap:4px;align-items:center;flex-wrap:wrap;background:#fff;border:2px solid #0f766e;border-radius:8px;padding:3px 8px;font-size:13px;font-weight:800">✍ 서명 크기 '+b('➖','_bkSgSet(-10)','작게')+'<b style="min-width:42px;text-align:center">'+BK_SG.s+'%</b>'+b('➕','_bkSgSet(10)','크게')
+    +' 위치 '+b('⬅','_bkSgSet(0,-3,0)','왼쪽')+b('➡','_bkSgSet(0,3,0)','오른쪽')+b('⬆','_bkSgSet(0,0,-3)','위')+b('⬇','_bkSgSet(0,0,3)','아래')+b('원래대로','_bkSgSet(0,0,0,1)','처음 크기·위치')+'</span>';
+}
+// 서명 그림 둘레 빈 공간 잘라내기 (서명칸에 작게 들어가던 원인) — 한 번 자르면 기억, 자른 뒤 화면 다시 그림
+var _BK_SGC={}, _bkSgT=null;
+function _bkSgCrop(src){
+  if(!src) return src; if(_BK_SGC[src]) return _BK_SGC[src]==="..."?src:_BK_SGC[src];
+  _BK_SGC[src]="..."; var im=new Image();
+  im.onload=function(){ try{
+    var w=im.naturalWidth, h=im.naturalHeight, c=document.createElement("canvas"); c.width=w; c.height=h; var x=c.getContext("2d"); x.drawImage(im,0,0);
+    var d=x.getImageData(0,0,w,h).data, x0=w, y0=h, x1=-1, y1=-1;
+    for(var y=0;y<h;y++) for(var i=0;i<w;i++){ var k=(y*w+i)*4; if(d[k+3]>30 && (d[k]<200||d[k+1]<200||d[k+2]<200)){ if(i<x0)x0=i; if(i>x1)x1=i; if(y<y0)y0=y; if(y>y1)y1=y; } }
+    if(x1<0){ _BK_SGC[src]=src; return; }
+    var pd=4; x0=Math.max(0,x0-pd); y0=Math.max(0,y0-pd); x1=Math.min(w-1,x1+pd); y1=Math.min(h-1,y1+pd);
+    var o=document.createElement("canvas"); o.width=x1-x0+1; o.height=y1-y0+1; o.getContext("2d").drawImage(c,x0,y0,o.width,o.height,0,0,o.width,o.height);
+    _BK_SGC[src]=o.toDataURL("image/png");
+  }catch(e){ _BK_SGC[src]=src; }
+    clearTimeout(_bkSgT); _bkSgT=setTimeout(function(){ try{ if(typeof CTAB!=="undefined"&&CTAB==="bank"&&!document.getElementById("bkEsgPadBox")) draw(); var v=document.getElementById("bkEsgView"); if(v&&document.getElementById("bkEsgMine")&&document.getElementById("bkEsgPadBox").style.display!=="block") _bkEsgView(); }catch(e){} },120); };
+  im.onerror=function(){ _BK_SGC[src]=src; }; im.src=src; return src;
+}
 function _bkSignBox(){
   if(!BK_SIGNON) return '';
   var R=_bkEsgRoles(), sg=_bkEsgOf().roles||{}, bd='border:1.5px solid #111;text-align:center;vertical-align:middle;padding:0', W=26+R.length*84;
   return '<div style="display:flex;justify-content:flex-end;margin:0 0 14px"><table style="margin-left:auto;border-collapse:collapse;table-layout:fixed;width:'+W+'px;min-width:'+W+'px;max-width:'+W+'px"><colgroup><col style="width:26px">'+R.map(function(){ return '<col style="width:84px">'; }).join('')+'</colgroup>'
     +'<tr><td rowspan="2" style="'+bd+';font-size:13px;font-weight:800;line-height:1.6">결<br><br>재</td>'
     +R.map(function(x){ return '<td style="'+bd+';height:28px;font-size:13px;font-weight:700;letter-spacing:1px;white-space:nowrap">'+esc(x)+'</td>'; }).join('')+'</tr><tr>'
-    +R.map(function(x){ var g=_bkEsgHand(x)?null:sg[x]; return '<td style="'+bd+';height:62px">'+(g&&g.img?'<img src="'+g.img+'" style="max-width:80px;max-height:44px;display:block;margin:0 auto"><div style="font-size:9.5px;color:#334155;line-height:1.2">'+esc(g.nm||'')+' '+esc(String(g.at||'').slice(5,10).replace('-','/'))+'</div>':'')+'</td>'; }).join('')+'</tr></table></div>';
+    +R.map(function(x){ var g=_bkEsgHand(x)?null:sg[x]; var k=BK_SG.s/100; return '<td style="'+bd+';height:62px;overflow:visible">'+(g&&g.img?'<div style="position:relative;height:60px"><img src="'+_bkSgCrop(g.img)+'" style="position:absolute;left:50%;top:50%;transform:translate(calc(-50% + '+BK_SG.x+'px),calc(-50% + '+BK_SG.y+'px));max-width:'+Math.round(80*k)+'px;max-height:'+Math.round(54*k)+'px"></div>':'')+'</td>'; }).join('')+'</tr></table></div>';
 }
 function _bkGovHtml(){
   var R=_bkSumCalc(), A=R.accts, an={}; A.forEach(function(a){ an[a._k]=a.nm; });
