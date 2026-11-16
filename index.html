@@ -14738,6 +14738,7 @@ function _bkEsgApply(o,pop){
   BK_SEL={}; _bkLoad();
   var n=0, go=function(){ n++;
     if((!BK.loaded||(_bkMain()&&!FB.loaded)||BK.esig===undefined)&&n<40){ setTimeout(go,300); return; }
+    if(!BK_SEL) BK_SEL={};  // _bkLoad()가 처음 불릴 때 BK_SEL을 null로 되돌림 → 그대로 쓰면 오류로 결재 화면이 안 떴음
     _bkAccts().forEach(function(a){ BK_SEL[a._k]=(o.s||[]).indexOf(a._k)>=0; }); try{ draw(); }catch(e){}
     if(pop){ try{ _bkEsgView(); }catch(e){ console.warn("esg view",e); toast("결재 화면을 못 열었어요 — 통장 > 정산서에서 ✍ 결재를 눌러 주세요",true); } } };
   go();
