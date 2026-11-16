@@ -637,7 +637,8 @@ function nowKST(full){ var d=new Date(); var s=todayKST()+" "+("0"+d.getHours())
       document.title = "💵 회비 조회";
     }
     // ===== 결재 요청 링크 (?esign=evt&inv=&role=&t=) — 로그인(폰은 자동 로그인) 후 결재 화면 =====
-    if (sp.get("bkesign")) DEEP_BKESIGN = sp.get("bkesign");
+    if (sp.get("bkesign")) { DEEP_BKESIGN = sp.get("bkesign"); try{ sessionStorage.setItem("bkesign", DEEP_BKESIGN); }catch(e){}
+      document.addEventListener("DOMContentLoaded", function(){ try{ var lb=document.getElementById("loginBox"); if(lb){ var d=document.createElement("div"); d.style.cssText="background:#1d4ed8;color:#fff;font-weight:900;border-radius:10px;padding:10px 12px;margin:0 0 12px;font-size:15px;text-align:center"; d.textContent="✍ 정산서 결재 링크예요 — 로그인하면 바로 서명 화면이 열려요"; lb.insertBefore(d, lb.firstChild); } }catch(e){} }); }
     if (sp.get("esign")) {
       DEEP_ESIGN = {evt:sp.get("esign")||"", inv:sp.get("inv")||"", role:sp.get("role")||"", t:sp.get("t")||""};
       DEEP_EVT = DEEP_ESIGN.evt;
@@ -1157,7 +1158,8 @@ async function doLogin(id,pw,keep,silent){
     }, 300);
   }
   // 결재 요청 링크로 들어왔으면 → 그 결재 화면 / 아니면 내 결재함 알림
-  if (DEEP_BKESIGN) { var _bd = DEEP_BKESIGN; DEEP_BKESIGN = null; setTimeout(function(){ _bkEsgOpenDeep(_bd); }, 600); }
+  if (!DEEP_BKESIGN) { try{ DEEP_BKESIGN = sessionStorage.getItem("bkesign") || null; }catch(e){} }
+  if (DEEP_BKESIGN) { var _bd = DEEP_BKESIGN; DEEP_BKESIGN = null; try{ sessionStorage.removeItem("bkesign"); }catch(e){} _bkEsgLoading("📡 정산서 불러오는 중…"); setTimeout(function(){ _bkEsgOpenDeep(_bd); }, 600); }
   else if (DEEP_ESIGN) { var _de = DEEP_ESIGN; DEEP_ESIGN = null; setTimeout(function(){ _esgOpenDeep(_de); }, 500); }
   else setTimeout(function(){ _esgInboxNotify(); }, 1500);
   return true;
@@ -14724,25 +14726,33 @@ function _bkEsgLinkCopy(role){
   var done=function(){ toast("🔗 링크를 복사했어요 — 문자·카톡에 붙여넣기"); };
   try{ navigator.clipboard.writeText(txt).then(done,function(){ prompt("복사하세요",txt); }); }catch(e){ prompt("복사하세요",txt); }
 }
+// 결재 링크: 여는 중·실패를 화면 전체로 보여 줌 (조용히 웹 화면만 남지 않게)
+function _bkEsgLoading(msg,err){
+  var v=document.getElementById("bkEsgView"); if(!v){ v=document.createElement("div"); v.id="bkEsgView"; v.style.cssText="position:fixed;inset:0;z-index:9000;background:#f1f5f9;overflow:auto"; document.body.appendChild(v); }
+  v.innerHTML='<div style="max-width:520px;margin:18vh auto 0;padding:20px;text-align:center"><div style="font-size:40px">'+(err?'⚠️':'✍')+'</div><div style="font-size:18px;font-weight:900;margin:10px 0;color:'+(err?'#b91c1c':'#0f172a')+'">'+esc(msg)+'</div>'
+    +(err?'<div style="font-size:13px;color:#475569;margin-bottom:14px">이 화면을 캡처해서 관리자에게 보내 주세요</div>':'<div style="font-size:13px;color:#475569">잠깐만 기다려 주세요</div>')
+    +'<button onclick="document.getElementById(\'bkEsgView\').remove()" style="margin-top:14px;border:none;border-radius:8px;padding:10px 18px;font-weight:800;background:#475569;color:#fff;cursor:pointer">✕ 닫기</button></div>';
+}
 function _bkEsgOpenDeep(code){
   try{ history.replaceState(null,"",location.pathname); }catch(e){}
-  var o; try{ o=JSON.parse(decodeURIComponent(escape(atob(code)))); }catch(e){ toast("결재 링크가 잘못됐어요",true); return; }
-  _bkEsgApply(o,true);
+  var o; try{ o=JSON.parse(decodeURIComponent(escape(atob(String(code).replace(/ /g,"+"))))); }catch(e){ _bkEsgLoading("결재 링크가 잘못됐어요 — 링크를 다시 받아 주세요",true); return; }
+  try{ _bkEsgApply(o,true); }catch(e){ console.warn(e); _bkEsgLoading("결재 화면 오류: "+(e&&e.message||e),true); }
 }
 function _bkEsgApply(o,pop){
   // 링크로 들어온 사람의 마지막 행사가 다른 행사면 → 정산서가 있는 행사(청년회 본회 또는 링크에 담긴 행사)로 먼저 바꿈
   if(pop&&!o._sw&&typeof EVENTS!=="undefined"&&EVENTS.length){
     var isMain=function(e){ var nm=String((e&&e.nm)||""), sp=(typeof SYS_PARENT!=="undefined"&&SYS_PARENT)||""; return (!!sp&&nm.indexOf(sp)>=0)||/청년회/.test(nm); };
     var tg=o.e?EVENTS.filter(function(e){ return e.evtId===o.e; })[0]:(_bkMain()?null:EVENTS.filter(isMain)[0]);
-    if(tg&&(!CUR_EVT||CUR_EVT.evtId!==tg.evtId)&&typeof switchEvent==="function"){ o._sw=1; Promise.resolve(switchEvent(tg.evtId)).catch(function(){}).then(function(){ _bkEsgApply(o,pop); }); return; }
+    if(tg&&(!CUR_EVT||CUR_EVT.evtId!==tg.evtId)&&typeof switchEvent==="function"){ o._sw=1; _bkEsgLoading("📡 "+(tg.nm||"")+" 정산서로 바꾸는 중…"); Promise.resolve(switchEvent(tg.evtId)).catch(function(){}).then(function(){ try{ _bkEsgApply(o,pop); }catch(e){ _bkEsgLoading("결재 화면 오류: "+(e&&e.message||e),true); } }); return; }
   }
   CTAB="bank"; BK_ACC="_sum"; BK_SV="report"; BK_RS="gov"; BK_BIG=o.b||""; BK_PY=+o.y||BK_PY; BK_PM=(o.m==null?0:+o.m); BK_FROM=o.f||""; BK_TO=o.t||"";
   BK_SEL={}; _bkLoad();
   var n=0, go=function(){ n++;
     if((!BK.loaded||(_bkMain()&&!FB.loaded)||BK.esig===undefined)&&n<40){ setTimeout(go,300); return; }
     if(!BK_SEL) BK_SEL={};  // _bkLoad()가 처음 불릴 때 BK_SEL을 null로 되돌림 → 그대로 쓰면 오류로 결재 화면이 안 떴음
-    _bkAccts().forEach(function(a){ BK_SEL[a._k]=(o.s||[]).indexOf(a._k)>=0; }); try{ draw(); }catch(e){}
-    if(pop){ try{ _bkEsgView(); }catch(e){ console.warn("esg view",e); toast("결재 화면을 못 열었어요 — 통장 > 정산서에서 ✍ 결재를 눌러 주세요",true); } } };
+    var okL=BK.loaded; _bkAccts().forEach(function(a){ BK_SEL[a._k]=(o.s||[]).indexOf(a._k)>=0; }); try{ draw(); }catch(e){}
+    if(pop){ if(!okL){ _bkEsgLoading("통장 자료를 못 불러왔어요 (권한 또는 인터넷 확인)",true); return; } try{ _bkEsgView(); }catch(e){ console.warn("esg view",e); _bkEsgLoading("결재 화면 오류: "+(e&&e.message||e),true); } } };
+  var go0=go; go=function(){ try{ go0(); }catch(e){ console.warn(e); if(pop) _bkEsgLoading("결재 화면 오류: "+(e&&e.message||e),true); } };
   go();
 }
 // ✍ 결재 링크로 들어오면 — 정산서 내용 전체를 보여 주고, 맨 아래(또는 위 버튼)에서 내 직책 서명만. 복잡한 화면 없이
@@ -14846,7 +14856,7 @@ function _bkEsgClear(role){
 function _bkEsgReq(role){
   var uid=_esgUidOf(role); if(!uid) return;
   if(typeof _tgOf==="function" && !_tgOf(uid)) return toast(_esgUserNm(uid)+"님은 텔레그램이 연결 안 돼 있어요 — 「이 기기에서 서명받기」로 받아 주세요",true);
-  _tgNotify("<b>✍ ["+esc(typeof SYS_NAME!=="undefined"?SYS_NAME:"")+"] 정산서 결재 요청</b>\n• "+esc(_bkRepTitle())+"\n• "+esc(role)+" 서명 부탁드려요\n• 재정 → 입출금 → 📊 결산·정산보고서 → 같은 기간 고르고 「✍ 결재 받기」", [uid]);
+  _tgNotify("<b>✍ ["+esc(typeof SYS_NAME!=="undefined"?SYS_NAME:"")+"] 정산서 결재 요청</b>\n• "+esc(_bkRepTitle())+"\n• "+esc(role)+" 서명 부탁드려요\n• 아래 링크 누르고 로그인 → 바로 서명\n"+_bkEsgLink(), [uid]);
   toast("📨 "+_esgUserNm(uid)+"님께 텔레그램으로 요청했어요");
 }
 function _bkSignBox(){
