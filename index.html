@@ -14739,8 +14739,9 @@ function _bkEsgView(){
       return g&&g.img?'<div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:10px 12px;margin-bottom:6px;font-size:15px">✅ <b>'+esc(r)+'</b> 서명 완료 <img src="'+g.img+'" style="height:34px;vertical-align:middle;background:#fff;border:1px solid #d1d5db;border-radius:4px;margin-left:6px"> <span style="color:#475569;font-size:13px">'+esc(g.nm||'')+' · '+esc(g.at||'')+'</span></div>'
         :'<div style="margin-bottom:6px">'+B("#2563eb","✍ "+esc(r)+"(으)로 서명하기","_bkEsgSign('"+esc(r)+"')","width:100%")+'</div>'; }).join('');
   };
-  var h='<div style="position:sticky;top:0;z-index:2;background:#0f172a;color:#fff;padding:10px 14px;display:flex;gap:8px;align-items:center"><b style="font-size:17px;flex:1">✍ 정산서 결재 — '+esc(_bkRepTitle())+'</b>'
+  var h='<div style="position:sticky;top:0;z-index:2;background:#0f172a;color:#fff;padding:10px 14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center"><b style="font-size:17px;flex:1">✍ 정산서 결재 — '+esc(_bkRepTitle())+'</b>'
     +(todo.length?'<button onclick="document.getElementById(\'bkEsgMine\').scrollIntoView({behavior:\'smooth\'})" style="border:none;border-radius:8px;padding:8px 12px;font-weight:900;background:#2563eb;color:#fff;cursor:pointer">✍ 서명하러 가기</button>':'')
+    +((typeof isA==="function"&&isA())?'<button onclick="document.getElementById(\'bkEsgView\').remove();_bkEsgPop()" style="border:none;border-radius:8px;padding:8px 12px;font-weight:900;background:#0f766e;color:#fff;cursor:pointer">📨 텔레그램·🔗 링크 (관리)</button>':'')
     +'<button onclick="document.getElementById(\'bkEsgView\').remove()" style="border:none;border-radius:8px;padding:8px 12px;font-weight:800;background:#475569;color:#fff;cursor:pointer">✕ 닫기</button></div>';
   h+='<div style="max-width:880px;margin:0 auto;padding:12px">';
   h+='<div style="font-size:14px;color:#334155;margin-bottom:10px">📄 아래 정산서 내용을 읽어 보고, <b>맨 아래에서 서명</b>해 주세요.'+(todo.length?' (내 서명할 곳: <b>'+todo.map(esc).join(', ')+'</b>)':'')+'</div>';
