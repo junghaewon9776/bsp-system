@@ -14432,6 +14432,8 @@ function _bkPeriodLabel(){
   return BK_PY+"년"+(BK_PM?" "+BK_PM+"월":"");
 }
 function _bkPer(py,pm){ if(py!=null) BK_PY=py; if(pm!=null) BK_PM=pm; draw(); }
+// 지난달 · 이번달 · 다음달 — 달을 고른 상태면 그 달에서 한 달씩, 아니면 이번 달 기준 (해 넘어가면 연도도 같이)
+function _bkMonNav(d){ var n=today(), y=+n.slice(0,4), m=+n.slice(5,7); if(d && BK_PM>=1 && BK_PM<=12){ y=BK_PY; m=BK_PM; } m+=d; while(m<1){ m+=12; y--; } while(m>12){ m-=12; y++; } BK_PY=y; BK_PM=m; draw(); }
 function _bkSumCalc(rgOv){
   var A=_bkAccts().filter(function(a){ return !BK_SEL || BK_SEL[a._k]!==false; });
   var rg=rgOv||_bkRange(), from=rg.from, to=rg.to;
@@ -14470,6 +14472,7 @@ function _bkSumView(){
   h+='<div class="bkF">';
   var MS=[[0,'1년 전체']]; for(var mm=1;mm<=12;mm++) MS.push([mm,mm+'월']); MS.push([-2,'전체 기간']); if(BK_PM===-1) MS.push([-1,'직접 고른 날짜']);
   h+='<div class="row"><span class="lb">📅 기간</span><span class="yr"><button onclick="_bkPer('+(BK_PY-1)+')">◀</button><span style="font-size:18px;font-weight:900;min-width:70px;text-align:center">'+BK_PY+'년</span><button onclick="_bkPer('+(BK_PY+1)+')">▶</button></span>'
+    +'<span class="yr"><button onclick="_bkMonNav(-1)" title="한 달 앞으로">◀ 지난달</button><button onclick="_bkMonNav(0)" style="'+(BK_PY===+today().slice(0,4)&&BK_PM===+today().slice(5,7)?'background:#0f766e;color:#fff':'')+'">이번달</button><button onclick="_bkMonNav(1)" title="한 달 뒤로">다음달 ▶</button></span>'
     +'<select class="mo" onchange="_bkPer(null,+this.value)" style="flex:1;padding:8px 10px;font-size:16px;font-weight:900;border:2px solid #0f766e;border-radius:8px;background:#fff;color:#0f766e">'+MS.map(function(x){ return '<option value="'+x[0]+'"'+(BK_PM===x[0]?' selected':'')+'>'+x[1]+'</option>'; }).join('')+'</select>'
     +'<span class="pc" style="font-size:14px;color:#0f766e;font-weight:900;margin-left:6px">📅 '+esc(_bkPeriodLabel())+'</span></div>';
   h+='<div class="row pc"><span class="lb"></span>'+pill(BK_PM===0,'1년 전체','_bkPer(null,0)'); for(var m2=1;m2<=12;m2++) h+=pill(BK_PM===m2,m2+'월','_bkPer(null,'+m2+')'); h+=pill(BK_PM===-2,'전체 기간','_bkPer(null,-2)','#334155')+'</div>';
