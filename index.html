@@ -14549,7 +14549,7 @@ function _bkDashCharts(R){
 }
 // ── 📄 정산보고서 — 엑셀 정산보고서 양식: 월 고르면 월별, 1년 전체면 총회용, 대분류 고르면 항목별 ──
 // ── 정산보고서 모양 고르기 ──
-var BK_RS="big", BK_MERGE=true;   // 같은 대분류·계정과목 칸 병합
+var BK_RS="gov", BK_MERGE=true;   // 처음 열면 🏛 정산서   // 같은 대분류·계정과목 칸 병합
 var BK_RS_LIST=[["gov","🏛 정산서","월례회 문서 양식 — 결재란 · 현황(이월액·수입·총합계·지출·잔액) · 수입내역 · 지출내역"],["big","📂 대분류별","엑셀 「정산보고서」 — 대분류 비중 + 대분류별 상세"],["date","📅 일자순","엑셀 「정산보고」 — 날짜 순서대로 수입·지출"],["pnl","⚖ 사업별 수입·지출","대분류마다 들어온 돈·쓴 돈·남은 돈을 옆에 — 같은 대분류는 칸 병합"],["acct","🧾 계정과목별","엑셀 「항목별 정산보고」 — 계정과목 비율 + 내역"],["month","📈 월별 추이","기업식 손익 추이표 — 대분류 × 월"],["yoy","🔁 전년 대비","기업식 — 올해와 작년 같은 기간 비교, 증감·증감률"]];
 var BK_GOVV=(function(){ try{ return localStorage.getItem("bsp_govV")!=="0"; }catch(e){ return true; } })();   // 정산서 맨 위 표 세로(기본) / 가로
 function _bkGovV(v){ BK_GOVV=v; try{ localStorage.setItem("bsp_govV",v?"1":"0"); }catch(e){} draw(); }
