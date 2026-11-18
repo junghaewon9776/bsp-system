@@ -14956,10 +14956,11 @@ function _bkGovHtml(){
   h+=_bkSignBox();
   h+='<div style="text-align:center;font-size:26px;font-weight:900;margin:6px 0 14px;letter-spacing:1px">'+esc(ttl)+'</div>';
   // □ 현황 — 이월액 · 수입 · 총합계 · 지출 · 잔액 (비율 없음)
-  h+='<div style="text-align:right;font-size:11.5px">(단위:원)</div>';
-  if(BK_GOVV){   // 세로 모양: 구분 | 금액
-    var row=function(lb,v,b){ return '<tr'+(b?' style="font-weight:800;background:#f8fafc"':'')+'><td style="'+C+';width:38%;letter-spacing:6px">'+lb+'</td><td style="'+N+';padding-right:12px">'+v+'</td></tr>'; };
-    h+='<table style="border-collapse:collapse;width:60%;margin-left:auto;font-size:14px"><tr><td style="'+H+'">구  분</td><td style="'+H+'">금  액</td></tr>'+row('이월액',dash(open))+row('수입',dash(inc))+row('총합계',dash(tot),1)+row('지출',dash(exp))+row('잔액',fm(tot-exp),1)+'</table>';
+  h+='<div style="text-align:right;font-size:11.5px;'+(BK_GOVV?'max-width:520px;margin:0 auto':'')+'">(단위:원)</div>';
+  if(BK_GOVV){   // 세로 모양 — 📂 대분류별 보고서 맨 위 표와 같은 모양 (가운데)
+    var td2='border:1px solid #64748b;padding:5px 10px', th2='border:1px solid #64748b;padding:6px 10px;background:#e2e8f0';
+    var row=function(lb,v,b){ return '<tr'+(b?' style="font-weight:900;background:#f1f5f9"':'')+'><td style="'+td2+';text-align:center;font-weight:700">'+lb+'</td><td style="'+td2+';text-align:right">'+v+'</td></tr>'; };
+    h+='<table style="border-collapse:collapse;width:100%;max-width:520px;margin:0 auto 14px;font-size:15px"><tr><th style="'+th2+'">구  분</th><th style="'+th2+'">금  액</th></tr>'+row('이 월 액',fm(open))+row('수  입',fm(inc))+row('총 합 계',fm(tot),1)+row('지  출',fm(exp))+row('잔  액',fm(tot-exp),1)+'</table>';
   } else {
   h+='<table style="border-collapse:collapse;width:100%;font-size:13.5px"><tr><td style="'+H+'">이 월 액</td><td style="'+H+'">수  입</td><td style="'+H+'">총 합 계</td><td style="'+H+'">지  출</td><td style="'+H+'">잔  액</td></tr>';
   h+='<tr style="font-weight:800"><td style="'+N+'">'+dash(open)+'</td><td style="'+N+'">'+dash(inc)+'</td><td style="'+N+'">'+dash(tot)+'</td><td style="'+N+'">'+dash(exp)+'</td><td style="'+N+'">'+fm(tot-exp)+'</td></tr></table>'; }
