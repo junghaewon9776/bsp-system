@@ -15302,11 +15302,23 @@ function _bkEvtDoc(){
 var BK_MT=(function(){ try{ return JSON.parse(localStorage.getItem("bsp_bkMt")||"{}"); }catch(e){ return {}; } })();
 function _bkMtSet(k,v){ BK_MT[k]=v; try{ localStorage.setItem("bsp_bkMt",JSON.stringify(BK_MT)); }catch(e){} draw(); }
 function _bkMtBar(){
-  var on=BK_MT.cover||BK_MT.act, ck=function(k,lb){ return '<label style="display:flex;gap:5px;align-items:center;font-weight:800;cursor:pointer"><input type="checkbox" '+(BK_MT[k]?'checked':'')+' onchange="_bkMtSet(\''+k+'\',this.checked)" style="width:17px;height:17px"> '+lb+'</label>'; };
-  return '<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:-4px 0 12px;padding:7px 12px;border:2px solid '+(on?'#b45309':'#e2e8f0')+';background:'+(on?'#fffbeb':'#fff')+';border-radius:8px;font-size:13.5px"><b style="color:#92400e">📋 월례회로 뽑기</b>'+ck("cover","표지·목차")+ck("act","활동보고 (활동일지·사진)")
+  var on=BK_MT.cover||BK_MT.act||BK_MT.ev, ck=function(k,lb){ return '<label style="display:flex;gap:5px;align-items:center;font-weight:800;cursor:pointer"><input type="checkbox" '+(BK_MT[k]?'checked':'')+' onchange="_bkMtSet(\''+k+'\',this.checked)" style="width:17px;height:17px"> '+lb+'</label>'; };
+  return '<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:-4px 0 12px;padding:7px 12px;border:2px solid '+(on?'#b45309':'#e2e8f0')+';background:'+(on?'#fffbeb':'#fff')+';border-radius:8px;font-size:13.5px"><b style="color:#92400e">📋 월례회의 자료 뽑기</b>'+ck("cover","표지·목차")+ck("act","활동보고 (활동일지·사진)")+ck("ev","📎 증빙 (정산서 뒤에)")+(BK_MT.ev?'<select onchange="_bkMtSet(\'evn\',+this.value)" style="padding:3px 4px;font-weight:700">'+[[1,"한 장에 1개"],[2,"한 장에 2개"],[4,"한 장에 4개"]].map(function(o){ return '<option value="'+o[0]+'"'+((+BK_MT.evn||2)===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('')+'</select>':'')
     +(BK_MT.cover?'<label style="display:flex;gap:5px;align-items:center;font-weight:700">회의 날짜 <input type="date" value="'+esc(BK_MT.dt||"")+'" onchange="_bkMtSet(\'dt\',this.value)" style="padding:4px 6px"></label>':'')
     +'<span style="font-size:12px;color:#64748b">체크하고 🖨 인쇄 · 기간이 여러 달이면 정산서가 달마다 한 장씩</span><a href="월례회_양식.hwp" download="월례회_양식.hwp" style="margin-left:auto;font-size:12.5px;font-weight:800;color:#1d4ed8;text-decoration:none;border:1px solid #93c5fd;border-radius:6px;padding:3px 9px;background:#eff6ff" title="예전 한글 월례회 표지·목차 양식 — 한글에서 직접 고쳐 쓸 때">📄 한글 양식 받기</a></div>';
 }
+// 📎 정산서 뒤에 붙는 증빙 쪽 (📎 증빙 출력과 같은 모양 · 지금 기간의 거래)
+function _bkMtEvHtml(title){
+  var per=+BK_MT.evn||2, an={}; _bkAccts().forEach(function(a){ an[a._k]=a.nm; });
+  var L=_bkSumCalc().list.slice().sort(function(a,b){ return String(a.dt).localeCompare(String(b.dt))||(a.seq||0)-(b.seq||0); }), cells=[];
+  L.forEach(function(t){ var amt=Number(t.out)?"출금 "+fm(t.out):"입금 "+fm(t.inA); (t.ev||[]).forEach(function(e){ cells.push({u:e.u, r:e.r||0, cap:e.c||t.desc||t.nm||"", sub:String(t.dt).slice(0,10)+" · "+[t.big,t.mid].filter(Boolean).join(" › ")+" · "+amt+"원 · "+(an[t._a]||"")}); }); });
+  if(!cells.length) return '';
+  var h='', n=Math.ceil(cells.length/per);
+  for(var i=0;i<cells.length;i+=per){ var ch=cells.slice(i,i+per);
+    h+='<div class="pg mev"><div class="mevh"><b>증빙자료</b> '+esc(title)+' ('+(Math.floor(i/per)+1)+'/'+n+'쪽)</div><div class="mevg g'+per+'">'+ch.map(function(c){ return '<div class="mevc"><img data-rot="'+c.r+'" src="'+esc(_evPrintBig(c.u))+'"><div class="mevt">'+esc(c.cap)+'<div style="font-size:10.5px;font-weight:500">'+esc(c.sub)+'</div></div></div>'; }).join('')+'</div></div>'; }
+  return h;
+}
+var BK_MT_EVCSS='<style>.mev{height:268mm;display:flex;flex-direction:column;overflow:hidden}.mevh{font-size:12px;border-bottom:2px solid #000;padding:2px 2px 6px;text-align:center}.mevh b{font-size:18px}.mevg{flex:1;min-height:0;display:grid;gap:4mm;padding-top:4mm}.mevg.g1{grid-template-columns:1fr;grid-template-rows:1fr}.mevg.g2{grid-template-columns:1fr;grid-template-rows:1fr 1fr}.mevg.g4{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}.mevc{min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid #94a3b8;padding:2mm;overflow:hidden}.mevc img{flex:1;min-height:0;max-width:100%;object-fit:contain}.mevt{font-size:14px;font-weight:800;text-align:center;padding-top:2mm;border-top:1px solid #94a3b8;width:100%}</style>';
 function _bkMtMonths(){   // 지금 기간의 달들 [[y,m],…]
   if(BK_PM>=1&&BK_PM<=12) return [[BK_PY,BK_PM]];
   if(BK_PM===-1){ var r=_bkRange(); if(!r.from||!r.to) return []; var y=+r.from.slice(0,4), m=+r.from.slice(5,7), ye=+r.to.slice(0,4), me=+r.to.slice(5,7), o=[]; while((y<ye||(y===ye&&m<=me))&&o.length<24){ o.push([y,m]); m++; if(m>12){ m=1; y++; } } return o; }
@@ -15315,12 +15327,12 @@ function _bkMtMonths(){   // 지금 기간의 달들 [[y,m],…]
 function _bkMtWrap(){
   var F="font-family:'바탕','Batang','함초롬바탕','HCR Batang',serif;color:#000";
   var MS=_bkMtMonths(), gov='', split=BK_RS==="gov"&&MS.length>1;
-  if(split){ var sv={py:BK_PY,pm:BK_PM}; MS.forEach(function(x,i){ BK_PY=x[0]; BK_PM=x[1]; gov+='<div class="pg">'+_bkReportHtml()+'</div>'; }); BK_PY=sv.py; BK_PM=sv.pm; }
-  else gov='<div class="pg">'+_bkReportHtml()+'</div>';
+  if(split){ var sv={py:BK_PY,pm:BK_PM}; MS.forEach(function(x,i){ BK_PY=x[0]; BK_PM=x[1]; gov+='<div class="pg">'+_bkReportHtml()+'</div>'+(BK_MT.ev?_bkMtEvHtml(x[0]+'. '+String(x[1]).padStart(2,'0')+'월'):''); }); BK_PY=sv.py; BK_PM=sv.pm; }
+  else gov='<div class="pg">'+_bkReportHtml()+'</div>'+(BK_MT.ev?_bkMtEvHtml(_bkPeriodLabel()):'');
   var acts0=BK_MT.act?(acts||[]):[], AM=[];
   if(BK_MT.act){ var ms=MS.length?MS:[]; if(!ms.length){ var r=_bkRange(); acts0=acts0.filter(function(a){ return (!r.from||a.dt>=r.from)&&(!r.to||a.dt<=r.to); }); var seen={}; acts0.forEach(function(a){ var k=a.dt.slice(0,7); if(!seen[k]){ seen[k]=1; AM.push([+k.slice(0,4),+k.slice(5,7)]); } }); AM.sort(function(a,b){ return a[0]-b[0]||a[1]-b[1]; }); }
     else AM=ms.filter(function(x){ var k=x[0]+"-"+String(x[1]).padStart(2,"0"); return acts0.some(function(a){ return String(a.dt).slice(0,7)===k; }); }); }
-  var h='<style>.pg{page-break-after:always;break-after:page}.pg:last-child{page-break-after:auto;break-after:auto}</style>';
+  var h='<style>.pg{page-break-after:always;break-after:page}.pg:last-child{page-break-after:auto;break-after:auto}</style>'+(BK_MT.ev?BK_MT_EVCSS:'');
   if(BK_MT.cover){
     var d=BK_MT.dt||today(), dy=+d.slice(0,4), dm=+d.slice(5,7), logo=(typeof SYS_LOGO!=="undefined"&&SYS_LOGO)?new URL(SYS_LOGO,location.href).href:"", org=(typeof SYS_PARENT!=="undefined"&&SYS_PARENT)||(typeof SYS_NAME!=="undefined"?SYS_NAME:"");
     h+='<div class="pg" style="'+F+';height:255mm;display:flex;flex-direction:column;align-items:center;text-align:center"><div style="font-size:42px;margin-top:34mm">'+dy+'년 '+dm+'월 월례회의</div><div style="flex:1;display:flex;align-items:center;justify-content:center">'+(logo?'<img src="'+esc(logo)+'" style="width:120mm;max-height:110mm;object-fit:contain">':'')+'</div><div style="font-size:26px;margin-bottom:10mm">'+d.slice(0,4)+'. '+d.slice(5,7)+'. '+d.slice(8,10)+'.</div><div style="font-size:30px;font-weight:700;letter-spacing:12px;margin-bottom:12mm">'+esc(String(org).split("").join(" "))+'</div></div>';
@@ -15892,8 +15904,8 @@ async function _bkSumXlsx(){
   hideLoading(); toast("📗 결산 엑셀 받았어요");
 }
 function _bkReportPrint(){
-  var mt=BK_MT.cover||BK_MT.act;
-  return _docPrint({ title: mt&&BK_MT.cover?(+(BK_MT.dt||today()).slice(0,4))+'년 '+(+(BK_MT.dt||today()).slice(5,7))+'월 월례회의':(BK_RS==="gov"?_bkRepTitle():(BK_BIG?BK_BIG+" ":"")+_bkPeriodLabel()+" 정산 보고서"), html: mt?_bkMtWrap():_bkReportHtml(), landscape: BK_RS==="month", key: "bk_"+BK_RS });
+  var mt=BK_MT.cover||BK_MT.act||BK_MT.ev;
+  return _docPrint({ title: mt&&BK_MT.cover?(+(BK_MT.dt||today()).slice(0,4))+'년 '+(+(BK_MT.dt||today()).slice(5,7))+'월 월례회의':(BK_RS==="gov"?_bkRepTitle():(BK_BIG?BK_BIG+" ":"")+_bkPeriodLabel()+" 정산 보고서"), html: mt?_bkMtWrap()+(BK_MT.ev&&typeof _evpRotInit==="function"?'<script>('+_evpRotInit.toString().replace('querySelector(".gl")','querySelector(".gl,.gt,.mevt")')+')();<\/script>':''):_bkReportHtml(), landscape: BK_RS==="month", key: "bk_"+BK_RS });
   var css='@page{size:A4 '+(BK_RS==="month"?'landscape':'portrait')+';margin:12mm}body{font-family:"맑은 고딕","Malgun Gothic",sans-serif;margin:0;color:#000}tr{page-break-inside:avoid}.bar{padding:8px}.bar button{font-size:15px;padding:8px 16px;background:#1d4ed8;color:#fff;border:none;border-radius:6px;cursor:pointer}@media print{.bar,.noprint{display:none}}';
   var h='<!doctype html><html><head><meta charset="utf-8"><title>&#8203;</title><style>'+css+'</style></head><body><div class="bar"><button onclick="window.print()">🖨️ 인쇄 / PDF 저장</button></div>'+_bkReportHtml()+'</body></html>';
   var w=window.open("","_blank","width=900,height=900"); if(!w){ toast("팝업이 막혔어요 — 허용 후 다시",true); return; }
