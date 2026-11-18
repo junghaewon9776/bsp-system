@@ -14493,14 +14493,13 @@ function _bkSumView(){
     +bl.map(function(b,i){ return '<option value="'+i+'"'+(BK_BIG===b?' selected':'')+' style="background:#fff;color:#0f172a">'+esc(b)+(R.bigs[b]?'  ·  '+fm(R.bigs[b])+'원':'')+'</option>'; }).join('')+'</select>'
     +(BK_BIG?'<button onclick="BK_BIG=\'\';draw()" style="border:none;border-radius:8px;padding:8px 12px;font-weight:800;background:#475569;color:#fff;cursor:pointer">✕ 전체로</button>':'')+'</div></div>';
   var sv=function(k,lb){ var on=BK_SV===k; return '<button onclick="BK_SV=\''+k+'\';draw()" style="border:none;border-radius:8px;padding:9px 16px;font-size:15px;font-weight:900;cursor:pointer;background:'+(on?'#1d4ed8':'#e2e8f0')+';color:'+(on?'#fff':'#0f172a')+'">'+lb+'</button>'; };
-  h+='<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:12px">'+(isA()?sv("dash","📊 대시보드")+sv("report","📄 정산보고서")+(_bkMain()?sv("evt","🎪 사업별 결산")+sv("budget","📋 예산안")+sv("agm","🏛 총회 자료")+sv("mtg","📋 월례회 자료"):''):'')+(BK_SV==="report"?'<label style="display:flex;gap:5px;align-items:center;font-weight:700;margin-left:8px"><input type="checkbox" '+(BK_DET?'checked':'')+' onchange="BK_DET=this.checked;draw()" style="width:18px;height:18px"> 거래 상세 내역도 넣기</label>':'')+'</div>';
+  h+='<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:12px">'+(isA()?sv("dash","📊 대시보드")+sv("report","📄 정산보고서")+(_bkMain()?sv("evt","🎪 사업별 결산")+sv("budget","📋 예산안")+sv("agm","🏛 총회 자료"):''):'')+(BK_SV==="report"?'<label style="display:flex;gap:5px;align-items:center;font-weight:700;margin-left:8px"><input type="checkbox" '+(BK_DET?'checked':'')+' onchange="BK_DET=this.checked;draw()" style="width:18px;height:18px"> 거래 상세 내역도 넣기</label>':'')+'</div>';
   if(!A.length) return h+'<div class="mut">통장을 하나 이상 골라 주세요</div>';
-  if(!_bkMain()&&(BK_SV==="evt"||BK_SV==="budget"||BK_SV==="agm"||BK_SV==="mtg")) BK_SV="report";
+  if(!_bkMain()&&(BK_SV==="evt"||BK_SV==="budget"||BK_SV==="agm")) BK_SV="report";
   if(BK_SV==="evt"&&isA()) return h+_bkEvtView();
   if(BK_SV==="budget"&&isA()) return h+_bkBudgetView();
   if(BK_SV==="agm"&&isA()) return h+_bkAgmView();
-  if(BK_SV==="mtg"&&isA()) return h+_bkMtgView();
-  if(BK_SV==="report") return h+_bkRsPicker()+'<div class="bkFitBox" style="background:#fff;border:1px solid #cbd5e1;border-radius:10px;padding:18px;max-width:'+(BK_RS==="month"?'100%':'900px')+';margin:0 auto;overflow:hidden"><div class="bkFit" data-w="'+(BK_RS==="month"?1000:640)+'">'+_bkReportHtml()+'</div></div>';
+  if(BK_SV==="report") return h+_bkRsPicker()+_bkMtBar()+'<div class="bkFitBox" style="background:#fff;border:1px solid #cbd5e1;border-radius:10px;padding:18px;max-width:'+(BK_RS==="month"?'100%':'900px')+';margin:0 auto;overflow:hidden"><div class="bkFit" data-w="'+(BK_RS==="month"?1000:640)+'">'+_bkReportHtml()+'</div></div>';
   var card=function(lb,v,col){ return '<div style="flex:1 1 150px;background:#fff;border:1px solid #cbd5e1;border-radius:8px;padding:8px 12px"><div style="font-size:12px;color:#475569;font-weight:700">'+lb+'</div><div style="font-size:19px;font-weight:900;color:'+col+'">'+fm(v)+'원</div></div>'; };
   var open=0,close=0; A.forEach(function(a){ open+=R.per[a._k].open; close+=R.per[a._k].close; });
   h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">'+(BK_BIG?card("「"+esc(BK_BIG)+"」 수입",R.incT,"#166534")+card("「"+esc(BK_BIG)+"」 지출",R.expT,"#b91c1c")+card("차액 (수입−지출)",R.incT-R.expT,"#1d4ed8")
@@ -15289,63 +15288,46 @@ function _bkEvtDoc(){
   }
   return h+'</div>';
 }
-// 📋 월례회 자료 — 표지(목차) + 정산보고(그 달 🏛 정산서) + 활동보고(그 달 활동일지) — 있는 것만
-//   /main/BankMTG/{YYYY-MM} = { no(차수), date, place, agenda, rpt(정산보고 넣기), act(활동보고 넣기), ph(사진 넣기) }
-function _bkMtgYm(){ return BK_PM>=1&&BK_PM<=12 ? BK_PY+"-"+String(BK_PM).padStart(2,"0") : ""; }
-function _bkMtgLoad(){ if(BK.mtg!==undefined) return; BK.mtg=null; fbDb.ref('/main/BankMTG').on('value',function(s){ BK.mtg=s.val()||{}; if(typeof CTAB!=="undefined"&&CTAB==="bank"&&BK_SV==="mtg") draw(); }); }
-function _bkMtgActs(ym){ return (acts||[]).filter(function(a){ return String(a.dt||"").slice(0,7)===ym; }).sort(function(a,b){ return String(a.dt).localeCompare(String(b.dt)); }); }
-function _bkMtgDef(ym){
-  var M=BK.mtg||{}, prev=Object.keys(M).filter(function(k){ return k<ym && M[k] && M[k].no; }).sort().pop(), pm=prev?M[prev]:null;
-  var R=_bkSumCalc(), hasRpt=!!(R.incT||R.expT), A=_bkMtgActs(ym);
-  return { no: pm ? (+pm.no||0)+(function(){ var a=+prev.slice(0,4)*12+ +prev.slice(5), b=+ym.slice(0,4)*12+ +ym.slice(5); return b-a; })() : "", date:"", place: pm ? pm.place||"" : "", agenda:"", rpt: hasRpt, act: A.length>0, ph: true };
+// 📋 월례회로 뽑기 — 📄 정산보고서 화면에서 체크: 표지·목차 / 활동보고 (예전 한글 「월례회」 모양 그대로)
+//   표지: 「YYYY년 M월 월례회의」 · 청년회 로고 · 회의 날짜 · 법 성 포 청 년 회 / 목차: 개회 및 인사 · ○월 정산 보고 · ○월 활동 보고 · 안건 논의 및 질의 응답 · 기타 안건 · 폐회
+//   기간이 여러 달(직접 고른 기간)이면 정산서를 달마다 한 장씩
+var BK_MT=(function(){ try{ return JSON.parse(localStorage.getItem("bsp_bkMt")||"{}"); }catch(e){ return {}; } })();
+function _bkMtSet(k,v){ BK_MT[k]=v; try{ localStorage.setItem("bsp_bkMt",JSON.stringify(BK_MT)); }catch(e){} draw(); }
+function _bkMtBar(){
+  var on=BK_MT.cover||BK_MT.act, ck=function(k,lb){ return '<label style="display:flex;gap:5px;align-items:center;font-weight:800;cursor:pointer"><input type="checkbox" '+(BK_MT[k]?'checked':'')+' onchange="_bkMtSet(\''+k+'\',this.checked)" style="width:17px;height:17px"> '+lb+'</label>'; };
+  return '<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:-4px 0 12px;padding:7px 12px;border:2px solid '+(on?'#b45309':'#e2e8f0')+';background:'+(on?'#fffbeb':'#fff')+';border-radius:8px;font-size:13.5px"><b style="color:#92400e">📋 월례회로 뽑기</b>'+ck("cover","표지·목차")+ck("act","활동보고 (활동일지·사진)")
+    +(BK_MT.cover?'<label style="display:flex;gap:5px;align-items:center;font-weight:700">회의 날짜 <input type="date" value="'+esc(BK_MT.dt||"")+'" onchange="_bkMtSet(\'dt\',this.value)" style="padding:4px 6px"></label>':'')
+    +'<span style="font-size:12px;color:#64748b">체크하고 🖨 인쇄 · 기간이 여러 달이면 정산서가 달마다 한 장씩</span><a href="월례회_양식.hwp" download="월례회_양식.hwp" style="margin-left:auto;font-size:12.5px;font-weight:800;color:#1d4ed8;text-decoration:none;border:1px solid #93c5fd;border-radius:6px;padding:3px 9px;background:#eff6ff" title="예전 한글 월례회 표지·목차 양식 — 한글에서 직접 고쳐 쓸 때">📄 한글 양식 받기</a></div>';
 }
-function _bkMtgView(){
-  _bkMtgLoad(); var ym=_bkMtgYm();
-  if(!ym) return '<div style="background:#fff7ed;border:2px solid #fdba74;border-radius:10px;padding:16px;font-size:15px;font-weight:800">📋 월례회 자료는 <b>한 달</b>을 골라야 만들 수 있어요 — 위 기간에서 ◀ 지난달 / 이번달 / 다음달 ▶ 로 달을 골라 주세요</div>';
-  if(BK.mtg===null) return '<div class="mut">불러오는 중...</div>';
-  var Y=+ym.slice(0,4), Mo=+ym.slice(5), A=Object.assign(_bkMtgDef(ym), (BK.mtg||{})[ym]||{}), R=_bkSumCalc(), hasRpt=!!(R.incT||R.expT), AC=_bkMtgActs(ym);
-  var inp=function(id,lb,v,ph,w){ return '<label style="display:flex;flex-direction:column;gap:3px;font-weight:800;font-size:13.5px'+(w?';max-width:'+w+'px':'')+'">'+lb+'<input id="'+id+'" value="'+esc(v==null?"":v)+'" placeholder="'+esc(ph||"")+'" style="padding:8px;font-weight:600"></label>'; };
-  var h='<div style="background:#fff;border:1px solid #cbd5e1;border-radius:10px;padding:14px">';
-  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px"><b style="font-size:18px;flex:1">📋 '+Y+'년 '+Mo+'월 월례회 자료 <span style="font-size:13px;color:#475569;font-weight:600">달은 위 ◀ ▶</span></b>';
-  h+='<button class="btn" style="background:#1d4ed8;color:#fff;font-weight:900" onclick="_bkMtgSave()">💾 저장</button><button class="btn" style="background:#b45309;color:#fff;font-weight:900" onclick="_bkMtgSave(1)">🖨 월례회 자료 뽑기</button></div>';
-  h+='<div style="display:grid;grid-template-columns:120px 1fr 1fr;gap:10px;margin-bottom:10px">'+inp("mtNo","차수 (제○차)",A.no,"예: 12")+inp("mtDate","일시",A.date,"예: "+Y+". "+Mo+". 25.(토) 19:00")+inp("mtPlace","장소",A.place,"예: 청년회 사무실")+'</div>';
-  h+='<label style="display:flex;flex-direction:column;gap:3px;font-weight:800;font-size:13.5px">기타 안건 <span style="font-weight:500;font-size:12px;color:#64748b">(한 줄에 하나 · 비우면 안 나와요)</span><textarea id="mtAgenda" rows="3" style="padding:8px;font-family:inherit;font-size:13.5px">'+esc(A.agenda||"")+'</textarea></label>';
-  var ck=function(id,on,lb,sub,ok){ return '<label style="display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border:2px solid '+(ok?'#86efac':'#e2e8f0')+';background:'+(ok?'#f0fdf4':'#f8fafc')+';border-radius:8px;cursor:pointer"><input type="checkbox" id="'+id+'" '+(on&&ok?'checked':'')+(ok?'':' disabled')+' style="width:18px;height:18px;margin-top:2px"><span><b>'+lb+'</b><br><span style="font-size:12px;color:#475569">'+sub+'</span></span></label>'; };
-  h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px;margin-top:10px">'
-    +ck("mtRpt",A.rpt,"1. 정산보고",hasRpt?'🏛 정산서 ('+Mo+'월) · 수입 '+fm(R.incT)+' · 지출 '+fm(R.expT):'이 달 통장 기록이 없어서 안 들어가요',hasRpt)
-    +ck("mtAct",A.act,"2. 활동보고",AC.length?'활동일지 '+AC.length+'건 · '+AC.map(function(a){ return (+a.dt.slice(8))+'일 '+(a.expMid||a.expTp||a.loc||'활동'); }).join(', '):'이 달 활동일지가 없어서 안 들어가요 — 📝 활동일지에 적으면 저절로 들어가요',AC.length>0)
-    +ck("mtPh",A.ph,"활동 사진도 넣기",'활동일지에 올린 사진 (활동마다 4장까지)',AC.some(function(a){ return (a.ph||[]).length; }))+'</div>';
-  h+='<div style="font-size:12.5px;color:#475569;margin-top:10px;line-height:1.7">뽑히는 순서: 표지(목차는 들어간 것만) → 1. 정산보고 → 2. 활동보고 → 기타 안건 · 인쇄 창에서 크기·가로세로·📝 한글 파일로 받기 다 돼요 · 차수·장소는 다음 달에 저절로 이어져요</div>';
-  return h+'</div>';
+function _bkMtMonths(){   // 지금 기간의 달들 [[y,m],…]
+  if(BK_PM>=1&&BK_PM<=12) return [[BK_PY,BK_PM]];
+  if(BK_PM===-1){ var r=_bkRange(); if(!r.from||!r.to) return []; var y=+r.from.slice(0,4), m=+r.from.slice(5,7), ye=+r.to.slice(0,4), me=+r.to.slice(5,7), o=[]; while((y<ye||(y===ye&&m<=me))&&o.length<24){ o.push([y,m]); m++; if(m>12){ m=1; y++; } } return o; }
+  return [];
 }
-function _bkMtgSave(print){
-  var ym=_bkMtgYm(); if(!ym) return;
-  var g=function(i){ var e=document.getElementById(i); return e?e.value:""; }, c=function(i){ var e=document.getElementById(i); return !!(e&&e.checked); };
-  var o={ no:g("mtNo").trim(), date:g("mtDate").trim(), place:g("mtPlace").trim(), agenda:g("mtAgenda"), rpt:c("mtRpt"), act:c("mtAct"), ph:c("mtPh") };
-  fbDb.ref('/main/BankMTG/'+ym).set(o).then(function(){ toast("💾 월례회 자료 저장"); if(print) _bkMtgPrint(ym,o); }).catch(function(e){ toast("저장 실패: "+e.message,true); });
-}
-function _bkMtgPrint(ym,A){
-  var Y=+ym.slice(0,4), Mo=+ym.slice(5), org=(typeof SYS_PARENT!=="undefined"&&SYS_PARENT)||(typeof SYS_NAME!=="undefined"?SYS_NAME:"");
-  var AC=A.act?_bkMtgActs(ym):[], R=_bkSumCalc(), rpt=A.rpt&&(R.incT||R.expT), ag=String(A.agenda||"").split("\n").map(function(x){ return x.trim(); }).filter(Boolean);
-  var td='border:1px solid #000;padding:6px 8px;font-size:13px;vertical-align:top', H='border:1px solid #000;padding:6px 8px;font-size:13px;background:#f1f5f9;text-align:center;font-weight:700';
-  var sec=function(t){ return '<div style="font-size:18px;font-weight:900;border-bottom:2px solid #000;padding-bottom:4px;margin:0 0 12px">'+t+'</div>'; };
-  var toc=[], n=0; if(rpt) toc.push((++n)+'. 정산보고'); if(AC.length) toc.push((++n)+'. 활동보고'); if(ag.length) toc.push((++n)+'. 기타 안건');
-  var h='<style>.pg{page-break-after:always;break-after:page}.pg:last-child{page-break-after:auto;break-after:auto}</style><div class="pg" style="height:250mm;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center"><div style="font-size:20px;font-weight:700;margin-bottom:18px">'+esc(org)+'</div><div style="font-size:38px;font-weight:900;letter-spacing:3px">'+(A.no?'제'+esc(A.no)+'차 ':'')+'정기 월례회</div><div style="font-size:22px;font-weight:700;margin-top:10px">'+Y+'년 '+Mo+'월</div>';
-  h+='<div style="font-size:16px;margin-top:36px;line-height:2">'+(A.date?'일시 : '+esc(A.date)+'<br>':'')+(A.place?'장소 : '+esc(A.place):'')+'</div>';
-  if(toc.length) h+='<table style="border-collapse:collapse;margin-top:44px;min-width:60%"><tr><td style="'+H+';font-size:15px">목 차</td></tr>'+toc.map(function(t){ return '<tr><td style="border:1px solid #000;padding:9px 18px;font-size:16px;text-align:left">'+t+'</td></tr>'; }).join('')+'</table>';
-  h+='</div>'; n=0;
-  if(rpt){ var sv={rs:BK_RS,big:BK_BIG}; BK_RS="gov"; BK_BIG=""; var gov=_bkReportHtml(); BK_RS=sv.rs; BK_BIG=sv.big;
-    h+='<div class="pg">'+sec((++n)+'. 정산보고 ('+Y+'년 '+Mo+'월)')+gov+'</div>'; }
-  if(AC.length){
-    h+='<div class="pg">'+sec((++n)+'. 활동보고 ('+Y+'년 '+Mo+'월)')+'<table style="border-collapse:collapse;width:100%"><thead><tr><td style="'+H+';width:70px">날짜</td><td style="'+H+';width:150px">행사</td><td style="'+H+';width:110px">장소</td><td style="'+H+'">내용</td></tr></thead><tbody>';
-    AC.forEach(function(a){ var d=new Date(a.dt+"T00:00:00"), wd="일월화수목금토".charAt(d.getDay());
-      h+='<tr><td style="'+td+';text-align:center;white-space:nowrap">'+(+a.dt.slice(5,7))+'. '+(+a.dt.slice(8))+'.('+wd+')</td><td style="'+td+'">'+esc(a.expTp||'')+(a.expMid?'<br><span style="font-size:12px">'+esc(a.expMid)+'</span>':'')+'</td><td style="'+td+'">'+esc(a.loc||'')+'</td><td style="'+td+';white-space:pre-wrap">'+esc(a.nt||'')+(a.ppl?'<div style="font-size:12px;margin-top:3px">참여 '+esc(a.ppl)+'</div>':'')+'</td></tr>';
-      var ph=A.ph?(a.ph||[]).slice(0,4):[];
-      if(ph.length) h+='<tr><td style="'+td+'" colspan="4"><div style="display:flex;gap:6px;flex-wrap:wrap">'+ph.map(function(p){ return '<img src="'+esc(imgSrc(p))+'" style="height:42mm;max-width:'+(ph.length>2?'40mm':'80mm')+';object-fit:cover;border:1px solid #999">'; }).join('')+'</div></td></tr>'; });
-    h+='</tbody></table></div>'; }
-  if(ag.length) h+='<div class="pg">'+sec((++n)+'. 기타 안건')+'<ol style="font-size:15px;line-height:2.1">'+ag.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join('')+'</ol></div>';
-  if(!rpt&&!AC.length&&!ag.length) h+='<div class="pg" style="text-align:center;padding-top:40mm;font-size:16px">이 달은 정산·활동 기록이 없어요</div>';
-  return _docPrint({ title: Y+'년 '+Mo+'월 '+(A.no?'제'+A.no+'차 ':'')+'월례회 자료', html: h, landscape:false, key:"bk_mtg" });
+function _bkMtWrap(){
+  var F="font-family:'바탕','Batang','함초롬바탕','HCR Batang',serif;color:#000";
+  var MS=_bkMtMonths(), gov='', split=BK_RS==="gov"&&MS.length>1;
+  if(split){ var sv={py:BK_PY,pm:BK_PM}; MS.forEach(function(x,i){ BK_PY=x[0]; BK_PM=x[1]; gov+='<div class="pg">'+_bkReportHtml()+'</div>'; }); BK_PY=sv.py; BK_PM=sv.pm; }
+  else gov='<div class="pg">'+_bkReportHtml()+'</div>';
+  var acts0=BK_MT.act?(acts||[]):[], AM=[];
+  if(BK_MT.act){ var ms=MS.length?MS:[]; if(!ms.length){ var r=_bkRange(); acts0=acts0.filter(function(a){ return (!r.from||a.dt>=r.from)&&(!r.to||a.dt<=r.to); }); var seen={}; acts0.forEach(function(a){ var k=a.dt.slice(0,7); if(!seen[k]){ seen[k]=1; AM.push([+k.slice(0,4),+k.slice(5,7)]); } }); AM.sort(function(a,b){ return a[0]-b[0]||a[1]-b[1]; }); }
+    else AM=ms.filter(function(x){ var k=x[0]+"-"+String(x[1]).padStart(2,"0"); return acts0.some(function(a){ return String(a.dt).slice(0,7)===k; }); }); }
+  var h='<style>.pg{page-break-after:always;break-after:page}.pg:last-child{page-break-after:auto;break-after:auto}</style>';
+  if(BK_MT.cover){
+    var d=BK_MT.dt||today(), dy=+d.slice(0,4), dm=+d.slice(5,7), logo=(typeof SYS_LOGO!=="undefined"&&SYS_LOGO)?new URL(SYS_LOGO,location.href).href:"", org=(typeof SYS_PARENT!=="undefined"&&SYS_PARENT)||(typeof SYS_NAME!=="undefined"?SYS_NAME:"");
+    h+='<div class="pg" style="'+F+';height:255mm;display:flex;flex-direction:column;align-items:center;text-align:center"><div style="font-size:30px;margin-top:14mm">'+dy+'년 '+dm+'월 월례회의</div><div style="flex:1;display:flex;align-items:center;justify-content:center">'+(logo?'<img src="'+esc(logo)+'" style="width:120mm;max-height:110mm;object-fit:contain">':'')+'</div><div style="font-size:26px;margin-bottom:10mm">'+d.slice(0,4)+'. '+d.slice(5,7)+'. '+d.slice(8,10)+'.</div><div style="font-size:30px;font-weight:700;letter-spacing:12px;margin-bottom:12mm">'+esc(String(org).split("").join(" "))+'</div></div>';
+    var toc=['개회 및 인사'].concat((split?MS:(MS.length?MS:[])).map(function(x){ return x[1]+'월 정산 보고'; })); if(!MS.length) toc.push(_bkPeriodLabel()+' 정산 보고');
+    AM.forEach(function(x){ toc.push(x[1]+'월 활동 보고'); }); toc=toc.concat(['안건 논의 및 질의 응답','기타 안건','폐회']);
+    h+='<div class="pg" style="'+F+';padding:10mm 8mm"><div style="font-size:32px;font-weight:700;letter-spacing:8px;margin-bottom:14mm">목 차</div>'+toc.map(function(t){ return '<div style="font-size:21px;margin-bottom:11mm">'+esc(t)+'</div>'; }).join('')+'</div>';
+  }
+  h+=gov;
+  AM.forEach(function(x){ var k=x[0]+"-"+String(x[1]).padStart(2,"0"), L=acts0.filter(function(a){ return String(a.dt).slice(0,7)===k; }).sort(function(a,b){ return String(a.dt).localeCompare(String(b.dt)); });
+    L.forEach(function(a,i){ var wd="일월화수목금토".charAt(new Date(a.dt+"T00:00:00").getDay()), ttl=a.expMid||a.expTp||String(a.nt||"활동").split("\n")[0], ph=(a.ph||[]).slice(0,4);
+      h+='<div class="pg" style="'+F+'">'+(i===0?'<div style="text-align:center;font-size:28px;font-weight:700;margin:2mm 0 8mm">'+x[0]+'. '+String(x[1]).padStart(2,"0")+'월 활동보고</div>':'');
+      h+='<div style="font-size:19px;font-weight:700;margin-bottom:5mm">□ '+esc(ttl)+'</div><div style="font-size:15px;line-height:2;padding-left:4mm">○ 일&nbsp;&nbsp;&nbsp;&nbsp;시 : '+a.dt.slice(0,4)+'. '+a.dt.slice(5,7)+'. '+a.dt.slice(8,10)+'.('+wd+')'+(a.tm?' '+esc(a.tm)+' ~':'')+'<br>○ 장&nbsp;&nbsp;&nbsp;&nbsp;소 : '+esc(a.loc||'')+(a.nt&&a.nt.split("\n")[0]!==ttl||a.nt&&(a.expMid||a.expTp)?'<br>○ 내&nbsp;&nbsp;&nbsp;&nbsp;용 : <span style="white-space:pre-wrap">'+esc(a.nt)+'</span>':'')+(a.ppl?'<br>○ 참여인원 : '+esc(a.ppl):'')+(ph.length?'<br>○ 활동사진 :':'')+'</div>';
+      if(ph.length) h+='<div style="display:grid;grid-template-columns:repeat('+(ph.length===1?1:2)+',1fr);gap:0;margin-top:3mm;border:1px solid #000">'+ph.map(function(p){ return '<img src="'+esc(imgSrc(p))+'" style="width:100%;height:'+(ph.length<=2?'110mm':'82mm')+';object-fit:cover;display:block;border:1px solid #000">'; }).join('')+'</div>';
+      h+='</div>'; }); });
+  return h;
 }
 // 🏛 총회 자료
 function _bkAgmDef(Y){ return {date:"", place:"", agenda:"제1호 의안: "+Y+"년도 사업실적 및 결산 승인의 건\n제2호 의안: "+(Y+1)+"년도 사업계획 및 예산(안) 승인의 건\n제3호 의안: 임원 선임(임기 연장)의 건\n제4호 의안: 기타 단체 운영에 관한 안건", plan:(Y+1)+"년도 사업은 "+Y+"년도 사업을 그대로 이어서 진행합니다.", officers:"", etc:""}; }
@@ -15902,7 +15884,8 @@ async function _bkSumXlsx(){
   hideLoading(); toast("📗 결산 엑셀 받았어요");
 }
 function _bkReportPrint(){
-  return _docPrint({ title: (BK_RS==="gov"?_bkRepTitle():(BK_BIG?BK_BIG+" ":"")+_bkPeriodLabel()+" 정산 보고서"), html: _bkReportHtml(), landscape: BK_RS==="month", key: "bk_"+BK_RS });
+  var mt=BK_MT.cover||BK_MT.act;
+  return _docPrint({ title: mt&&BK_MT.cover?(+(BK_MT.dt||today()).slice(0,4))+'년 '+(+(BK_MT.dt||today()).slice(5,7))+'월 월례회의':(BK_RS==="gov"?_bkRepTitle():(BK_BIG?BK_BIG+" ":"")+_bkPeriodLabel()+" 정산 보고서"), html: mt?_bkMtWrap():_bkReportHtml(), landscape: BK_RS==="month", key: "bk_"+BK_RS });
   var css='@page{size:A4 '+(BK_RS==="month"?'landscape':'portrait')+';margin:12mm}body{font-family:"맑은 고딕","Malgun Gothic",sans-serif;margin:0;color:#000}tr{page-break-inside:avoid}.bar{padding:8px}.bar button{font-size:15px;padding:8px 16px;background:#1d4ed8;color:#fff;border:none;border-radius:6px;cursor:pointer}@media print{.bar,.noprint{display:none}}';
   var h='<!doctype html><html><head><meta charset="utf-8"><title>&#8203;</title><style>'+css+'</style></head><body><div class="bar"><button onclick="window.print()">🖨️ 인쇄 / PDF 저장</button></div>'+_bkReportHtml()+'</body></html>';
   var w=window.open("","_blank","width=900,height=900"); if(!w){ toast("팝업이 막혔어요 — 허용 후 다시",true); return; }
