@@ -6587,6 +6587,7 @@ function dAct(){
         h+='<div style="border:1px solid #e5e7eb;border-top:none;'+(k==dayActs.length-1?"border-radius:0 0 10px 10px;":"")+'overflow:hidden">';
         h+='<div style="padding:10px 12px;background:#f8fafc;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">';
         h+='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">';
+        if(a.ttl)h+='<b style="font-size:14px;color:#0f172a">'+esc(a.ttl)+'</b>'+(a.tm?'<span style="font-size:12px;color:#475569">'+esc(a.tm)+'</span>':'');
         if(a.expTp)h+='<span style="background:#f3e8ff;color:#7c3aed;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600">'+esc(a.expTp)+(a.expMid?" › "+esc(a.expMid):"")+'</span>';
         else h+='<span style="background:#e5e7eb;color:#666;padding:3px 10px;border-radius:12px;font-size:12px">행사구분 미지정</span>';
         h+='</div>';
@@ -6641,7 +6642,9 @@ function onActExpTpChg(prefix){
 }
 function popAct(){
   openPopup('<h3>행사일지 등록 <button class="close-x" onclick="closePopup()">&times;</button></h3>'+
+    '<div style="margin-bottom:10px"><label>행사명 <span style="color:#888;font-size:11px">(월례회의 활동보고 제목 — 예: 연합청년회 주관 읍·면 정화활동(법성면))</span></label><input type="text" id="aTtl" placeholder="무슨 행사였는지"></div>'+
     '<div class="frow fr2"><div><label>날짜 *</label><input type="date" id="aD" value="'+today()+'"></div>'+
+    '<div><label>시간 <span style="color:#888;font-size:11px">(예: 18:00 ~ 21:00)</span></label><input type="text" id="aTm" placeholder="18:00 ~" style="max-width:220px"></div></div><div class="frow fr2">'+
     '<div><label>장소</label><input type="text" id="aL" placeholder="장소 (간단히)" style="max-width:220px"></div></div>'+
     '<div class="frow fr2" style="margin-bottom:10px"><div><label>세출 대분류 (행사구분)</label><select id="aExpTp" onchange="onActExpTpChg(\'a\')">'+actExpTpOpts("")+'</select></div>'+
     '<div><label>세출 중분류 (세부행사)</label><select id="aExpMid">'+actExpMidOpts("","")+'</select></div></div>'+
@@ -6654,7 +6657,7 @@ async function addA(){
   var d=document.getElementById("aD").value;
   if(!d){alert("날짜를 입력하세요");return}
   var ar=myar()||(AR&&AR[0])||"";
-  var payload={dt:d,ar:ar,tp:"행사",ppl:"",bag:"",nt:document.getElementById("aN").value,loc:(document.getElementById("aL")?document.getElementById("aL").value:""),expTp:(document.getElementById("aExpTp")?document.getElementById("aExpTp").value:""),expMid:(document.getElementById("aExpMid")?document.getElementById("aExpMid").value:""),by:CID,ph:[]};
+  var payload={dt:d,ar:ar,tp:"행사",ppl:"",bag:"",ttl:(document.getElementById("aTtl")||{}).value||"",tm:(document.getElementById("aTm")||{}).value||"",nt:document.getElementById("aN").value,loc:(document.getElementById("aL")?document.getElementById("aL").value:""),expTp:(document.getElementById("aExpTp")?document.getElementById("aExpTp").value:""),expMid:(document.getElementById("aExpMid")?document.getElementById("aExpMid").value:""),by:CID,ph:[]};
   var fi=document.getElementById("aPh");
   showLoading("저장 중...");
   var files=await readFiles(fi);
@@ -6682,7 +6685,9 @@ function edAct(id){
   var a;for(var i=0;i<acts.length;i++)if(acts[i].id==id){a=acts[i];break}
   if(!a)return;
   openPopup('<h3>행사일지 수정 <button class="close-x" onclick="closePopup()">&times;</button></h3>'+
+    '<div style="margin-bottom:10px"><label>행사명 <span style="color:#888;font-size:11px">(월례회의 활동보고 제목)</span></label><input type="text" id="eaTtl" value="'+esc(a.ttl||"")+'" placeholder="무슨 행사였는지"></div>'+
     '<div class="frow fr2"><div><label>날짜</label><input type="date" id="eaD" value="'+esc(a.dt)+'"></div>'+
+    '<div><label>시간</label><input type="text" id="eaTm" value="'+esc(a.tm||"")+'" placeholder="18:00 ~" style="max-width:220px"></div></div><div class="frow fr2">'+
     '<div><label>장소</label><input type="text" id="eaL" value="'+esc(a.loc||"")+'" placeholder="장소 (간단히)" style="max-width:220px"></div></div>'+
     '<div class="frow fr2" style="margin-bottom:10px"><div><label>세출 대분류 (행사구분)</label><select id="eaExpTp" onchange="onActExpTpChg(\'ea\')">'+actExpTpOpts(a.expTp||"")+'</select></div>'+
     '<div><label>세출 중분류 (세부행사)</label><select id="eaExpMid">'+actExpMidOpts(a.expTp||"",a.expMid||"")+'</select></div></div>'+
@@ -6690,7 +6695,7 @@ function edAct(id){
     '<div style="text-align:right"><button class="btn btn-b" onclick="saveAct(\''+id+'\')">저장</button></div>');
 }
 async function saveAct(id){
-  var p={id:id,dt:document.getElementById("eaD").value,nt:document.getElementById("eaN").value,loc:(document.getElementById("eaL")?document.getElementById("eaL").value:""),expTp:(document.getElementById("eaExpTp")?document.getElementById("eaExpTp").value:""),expMid:(document.getElementById("eaExpMid")?document.getElementById("eaExpMid").value:"")};
+  var p={id:id,dt:document.getElementById("eaD").value,ttl:(document.getElementById("eaTtl")||{}).value||"",tm:(document.getElementById("eaTm")||{}).value||"",nt:document.getElementById("eaN").value,loc:(document.getElementById("eaL")?document.getElementById("eaL").value:""),expTp:(document.getElementById("eaExpTp")?document.getElementById("eaExpTp").value:""),expMid:(document.getElementById("eaExpMid")?document.getElementById("eaExpMid").value:"")};
   showLoading("저장 중...");
   var r=await api("updateAct",p);
   hideLoading();
@@ -15304,6 +15309,7 @@ function _bkMtSet(k,v){ BK_MT[k]=v; try{ localStorage.setItem("bsp_bkMt",JSON.st
 function _bkMtBar(){
   var on=BK_MT.cover||BK_MT.act||BK_MT.ev, ck=function(k,lb){ return '<label style="display:flex;gap:5px;align-items:center;font-weight:800;cursor:pointer"><input type="checkbox" '+(BK_MT[k]?'checked':'')+' onchange="_bkMtSet(\''+k+'\',this.checked)" style="width:17px;height:17px"> '+lb+'</label>'; };
   return '<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:-4px 0 12px;padding:7px 12px;border:2px solid '+(on?'#b45309':'#e2e8f0')+';background:'+(on?'#fffbeb':'#fff')+';border-radius:8px;font-size:13.5px"><b style="color:#92400e">📋 월례회의 자료 뽑기</b>'+ck("cover","표지·목차")+ck("act","활동보고 (활동일지·사진)")+ck("ev","📎 증빙 (정산서 뒤에)")+(BK_MT.ev?'<select onchange="_bkMtSet(\'evn\',+this.value)" style="padding:3px 4px;font-weight:700">'+[[1,"한 장에 1개"],[2,"한 장에 2개"],[4,"한 장에 4개"]].map(function(o){ return '<option value="'+o[0]+'"'+((+BK_MT.evn||2)===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('')+'</select>':'')
+    +(BK_MT.cover?'<button onclick="_bkMtAgPop()" style="border:1px solid #b45309;background:#fff;color:#92400e;border-radius:6px;padding:3px 9px;font-weight:800;cursor:pointer">📝 안건·기타 안건'+(function(){ _bkMtLoad(); var A=(BK.mtg||{})[_bkMtYm()]||{}; var n=[A.agenda,A.etc].filter(function(x){ return String(x||"").trim(); }).length; return n?' ✓':''; })()+'</button>':'')
     +(BK_MT.cover?'<label style="display:flex;gap:5px;align-items:center;font-weight:700">회의 날짜 <input type="date" value="'+esc(BK_MT.dt||"")+'" onchange="_bkMtSet(\'dt\',this.value)" style="padding:4px 6px"></label>':'')
     +'<span style="font-size:12px;color:#64748b">체크하고 🖨 인쇄 · 기간이 여러 달이면 정산서가 달마다 한 장씩</span><a href="월례회_양식.hwp" download="월례회_양식.hwp" style="margin-left:auto;font-size:12.5px;font-weight:800;color:#1d4ed8;text-decoration:none;border:1px solid #93c5fd;border-radius:6px;padding:3px 9px;background:#eff6ff" title="예전 한글 월례회 표지·목차 양식 — 한글에서 직접 고쳐 쓸 때">📄 한글 양식 받기</a></div>';
 }
@@ -15319,6 +15325,23 @@ function _bkMtEvHtml(title){
   return h;
 }
 var BK_MT_EVCSS='<style>.mev{height:268mm;display:flex;flex-direction:column;overflow:hidden}.mevh{font-size:12px;border-bottom:2px solid #000;padding:2px 2px 6px;text-align:center}.mevh b{font-size:18px}.mevg{flex:1;min-height:0;display:grid;gap:4mm;padding-top:4mm}.mevg.g1{grid-template-columns:1fr;grid-template-rows:1fr}.mevg.g2{grid-template-columns:1fr;grid-template-rows:1fr 1fr}.mevg.g4{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}.mevc{min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid #94a3b8;padding:2mm;overflow:hidden}.mevc img{flex:1;min-height:0;max-width:100%;object-fit:contain}.mevt{font-size:14px;font-weight:800;text-align:center;padding-top:2mm;border-top:1px solid #94a3b8;width:100%}</style>';
+// 📝 안건 · 기타 안건 — 회의 날짜의 달마다 /main/BankMTG/{YYYY-MM} = { agenda, etc } · 줄 앞 □ = 큰 제목, ○ = 세부
+function _bkMtYm(){ return String(BK_MT.dt||today()).slice(0,7); }
+function _bkMtLoad(){ if(BK.mtg!==undefined) return; BK.mtg=null; fbDb.ref('/main/BankMTG').on('value',function(s){ BK.mtg=s.val()||{}; }); }
+function _bkMtAgPop(){
+  _bkMtLoad(); var ym=_bkMtYm(), A=(BK.mtg||{})[ym]||{};
+  var ta=function(id,lb,v){ return '<label style="display:block;font-weight:800;margin-bottom:10px">'+lb+'<textarea id="'+id+'" rows="8" style="width:100%;box-sizing:border-box;padding:8px;font-family:inherit;font-size:14px;line-height:1.6;margin-top:4px" placeholder="□ 2026. 법성면 화합한마당&#10;○ 일 시 : 2026. 10. 16.(금) 15:00 ~ 21:00&#10;○ 장 소 : 법성면 뉴타운 문화광장">'+esc(v||"")+'</textarea></label>'; };
+  openPopup2('<h3>📝 '+(+ym.slice(5))+'월 월례회의 안건 <button class="close-x" onclick="closePopup2()">&times;</button></h3><div style="font-size:12.5px;color:#475569;margin-bottom:8px">줄 앞에 <b>□</b> 를 붙이면 큰 제목, <b>○</b> 는 세부 줄 · 비우면 그 쪽은 안 나와요 · 회의 날짜('+esc(BK_MT.dt||today())+')의 달에 저장돼요</div>'+ta("mtAg","안건",A.agenda)+ta("mtEtc","기타 안건",A.etc)+'<div style="text-align:right"><button class="btn btn-b" onclick="_bkMtAgSave()">💾 저장</button></div>',620);
+}
+function _bkMtAgSave(){ var ym=_bkMtYm(), o={agenda:document.getElementById("mtAg").value, etc:document.getElementById("mtEtc").value};
+  fbDb.ref('/main/BankMTG/'+ym).update(o).then(function(){ BK.mtg=BK.mtg||{}; BK.mtg[ym]=Object.assign({},BK.mtg[ym]||{},o); closePopup2(); toast("💾 안건 저장"); draw(); }).catch(function(e){ toast("저장 실패: "+e.message,true); }); }
+function _bkMtAgHtml(title,txt,F){
+  var L=String(txt||"").split("\n").map(function(x){ return x.replace(/\s+$/,""); }).filter(function(x){ return x.trim(); }); if(!L.length) return '';
+  return '<div class="pg" style="'+F+'"><div style="text-align:center;font-size:28px;font-weight:700;margin:2mm 0 8mm">'+esc(title)+'</div>'+L.map(function(x){ var t=x.trim();
+    if(/^□/.test(t)) return '<div style="font-size:19px;font-weight:700;margin:6mm 0 3mm">'+esc(t)+'</div>';
+    if(/^[○◦·\-]/.test(t)) return '<div style="font-size:15px;line-height:2;padding-left:4mm">'+esc(t)+'</div>';
+    return '<div style="font-size:15px;line-height:2;padding-left:8mm">'+esc(t)+'</div>'; }).join('')+'</div>';
+}
 function _bkMtMonths(){   // 지금 기간의 달들 [[y,m],…]
   if(BK_PM>=1&&BK_PM<=12) return [[BK_PY,BK_PM]];
   if(BK_PM===-1){ var r=_bkRange(); if(!r.from||!r.to) return []; var y=+r.from.slice(0,4), m=+r.from.slice(5,7), ye=+r.to.slice(0,4), me=+r.to.slice(5,7), o=[]; while((y<ye||(y===ye&&m<=me))&&o.length<24){ o.push([y,m]); m++; if(m>12){ m=1; y++; } } return o; }
@@ -15342,11 +15365,12 @@ function _bkMtWrap(){
   }
   h+=gov;
   AM.forEach(function(x){ var k=x[0]+"-"+String(x[1]).padStart(2,"0"), L=acts0.filter(function(a){ return String(a.dt).slice(0,7)===k; }).sort(function(a,b){ return String(a.dt).localeCompare(String(b.dt)); });
-    L.forEach(function(a,i){ var wd="일월화수목금토".charAt(new Date(a.dt+"T00:00:00").getDay()), ttl=a.expMid||a.expTp||String(a.nt||"활동").split("\n")[0], ph=(a.ph||[]).slice(0,4);
+    L.forEach(function(a,i){ var wd="일월화수목금토".charAt(new Date(a.dt+"T00:00:00").getDay()), ttl=a.ttl||a.expMid||a.expTp||String(a.nt||"활동").split("\n")[0], ph=(a.ph||[]).slice(0,4);
       h+='<div class="pg" style="'+F+'">'+(i===0?'<div style="text-align:center;font-size:28px;font-weight:700;margin:2mm 0 8mm">'+x[0]+'. '+String(x[1]).padStart(2,"0")+'월 활동보고</div>':'');
-      h+='<div style="font-size:19px;font-weight:700;margin-bottom:5mm">□ '+esc(ttl)+'</div><div style="font-size:15px;line-height:2;padding-left:4mm">○ 일&nbsp;&nbsp;&nbsp;&nbsp;시 : '+a.dt.slice(0,4)+'. '+a.dt.slice(5,7)+'. '+a.dt.slice(8,10)+'.('+wd+')'+(a.tm?' '+esc(a.tm)+' ~':'')+'<br>○ 장&nbsp;&nbsp;&nbsp;&nbsp;소 : '+esc(a.loc||'')+(a.nt&&a.nt.split("\n")[0]!==ttl||a.nt&&(a.expMid||a.expTp)?'<br>○ 내&nbsp;&nbsp;&nbsp;&nbsp;용 : <span style="white-space:pre-wrap">'+esc(a.nt)+'</span>':'')+(a.ppl?'<br>○ 참여인원 : '+esc(a.ppl):'')+(ph.length?'<br>○ 활동사진 :':'')+'</div>';
+      h+='<div style="font-size:19px;font-weight:700;margin-bottom:5mm">□ '+esc(ttl)+'</div><div style="font-size:15px;line-height:2;padding-left:4mm">○ 일&nbsp;&nbsp;&nbsp;&nbsp;시 : '+a.dt.slice(0,4)+'. '+a.dt.slice(5,7)+'. '+a.dt.slice(8,10)+'.('+wd+')'+(a.tm?' '+esc(a.tm):'')+'<br>○ 장&nbsp;&nbsp;&nbsp;&nbsp;소 : '+esc(a.loc||'')+(a.nt&&a.nt.split("\n")[0]!==ttl||a.nt&&(a.expMid||a.expTp)?'<br>○ 내&nbsp;&nbsp;&nbsp;&nbsp;용 : <span style="white-space:pre-wrap">'+esc(a.nt)+'</span>':'')+(a.ppl?'<br>○ 참여인원 : '+esc(a.ppl):'')+(ph.length?'<br>○ 활동사진 :':'')+'</div>';
       if(ph.length) h+='<div style="display:grid;grid-template-columns:repeat('+(ph.length===1?1:2)+',1fr);gap:0;margin-top:3mm;border:1px solid #000">'+ph.map(function(p){ return '<img src="'+esc(imgSrc(p))+'" style="width:100%;height:'+(ph.length<=2?'110mm':'82mm')+';object-fit:cover;display:block;border:1px solid #000">'; }).join('')+'</div>';
       h+='</div>'; }); });
+  if(BK_MT.cover){ _bkMtLoad(); var AG=(BK.mtg||{})[_bkMtYm()]||{}; h+=_bkMtAgHtml('안건',AG.agenda,F)+_bkMtAgHtml('기타안건',AG.etc,F); }
   return h;
 }
 // 🏛 총회 자료
