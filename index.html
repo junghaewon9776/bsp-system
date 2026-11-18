@@ -14550,7 +14550,7 @@ function _bkDashCharts(R){
 // ── 📄 정산보고서 — 엑셀 정산보고서 양식: 월 고르면 월별, 1년 전체면 총회용, 대분류 고르면 항목별 ──
 // ── 정산보고서 모양 고르기 ──
 var BK_RS="big", BK_MERGE=true;   // 같은 대분류·계정과목 칸 병합
-var BK_RS_LIST=[["gov","🏛 정산서","월례회 문서 양식 — 결재란 · 집행현황(이월금·수입금) · 집행내역(비목·항목·내역)"],["big","📂 대분류별","엑셀 「정산보고서」 — 대분류 비중 + 대분류별 상세"],["date","📅 일자순","엑셀 「정산보고」 — 날짜 순서대로 수입·지출"],["pnl","⚖ 사업별 수입·지출","대분류마다 들어온 돈·쓴 돈·남은 돈을 옆에 — 같은 대분류는 칸 병합"],["acct","🧾 계정과목별","엑셀 「항목별 정산보고」 — 계정과목 비율 + 내역"],["month","📈 월별 추이","기업식 손익 추이표 — 대분류 × 월"],["yoy","🔁 전년 대비","기업식 — 올해와 작년 같은 기간 비교, 증감·증감률"]];
+var BK_RS_LIST=[["gov","🏛 정산서","월례회 문서 양식 — 결재란 · 현황(이월액·수입·총합계·지출·잔액) · 수입내역 · 지출내역"],["big","📂 대분류별","엑셀 「정산보고서」 — 대분류 비중 + 대분류별 상세"],["date","📅 일자순","엑셀 「정산보고」 — 날짜 순서대로 수입·지출"],["pnl","⚖ 사업별 수입·지출","대분류마다 들어온 돈·쓴 돈·남은 돈을 옆에 — 같은 대분류는 칸 병합"],["acct","🧾 계정과목별","엑셀 「항목별 정산보고」 — 계정과목 비율 + 내역"],["month","📈 월별 추이","기업식 손익 추이표 — 대분류 × 월"],["yoy","🔁 전년 대비","기업식 — 올해와 작년 같은 기간 비교, 증감·증감률"]];
 function _bkRsPicker(){
   return '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:-4px 0 12px"><b style="font-size:13px;color:#475569">보고서 모양</b>'+BK_RS_LIST.map(function(o){ var on=BK_RS===o[0]; return '<button title="'+esc(o[2])+'" onclick="BK_RS=\''+o[0]+'\';draw()" style="border:2px solid '+(on?'#1d4ed8':'#cbd5e1')+';border-radius:8px;padding:5px 11px;font-size:13.5px;font-weight:800;cursor:pointer;background:'+(on?'#1d4ed8':'#fff')+';color:'+(on?'#fff':'#0f172a')+'">'+o[1]+'</button>'; }).join('')+(true?'<label style="display:flex;gap:5px;align-items:center;font-weight:800;margin-left:6px;background:#fff;border:2px solid #7c3aed;border-radius:8px;padding:4px 10px;cursor:pointer"><input type="checkbox" '+(BK_MERGE?'checked':'')+' onchange="BK_MERGE=this.checked;draw()" style="width:17px;height:17px"> 같은 '+(BK_RS==="date"?'날짜':(BK_RS==="acct"||BK_BIG?'계정과목':'대분류'))+' 칸 병합'+((BK_RS==="month"||BK_RS==="yoy")?' <span style="font-size:11px;font-weight:600;color:#64748b">(이 모양은 합칠 칸 없음)</span>':(BK_RS==="gov"?' <span style="font-size:11px;font-weight:600;color:#64748b">(정산서는 항상 병합)</span>':''))+'</label><label style="display:flex;gap:5px;align-items:center;font-weight:800;background:#fff;border:2px solid #0f766e;border-radius:8px;padding:4px 10px;cursor:pointer"><input type="checkbox" '+(BK_SIGNON?'checked':'')+' onchange="BK_SIGNON=this.checked;draw()" style="width:17px;height:17px"> ✍ 결재란</label>'+(BK_SIGNON?_bkEsgBtn()+_bkSgCtl():'')+'':'')+'<span style="font-size:12px;color:#64748b">'+esc((BK_RS_LIST.filter(function(o){ return o[0]===BK_RS; })[0]||[])[2]||'')+'</span></div>';
 }
@@ -14953,15 +14953,13 @@ function _bkGovHtml(){
   var h='<div class="bkRep">';
   h+=_bkSignBox();
   h+='<div style="text-align:center;font-size:26px;font-weight:900;margin:6px 0 14px;letter-spacing:1px">'+esc(ttl)+'</div>';
-  // □ 집행현황
-  h+='<div style="font-weight:800;font-size:15px;margin:8px 0 2px">□ 집행현황</div><div style="text-align:right;font-size:11.5px">(단위:원)</div>';
-  h+='<table style="border-collapse:collapse;width:100%;font-size:13px"><tr><td style="'+H+'">구  분</td><td style="'+H+'">예 산 액</td><td style="'+H+'">%</td><td style="'+H+'">집 행 액</td><td style="'+H+'">%</td><td style="'+H+'">집행잔액</td><td style="'+H+'">이 자<br>발생액</td><td style="'+H+'">비 고<br>(잔액사유)</td></tr>';
-  [["계",tot,100,exp,exp?100:0,tot-exp,intr],["이월금",open,pc(open,tot),fromO,pc(fromO,exp),open-fromO,null],["수입금",inc,pc(inc,tot),fromI,pc(fromI,exp),inc-fromI,null]].forEach(function(r,i){
-    h+='<tr'+(i===0?' style="font-weight:800"':'')+'><td style="'+C+'">'+r[0]+'</td><td style="'+N+'">'+dash(r[1])+'</td><td style="'+C+'">'+r[2]+'</td><td style="'+N+'">'+dash(r[3])+'</td><td style="'+C+'">'+r[4]+'</td><td style="'+N+'">'+dash(r[5])+'</td><td style="'+C+'">'+(r[6]?fm(r[6]):'-')+'</td><td style="'+B+'"></td></tr>'; });
-  h+='</table>';
-  // □ 집행내역 - 수입 / - 지출
+  // □ 현황 — 이월액 · 수입 · 총합계 · 지출 · 잔액 (비율 없음)
+  h+='<div style="text-align:right;font-size:11.5px">(단위:원)</div>';
+  h+='<table style="border-collapse:collapse;width:100%;font-size:13.5px"><tr><td style="'+H+'">이 월 액</td><td style="'+H+'">수  입</td><td style="'+H+'">총 합 계</td><td style="'+H+'">지  출</td><td style="'+H+'">잔  액</td></tr>';
+  h+='<tr style="font-weight:800"><td style="'+N+'">'+dash(open)+'</td><td style="'+N+'">'+dash(inc)+'</td><td style="'+N+'">'+dash(tot)+'</td><td style="'+N+'">'+dash(exp)+'</td><td style="'+N+'">'+fm(tot-exp)+'</td></tr></table>';
+  // □ 수입내역 / □ 지출내역
   var sec=function(title,G,total,f){
-    var s='<div style="font-weight:700;margin:12px 0 2px">- '+title+'</div><div style="text-align:right;font-size:11.5px">(단위:원)</div><table style="border-collapse:collapse;width:100%;font-size:12.5px">';
+    var s='<div style="font-weight:800;font-size:15px;margin:16px 0 2px">□ '+title+'내역</div><div style="text-align:right;font-size:11.5px">(단위:원)</div><table style="border-collapse:collapse;width:100%;font-size:12.5px">';
     var mA=A.length>1;   // 통장 하나만이면 구분(통장) 칸 없음
     s+='<tr>'+(mA?'<td style="'+H+';width:44px">구분</td>':'')+'<td style="'+H+'">비 목</td><td style="'+H+'">항 목</td><td style="'+H+'">'+title+' 금액</td><td style="'+H+'">합계</td><td style="'+H+'">'+title+' 내역</td><td style="'+H+';width:60px">비고</td></tr>';
     s+='<tr style="font-weight:800"><td style="'+C+'" colspan="'+(mA?3:2)+'">총  계</td><td style="'+N+'">'+fm(total)+'</td><td style="'+B+'"></td><td style="'+B+'"></td><td style="'+B+'"></td></tr>';
@@ -14988,7 +14986,6 @@ function _bkGovHtml(){
     });
     return s+'</table>';
   };
-  h+='<div style="font-weight:800;font-size:15px;margin:16px 0 2px">□ 집행내역</div>';
   if(inc) h+=sec("수입",R.inc,inc,"inA");
   h+=sec("지출",R.exp,exp,"out");
   if(R.none.length) h+='<div class="noprint" style="margin-top:10px;font-size:12px;color:#b45309">※ 분류 안 한 거래 '+R.none.length+'건은 「❓ 분류 안 함」으로 들어가 있어요</div>';
