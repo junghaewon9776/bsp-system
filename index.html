@@ -899,7 +899,9 @@ function shiftDay(px,dir){
   draw();
 }
 function toast(m,e){var t=document.getElementById("toast2");t.textContent=m;t.style.background=e?"#dc2626":"#16a34a";t.style.display="block";setTimeout(function(){t.style.display="none"},2400)}
-function imgSrc(u){if(!u)return"";var m=String(u).match(/[?&/]id=([^&]+)|\/d\/([^/]+)|\/file\/d\/([^/]+)/);var id=m?(m[1]||m[2]||m[3]):"";if(!id)return u;return"https://drive.google.com/thumbnail?id="+id+"&sz=w1000"}
+// 방금 올린 사진은 구글 드라이브 미리보기가 몇 분 늦게 만들어져서 안 보임 → 이 화면에선 올린 그 사진(내 기기 것)을 바로 보여줌
+var _LIMG={};
+function imgSrc(u){if(!u)return"";if(_LIMG[u])return _LIMG[u];var m=String(u).match(/[?&/]id=([^&]+)|\/d\/([^/]+)|\/file\/d\/([^/]+)/);var id=m?(m[1]||m[2]||m[3]):"";if(!id)return u;return"https://drive.google.com/thumbnail?id="+id+"&sz=w1000"}
 function normD(s){if(!s)return"";var m=String(s).match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);if(m){var y=+m[1],mo=+m[2],d=+m[3];return y+"-"+(mo<10?"0":"")+mo+"-"+(d<10?"0":"")+d}var dt=new Date(s);if(isNaN(dt.getTime()))return String(s);var y=dt.getFullYear(),mo=dt.getMonth()+1,d=dt.getDate();return y+"-"+(mo<10?"0":"")+mo+"-"+(d<10?"0":"")+d}
 function fmtDK(s){if(!s)return"";var n=normD(s);var m=n.match(/^(\d{4})-(\d{2})-(\d{2})/);if(!m)return String(s);var y=+m[1],mo=+m[2],d=+m[3];var dt=new Date(y,mo-1,d);var w=["일","월","화","수","목","금","토"][dt.getDay()];return y+"년 "+mo+"월 "+d+"일 ("+w+")"}
 function fixDates(){for(var i=0;i<acts.length;i++)acts[i].dt=normD(acts[i].dt);for(var i=0;i<purs.length;i++)purs[i].dt=normD(purs[i].dt);for(var i=0;i<exps.length;i++)exps[i].dt=normD(exps[i].dt);for(var i=0;i<mems.length;i++)if(mems[i].bd)mems[i].bd=normD(mems[i].bd)}
@@ -1011,7 +1013,7 @@ async function uploadAll(files, ar, type){
   for(var i=0;i<files.length;i++){
     showLoading("사진 업로드 "+(i+1)+"/"+files.length);
     var r=await api("uploadPhoto",{dataUrl:files[i].dataUrl, name:files[i].name, ar:ar, type:type});
-    if(r.ok)urls.push(r.url);
+    if(r.ok){ urls.push(r.url); if(r.url&&files[i].dataUrl) _LIMG[r.url]=files[i].dataUrl; }
     else toast("사진 업로드 실패: "+r.err, true);
   }
   return urls;
@@ -13713,10 +13715,13 @@ function _fbPubLink(){
 }
 // 월회비 표 필터
 var FB_TBQ="", FB_TBF="all";
+// 탈퇴 회원 보이기/숨기기 (기억) — 숨기면 표·인쇄·엑셀에서 이미 탈퇴한 회원(탈퇴 달이 지난 사람)과 '탈퇴 회원 — 남은 미납' 줄을 빼요
+var FB_GONE=(function(){ try{ return localStorage.getItem("bsp_fbGone")!=="0"; }catch(e){ return true; } })();
+function _fbGoneSet(on){ FB_GONE=!!on; try{ localStorage.setItem("bsp_fbGone",on?"1":"0"); }catch(e){} draw(); }
 // 🖨 📗 📋 월회비 표 뽑기 (지금 연도·필터 그대로)
 function _fbOutRows(){
   var R=_fbYearRows(+FB_YEAR);
-  var rows=R.rows.filter(function(r){ if(FB_TBQ && _fbNm(r.m.nm+(r.m.role||"")).indexOf(_fbNm(FB_TBQ))<0) return false; if(FB_TBF==="unpaid") return r.mis<0; if(FB_TBF==="paid") return r.mis===0; if(FB_TBF==="over") return r.mis>0; return true; });
+  var rows=R.rows.filter(function(r){ if(!FB_GONE && r.m.endYm && r.m.endYm<_ymNow()) return false; if(FB_TBQ && _fbNm(r.m.nm+(r.m.role||"")).indexOf(_fbNm(FB_TBQ))<0) return false; if(FB_TBF==="unpaid") return r.mis<0; if(FB_TBF==="paid") return r.mis===0; if(FB_TBF==="over") return r.mis>0; return true; });
   var head=["구분","직책","성함","이월액","1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월","합계","미납금"];
   var body=rows.map(function(r,i){ return [i+1, r.m.role||"", r.m.nm, r.carry].concat(r.months).concat([r.sum, r.mis]); });
   var tot=["","","합계 ("+rows.length+"명)", rows.reduce(function(a,r){return a+r.carry;},0)];
@@ -13728,7 +13733,7 @@ function _fbOutRows(){
   foot.push("🏦 회비 통장 잔액: "+fm(B.calc)+"원 ("+today()+" 기준)");
   if(lt) foot.push("최근 거래: "+String(lt.dt).slice(0,10)+" "+(lt.nm||"")+" "+(Number(lt.inA)?"입금 "+fm(lt.inA):"출금 "+fm(lt.out))+"원");
   if(FB.cfg.acct) foot.push("회비 계좌: "+FB.cfg.acct);
-  return {head:head, body:body, tot:tot, title:title, sub:sub, gone:R.gone, foot:foot};
+  return {head:head, body:body, tot:tot, title:title, sub:sub, gone:FB_GONE?R.gone:[], foot:foot};
 }
 function _fbPrint(){
   var D=_fbOutRows(), f=function(v){ return typeof v==="number"?(v?fm(v):"-"):esc(v); };
@@ -13836,7 +13841,7 @@ async function _fbXlsx(){
 function _fbTableView(){
   var ys=_fbYears(); if(!FB_YEAR||ys.indexOf(FB_YEAR)<0) FB_YEAR=ys[0];
   var R=_fbYearRows(+FB_YEAR), refM=+R.ref.slice(5,7), _all=R.rows.length;
-  R.rows=R.rows.filter(function(r){ if(FB_TBQ && _fbNm(r.m.nm+(r.m.role||"")).indexOf(_fbNm(FB_TBQ))<0) return false; if(FB_TBF==="unpaid") return r.mis<0; if(FB_TBF==="paid") return r.mis===0; if(FB_TBF==="over") return r.mis>0; return true; });
+  R.rows=R.rows.filter(function(r){ if(!FB_GONE && r.m.endYm && r.m.endYm<_ymNow()) return false; if(FB_TBQ && _fbNm(r.m.nm+(r.m.role||"")).indexOf(_fbNm(FB_TBQ))<0) return false; if(FB_TBF==="unpaid") return r.mis<0; if(FB_TBF==="paid") return r.mis===0; if(FB_TBF==="over") return r.mis>0; return true; });
   var h='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">';
   var _yi=ys.indexOf(FB_YEAR), _yo=ys[_yi+1], _yn=ys[_yi-1];
   var _nb=function(y,lb){ return '<button '+(y?'onclick="FB_YEAR=\''+y+'\';draw()"':'disabled')+' style="border:2px solid '+(y?'#0f766e':'#e2e8f0')+';border-radius:8px;width:42px;height:40px;font-size:18px;font-weight:900;cursor:'+(y?'pointer':'default')+';background:#fff;color:'+(y?'#0f766e':'#cbd5e1')+'">'+lb+'</button>'; };
@@ -13844,7 +13849,7 @@ function _fbTableView(){
   h+='<span style="margin-left:auto;display:inline-flex;gap:6px"><button class="btn btn-s" style="background:#334155;color:#fff;font-weight:700" onclick="_fbPrint()">🖨 인쇄</button><button class="btn btn-s" style="background:#0d9488;color:#fff;font-weight:700" onclick="_fbXlsx()">📗 엑셀</button><button class="btn btn-s" style="background:#7c3aed;color:#fff;font-weight:700" onclick="_fbCopy()">📋 복사</button><button class="btn btn-s" style="background:#059669;color:#fff;font-weight:700" onclick="_fbImg()" title="표 전체를 사진(PNG)으로 — 카톡으로 보내기 좋게">📸 이미지</button></span>';
   h+='<span style="font-size:13px;color:#475569">'+_fbRefSel()+' 기준: <b>'+esc(R.ref)+'</b>까지 · 이월 = 지난해까지 밀린 돈 · 미납금 <b style="color:#dc2626">−</b>는 덜 낸 돈, <b style="color:#15803d">+</b>는 미리 낸 돈</span></div>';
   var tf=function(k,lb){ var on=FB_TBF===k; return '<button onclick="FB_TBF=\''+k+'\';draw()" style="border:none;border-radius:7px;padding:6px 11px;font-size:13px;font-weight:700;cursor:pointer;background:'+(on?'#0f766e':'#e2e8f0')+';color:'+(on?'#fff':'#0f172a')+'">'+lb+'</button>'; };
-  h+='<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px"><input type="search" id="fbTbQ" list="fbMemDL2" value="'+esc(FB_TBQ)+'" placeholder="🔍 이름 · 직책" oninput="FB_TBQ=this.value;clearTimeout(window._fbTbT);window._fbTbT=setTimeout(function(){ draw(); var e=document.getElementById(\'fbTbQ\'); if(e){ e.focus(); e.setSelectionRange(e.value.length,e.value.length); } },350)" autocomplete="off" style="padding:7px 10px;font-size:14px;border:2px solid '+(FB_TBQ?'#0f766e':'#cbd5e1')+';border-radius:8px;width:180px"><datalist id="fbMemDL2">'+_fbMemList().map(function(m){ return '<option value="'+esc(m.nm)+'">'; }).join('')+'</datalist>'+tf("all","전체")+tf("unpaid","미납만")+tf("paid","완납")+tf("over","미리 낸 사람")+((FB_TBQ||FB_TBF!=="all")?'<span style="font-size:13px;font-weight:700;color:#0f766e">'+R.rows.length+' / '+_all+'명</span>':'')+'</div>';
+  h+='<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px"><label style="display:flex;gap:5px;align-items:center;font-size:13px;font-weight:800;cursor:pointer;border:1px solid #cbd5e1;border-radius:7px;padding:5px 9px;background:'+(FB_GONE?'#fff':'#f1f5f9')+'"><input type="checkbox" '+(FB_GONE?'checked':'')+' onchange="_fbGoneSet(this.checked)" style="width:16px;height:16px"> 탈퇴 회원 보이기</label><input type="search" id="fbTbQ" list="fbMemDL2" value="'+esc(FB_TBQ)+'" placeholder="🔍 이름 · 직책" oninput="FB_TBQ=this.value;clearTimeout(window._fbTbT);window._fbTbT=setTimeout(function(){ draw(); var e=document.getElementById(\'fbTbQ\'); if(e){ e.focus(); e.setSelectionRange(e.value.length,e.value.length); } },350)" autocomplete="off" style="padding:7px 10px;font-size:14px;border:2px solid '+(FB_TBQ?'#0f766e':'#cbd5e1')+';border-radius:8px;width:180px"><datalist id="fbMemDL2">'+_fbMemList().map(function(m){ return '<option value="'+esc(m.nm)+'">'; }).join('')+'</datalist>'+tf("all","전체")+tf("unpaid","미납만")+tf("paid","완납")+tf("over","미리 낸 사람")+((FB_TBQ||FB_TBF!=="all")?'<span style="font-size:13px;font-weight:700;color:#0f766e">'+R.rows.length+' / '+_all+'명</span>':'')+'</div>';
   h+='<div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:14px;min-width:960px;width:100%">';
   h+='<thead><tr style="background:#1e293b;color:#fff"><th style="padding:7px 6px">직책</th><th style="padding:7px 6px;text-align:left">성함</th><th style="padding:7px 6px;text-align:right">이월</th>';
   for(var i=1;i<=12;i++) h+='<th style="padding:7px 4px;text-align:right'+(i>refM&&FB_YEAR===R.ref.slice(0,4)?';opacity:.5':'')+'">'+i+'월</th>';
@@ -13863,7 +13868,7 @@ function _fbTableView(){
   h+='<tr style="background:#e2e8f0;font-weight:900;border-top:2px solid #334155"><td></td><td style="padding:7px 6px">합계 ('+R.rows.length+'명)</td><td style="padding:7px 6px;text-align:right">'+fm(tC)+'</td>';
   tM.forEach(function(v){ h+='<td style="padding:7px 4px;text-align:right">'+(v?fm(v):'')+'</td>'; });
   h+='<td style="padding:7px 6px;text-align:right">'+fm(tS)+'</td><td style="padding:7px 6px;text-align:right;color:'+(tMis<0?'#dc2626':'#0f172a')+'">'+fm(tMis)+'</td></tr>';
-  if(R.gone.length){
+  if(R.gone.length && FB_GONE){
     h+='<tr><td colspan="16" style="padding:10px 6px 4px;font-weight:800;color:#64748b">탈퇴 회원 — 남은 미납 (회비 계산은 탈퇴 달까지만)</td></tr>';
     R.gone.forEach(function(r){ h+=row(r,true); });
   }
@@ -15366,7 +15371,7 @@ function _bkMtWrap(){
   h+=gov;
   AM.forEach(function(x){ var k=x[0]+"-"+String(x[1]).padStart(2,"0"), L=acts0.filter(function(a){ return String(a.dt).slice(0,7)===k; }).sort(function(a,b){ return String(a.dt).localeCompare(String(b.dt)); });
     L.forEach(function(a,i){ var wd="일월화수목금토".charAt(new Date(a.dt+"T00:00:00").getDay()), ttl=a.ttl||a.expMid||a.expTp||String(a.nt||"활동").split("\n")[0], ph=(a.ph||[]).slice(0,4);
-      h+='<div class="pg" style="'+F+'">'+(i===0?'<div style="text-align:center;font-size:28px;font-weight:700;margin:2mm 0 8mm">'+x[0]+'. '+String(x[1]).padStart(2,"0")+'월 활동보고</div>':'');
+      h+='<div class="pg" style="'+F+';padding-top:14mm">'+(i===0?'<div style="text-align:center;font-size:28px;font-weight:700;margin:0 0 10mm">'+x[0]+'. '+String(x[1]).padStart(2,"0")+'월 활동보고</div>':'');
       h+='<div style="font-size:19px;font-weight:700;margin-bottom:5mm">□ '+esc(ttl)+'</div><div style="font-size:15px;line-height:2;padding-left:4mm">○ 일&nbsp;&nbsp;&nbsp;&nbsp;시 : '+a.dt.slice(0,4)+'. '+a.dt.slice(5,7)+'. '+a.dt.slice(8,10)+'.('+wd+')'+(a.tm?' '+esc(a.tm):'')+'<br>○ 장&nbsp;&nbsp;&nbsp;&nbsp;소 : '+esc(a.loc||'')+(a.nt&&a.nt.split("\n")[0]!==ttl||a.nt&&(a.expMid||a.expTp)?'<br>○ 내&nbsp;&nbsp;&nbsp;&nbsp;용 : <span style="white-space:pre-wrap">'+esc(a.nt)+'</span>':'')+(a.ppl?'<br>○ 참여인원 : '+esc(a.ppl):'')+(ph.length?'<br>○ 활동사진 :':'')+'</div>';
       if(ph.length) h+='<div style="display:grid;grid-template-columns:repeat('+(ph.length===1?1:2)+',1fr);gap:0;margin-top:3mm;border:1px solid #000">'+ph.map(function(p){ return '<img src="'+esc(imgSrc(p))+'" style="width:100%;height:'+(ph.length<=2?'110mm':'82mm')+';object-fit:cover;display:block;border:1px solid #000">'; }).join('')+'</div>';
       h+='</div>'; }); });
@@ -15995,96 +16000,170 @@ function _docPrintBoot(KEY, ORI, TTL){
     window._docLastHtml = html;
     setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
   };
-  // ── 📝 한글 문서(.hml, 한글 XML) 만들기 — 화면에 그려진 정산서를 그대로 한글 표·문단으로 옮김 (2026-11-16 한컴오피스로 열어 확인) ──
-  window._docHml = function(){
-    var doc = $("doc"), U = 283.465, TW = Math.round((W - 2 * M) * U), dw = doc.clientWidth || 1;
+  // ── 📝 한글 문서(.hml, 한글 XML) — 화면 그대로: 쪽 나눔(.pg)·위아래 간격·글꼴(바탕/맑은 고딕)·글자 크기·자간·줄 간격·표·그림(로고·활동사진 넣음) ──
+  //   (2026-11-19 한컴오피스 2022 로 열어 PDF 로 바꿔 확인) · 사진은 구글 드라이브 → 앱스스크립트(download)로 받아 넣음
+  window._docHml = async function(){
+    var bt = window.event && window.event.target, old = bt ? bt.textContent : "";
+    var st = function(t){ if(bt) bt.textContent = t; };
+    if(bt) bt.disabled = true;
+    try { await hmlBuild(st); } catch(e){ alert("한글 파일 만들기 실패: " + (e && e.message || e)); }
+    if(bt){ bt.disabled = false; bt.textContent = old; }
+  };
+  async function hmlBuild(st){
+    st("⏳ 한글 파일 만드는 중...");
+    var doc = $("doc"), U = 283.465, TW = Math.round((W - 2 * M) * U), DR = doc.getBoundingClientRect(), KM = (W - 2 * M) / (DR.width || 1), Zf = parseFloat(doc.style.zoom) || 1;
+    var hu = function(px){ return Math.round(px * KM * U); };   // 화면 px → 한글 단위
     var X = function(t){ return String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); };
-    var CS = [], CSK = {}, BF = [], BFK = {}, iid = 1000;
-    var cs = function(px, bold){ var h = Math.max(600, Math.round(px * 0.75 * 100 / 50) * 50), k = h + "|" + (bold ? 1 : 0); if(CSK[k] == null){ CSK[k] = CS.length; CS.push({ h: h, b: bold }); } return CSK[k]; };
-    var bf = function(bg){ var k = bg || "-"; if(BFK[k] == null){ BFK[k] = BF.length + 3; BF.push(bg); } return BFK[k]; };   // 1·2 = 선 없음, 3~ = 검정 선 (+배경)
-    var colInt = function(c){ var m = String(c || "").match(/\d+/g); if(!m || (m.length > 3 && +m[3] === 0)) return null; return (+m[0]) + (+m[1]) * 256 + (+m[2]) * 65536; };
-    var PS = { left: 0, center: 1, right: 2 };
-    var psOf = function(e){ var a = getComputedStyle(e).textAlign; return a === "center" ? 1 : (a === "right" || a === "end") ? 2 : 0; };
-    var fw = function(e){ var w = getComputedStyle(e).fontWeight; return w === "bold" || +w >= 600; };
-    var fpx = function(e){ return parseFloat(getComputedStyle(e).fontSize) || 13; };
-    // 글자 → <CHAR> (줄바꿈은 LINEBREAK)
-    var runs = function(txt){ return String(txt).replace(/ /g, " ").split("\n").map(function(l){ return X(l); }).join("<LINEBREAK/>"); };
+    var GS = function(e){ return getComputedStyle(e); };
+    // 글자 모양 (크기·굵기·글꼴·자간) / 테두리 / 문단 모양 (정렬·앞 간격·줄 간격)
+    var CS = [], CSK = {}, BF = [], BFK = {}, PS = [], PSK = {}, iid = 1000, BIN = [];
+    var cs = function(e, boldUp){ var s = GS(e), px = parseFloat(s.fontSize) || 13, h = Math.max(500, Math.round(hu(px * Zf) / 50) * 50), b = (s.fontWeight === "bold" || +s.fontWeight >= 600 || !!boldUp) ? 1 : 0, f = /바탕|Batang/i.test(s.fontFamily) ? 1 : 0, ls = parseFloat(s.letterSpacing) || 0, sp = Math.max(-50, Math.min(50, Math.round(ls / px * 100)));
+      var k = h + "|" + b + "|" + f + "|" + sp; if(CSK[k] == null){ CSK[k] = CS.length; CS.push({ h: h, b: b, f: f, sp: sp }); } return CSK[k]; };
+    var bf = function(bg){ var k = bg == null ? "-" : bg; if(BFK[k] == null){ BFK[k] = BF.length + 3; BF.push(bg); } return BFK[k]; };
+    var colInt = function(c){ var m = String(c || "").match(/[\d.]+/g); if(!m || (m.length > 3 && +m[3] === 0)) return null; return (+m[0]) + (+m[1]) * 256 + (+m[2]) * 65536; };
+    var alignOf = function(e){ var s = GS(e), a = s.textAlign; if(a === "center") return "Center"; if(a === "right" || a === "end") return "Right"; if(s.display === "flex" && s.flexDirection === "row" && s.justifyContent === "center") return "Center"; return "Left"; };
+    var ps = function(align, prev, lsp, left){ left = Math.max(0, Math.min(Math.round((left || 0) * 2 / 50) * 50, 60000)); prev = Math.max(0, Math.min(Math.round((prev || 0) * 2 / 50) * 50, 140000));   // 한글은 문단 앞 간격을 반 단위로 읽음 → ×2 (PDF 로 재서 맞춤)
+      lsp = Math.max(100, Math.min(300, Math.round((lsp || 130) / 5) * 5)); var k = align + "|" + prev + "|" + lsp + "|" + left; if(PSK[k] == null){ PSK[k] = PS.length; PS.push({ a: align, p: prev, l: lsp, lf: left }); } return PSK[k]; };
+    ps("Left", 0, 130); ps("Center", 0, 130); ps("Right", 0, 130);   // 0·1·2 = 표 칸 안
+    var lsOf = function(e){ var s = GS(e), fs = parseFloat(s.fontSize) || 13, lh = parseFloat(s.lineHeight); return isFinite(lh) && lh > 0 ? lh / fs * 100 : 135; };
+    var runs = function(txt){ return String(txt).replace(/ /g, " ").split("\n").map(function(l){ return X(l); }).join("<LINEBREAK/>"); };
     var textOf = function(e){
       var c = e.cloneNode(true); [].forEach.call(c.querySelectorAll("br"), function(b){ b.replaceWith("\n"); });
       [].forEach.call(c.querySelectorAll("div,p,tr"), function(d){ d.insertAdjacentText("beforebegin", "\n"); });
       return c.textContent.replace(/[ \t]+\n/g, "\n").replace(/\n{2,}/g, "\n").replace(/^\n+|\n+$/g, "");
     };
-    var para = function(e, txt, pb){ return '<P ParaShape="' + psOf(e) + '" Style="0"' + (pb ? ' PageBreak="true"' : '') + '><TEXT CharShape="' + cs(fpx(e), fw(e)) + '"><CHAR>' + runs(txt) + '</CHAR></TEXT></P>'; };
+    // ── 그림: 화면에 보이는 크기·잘림(object-fit) 그대로 JPEG 로 ──
+    var OP = window.opener || {};
+    var b64Of = async function(src){
+      if(/^data:/.test(src)) return src;
+      var rd = async function(u){ try { var rr = await fetch(u, { mode: "cors" }); if(!rr.ok) return null; var bl = await rr.blob(); if(!/^image\//.test(bl.type)) return null; return await new Promise(function(res){ var fr = new FileReader(); fr.onload = function(){ res(fr.result); }; fr.onerror = function(){ res(null); }; fr.readAsDataURL(bl); }); } catch(e){ return null; } };
+      var id = null, m = String(src).match(/[?&]id=([^&]+)|\/d\/([^/?=]+)/); if(m && /google/.test(src)) id = m[1] || m[2];
+      if(id){ var d1 = await rd("https://lh3.googleusercontent.com/d/" + id + "=w1600"); if(d1) return d1; }   // 구글 사진 주소는 바로 받아짐(CORS 허용)
+      var d2 = await rd(src); if(d2) return d2;
+      if(id && OP.DRIVE_UPLOAD_URL){ try { var r = await fetch(OP.DRIVE_UPLOAD_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "download", fileId: id }) }); var j = JSON.parse(await r.text()); if(j && j.ok && j.base64) return "data:" + (j.mime || "image/jpeg") + ";base64," + j.base64; } catch(e){} }
+      return null;
+    };
+    var picOf = async function(img){
+      var r = img.getBoundingClientRect(); if(r.width < 2 || r.height < 2) return "";
+      var src = img.currentSrc || img.src, du = await b64Of(src);
+      var wMM = r.width * KM, hMM = r.height * KM, w = Math.round(wMM * U * 0.995), h = Math.round(hMM * U);
+      if(!du) return null;
+      var im = await new Promise(function(res){ var o = new Image(); o.onload = function(){ res(o); }; o.onerror = function(){ res(null); }; o.src = du; }); if(!im) return null;
+      var rot = (+img.getAttribute("data-rot") || 0) % 360, iw = im.naturalWidth, ih = im.naturalHeight; if(rot === 90 || rot === 270){ var t = iw; iw = ih; ih = t; }
+      var fit = GS(img).objectFit, bw = r.width, bh = r.height, sx = 0, sy = 0, sw = iw, sh = ih;
+      if(fit === "cover"){ var sc = Math.max(bw / iw, bh / ih); sw = bw / sc; sh = bh / sc; sx = (iw - sw) / 2; sy = (ih - sh) / 2; }
+      else if(fit === "contain" || fit === "scale-down"){ var s2 = Math.min(bw / iw, bh / ih); w = Math.round(iw * s2 * KM * U * 0.995); h = Math.round(ih * s2 * KM * U); }
+      var PX = Math.min(1600, Math.max(200, Math.round(w / U / 25.4 * 220))), cw = PX, ch = Math.max(1, Math.round(PX * h / w));
+      var cv = document.createElement("canvas"); cv.width = cw; cv.height = ch; var g = cv.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, cw, ch);
+      var tmp = im; if(rot){ var c2 = document.createElement("canvas"); c2.width = iw; c2.height = ih; var g2 = c2.getContext("2d"); g2.translate(iw / 2, ih / 2); g2.rotate(rot * Math.PI / 180); g2.drawImage(im, -im.naturalWidth / 2, -im.naturalHeight / 2); tmp = c2; }
+      g.drawImage(tmp, sx, sy, sw, sh, 0, 0, cw, ch);
+      var b64 = cv.toDataURL("image/jpeg", 0.86).replace(/^data:[^;]+;base64,/, ""); BIN.push(b64); var bin = BIN.length;
+      iid += 2;
+      var E = '<TRANSMATRIX E1="1.00000" E2="0.00000" E3="0.00000" E4="0.00000" E5="1.00000" E6="0.00000"/>';
+      return '<PICTURE Reverse="false"><SHAPEOBJECT InstId="' + iid + '" Lock="false" NumberingType="Figure" ZOrder="' + iid + '"><SIZE Height="' + h + '" HeightRelTo="Absolute" Protect="false" Width="' + w + '" WidthRelTo="Absolute"/><POSITION AffectLSpacing="false" AllowOverlap="false" FlowWithText="true" HoldAnchorAndSO="false" HorzAlign="Left" HorzOffset="0" HorzRelTo="Column" TreatAsChar="true" VertAlign="Top" VertOffset="0" VertRelTo="Para"/><OUTSIDEMARGIN Bottom="0" Left="0" Right="0" Top="0"/></SHAPEOBJECT>'
+        + '<SHAPECOMPONENT GroupLevel="0" HorzFlip="false" InstID="' + (iid + 1) + '" OriHeight="' + h + '" OriWidth="' + w + '" VertFlip="false" XPos="0" YPos="0"><ROTATIONINFO Angle="0" CenterX="' + (w >> 1) + '" CenterY="' + (h >> 1) + '" Rotate="1"/><RENDERINGINFO>' + E + E.replace("TRANS", "SCA").replace("TRANS", "SCA") + E.replace("TRANS", "ROT").replace("TRANS", "ROT") + '</RENDERINGINFO></SHAPECOMPONENT>'
+        + '<IMAGERECT X0="0" X1="' + w + '" X2="' + w + '" X3="0" Y0="0" Y1="0" Y2="' + h + '" Y3="' + h + '"/><IMAGECLIP Bottom="' + ch * 75 + '" Left="0" Right="' + cw * 75 + '" Top="0"/><INSIDEMARGIN Bottom="0" Left="0" Right="0" Top="0"/><IMAGEDIM Height="' + ch * 75 + '" Width="' + cw * 75 + '"/><IMAGE Alpha="0" BinItem="' + bin + '" Bright="0" Contrast="0" Effect="RealPic"/><EFFECTS/></PICTURE>';
+    };
+    // ── 표 ──
     var table = function(t, right){
-      var sc = TW / dw, tw = Math.min(TW, Math.round(t.offsetWidth * sc)), rows = [].slice.call(t.rows), grid = [], out = "", nC = 0;
+      var tw = Math.min(TW, hu(t.getBoundingClientRect().width)), rows = [].slice.call(t.rows), grid = [], out = "", nC = 0, tScale = tw / (t.getBoundingClientRect().width || 1);
       rows.forEach(function(r, ri){ grid[ri] = grid[ri] || []; var ci = 0;
         [].forEach.call(r.cells, function(c){ while(grid[ri][ci]) ci++; c._ra = ri; c._ca = ci;
           for(var y = 0; y < c.rowSpan; y++) for(var x = 0; x < c.colSpan; x++){ grid[ri + y] = grid[ri + y] || []; grid[ri + y][ci + x] = 1; }
           ci += c.colSpan; nC = Math.max(nC, ci); }); });
-      var tScale = tw / (t.offsetWidth || 1);
       rows.forEach(function(r){
         out += "<ROW>";
         [].forEach.call(r.cells, function(c){
-          var bg = colInt(getComputedStyle(c).backgroundColor), va = getComputedStyle(c).verticalAlign;
-          var lines = textOf(c);
-          out += '<CELL BorderFill="' + bf(bg) + '" ColAddr="' + c._ca + '" ColSpan="' + c.colSpan + '" Dirty="false" Editable="false" HasMargin="true" Header="false" Height="' + (lines.trim() ? 282 : Math.max(282, Math.round(c.offsetHeight * tScale))) + '" Protect="false" RowAddr="' + c._ra + '" RowSpan="' + c.rowSpan + '" Width="' + Math.round(c.offsetWidth * tScale) + '">'
+          var s = GS(c), bg = colInt(s.backgroundColor), va = s.verticalAlign, lines = textOf(c), cr = c.getBoundingClientRect(), a = alignOf(c);
+          out += '<CELL BorderFill="' + bf(bg) + '" ColAddr="' + c._ca + '" ColSpan="' + c.colSpan + '" Dirty="false" Editable="false" HasMargin="true" Header="false" Height="' + (lines.trim() ? 282 : Math.max(282, Math.round(cr.height * tScale))) + '" Protect="false" RowAddr="' + c._ra + '" RowSpan="' + c.rowSpan + '" Width="' + Math.round(cr.width * tScale) + '">'
             + '<CELLMARGIN Bottom="170" Left="340" Right="340" Top="170"/><PARALIST LineWrap="Break" LinkListID="0" LinkListIDNext="0" TextDirection="0" VertAlign="' + (va === "top" ? "Top" : va === "bottom" ? "Bottom" : "Center") + '">'
-            + '<P ParaShape="' + psOf(c) + '" Style="0"><TEXT CharShape="' + cs(fpx(c), fw(c) || (c.parentNode && fw(c.parentNode))) + '"><CHAR>' + runs(lines) + '</CHAR></TEXT></P></PARALIST></CELL>';
+            + '<P ParaShape="' + (a === "Center" ? 1 : a === "Right" ? 2 : 0) + '" Style="0"><TEXT CharShape="' + cs(c, c.parentNode && /^(TH)$/.test(c.tagName)) + '"><CHAR>' + runs(lines) + '</CHAR></TEXT></P></PARALIST></CELL>';
         });
         out += "</ROW>";
       });
       iid++;
-      return '<P ParaShape="0" Style="0"><TEXT CharShape="0"><TABLE BorderFill="3" CellSpacing="0" ColCount="' + nC + '" PageBreak="Cell" RepeatHeader="false" RowCount="' + rows.length + '">'
-        + '<SHAPEOBJECT InstId="' + iid + '" Lock="false" NumberingType="Table" TextWrap="TopAndBottom" ZOrder="' + iid + '"><SIZE Height="' + Math.round(t.offsetHeight * tScale) + '" HeightRelTo="Absolute" Protect="false" Width="' + tw + '" WidthRelTo="Absolute"/>'
+      return '<TABLE BorderFill="3" CellSpacing="0" ColCount="' + nC + '" PageBreak="Cell" RepeatHeader="false" RowCount="' + rows.length + '">'
+        + '<SHAPEOBJECT InstId="' + iid + '" Lock="false" NumberingType="Table" TextWrap="TopAndBottom" ZOrder="' + iid + '"><SIZE Height="' + hu(t.getBoundingClientRect().height) + '" HeightRelTo="Absolute" Protect="false" Width="' + tw + '" WidthRelTo="Absolute"/>'
         + '<POSITION AffectLSpacing="false" AllowOverlap="false" FlowWithText="true" HoldAnchorAndSO="false" HorzAlign="' + (right ? "Right" : "Left") + '" HorzOffset="0" HorzRelTo="Para" TreatAsChar="false" VertAlign="Top" VertOffset="0" VertRelTo="Para"/><OUTSIDEMARGIN Bottom="141" Left="0" Right="0" Top="141"/></SHAPEOBJECT>'
-        + '<INSIDEMARGIN Bottom="100" Left="280" Right="280" Top="100"/>' + out + '</TABLE><CHAR/></TEXT></P>';
+        + '<INSIDEMARGIN Bottom="100" Left="280" Right="280" Top="100"/>' + out + '</TABLE>';
     };
-    // 문서 훑기: 표 → 한글 표, 글 덩어리 → 문단
-    var body = [];
-    var walk = function(e){
-      [].forEach.call(e.children, function(ch){
-        var st = getComputedStyle(ch); if(st.display === "none" || /noprint|no-print/.test(ch.className)) return;
-        var pb = st.breakBefore === "page" || st.pageBreakBefore === "always";
-        if(ch.tagName === "TABLE"){ body.push(table(ch, false)); return; }
-        if(ch.tagName === "IMG" || ch.tagName === "BUTTON" || ch.tagName === "SCRIPT" || ch.tagName === "STYLE") return;
-        var t = ch.querySelector("table");
-        if(t){
-          if(ch.children.length === 1 && ch.firstElementChild === t){ body.push(table(t, st.justifyContent === "flex-end" || st.textAlign === "right")); return; }
-          walk(ch); return;
+    // ── 문서 훑기: 쪽(.pg)이 바뀌면 쪽 나눔 · 앞 덩어리 아래 ~ 이 덩어리 위 = 문단 앞 간격 ──
+    var body = [], lastPg = undefined, prevBot = DR.top, pbNext = false, nPic = 0, nFail = 0;
+    var pageOf = function(e){ return e.closest ? e.closest(".pg") : null; };
+    var emit = function(e, rect, inner, align, lsp){
+      var lf = 0; if(align === "Left" && e.nodeType === 1){ var er = e.getBoundingClientRect(); lf = hu(Math.max(0, er.left + (parseFloat(GS(e).paddingLeft) || 0) - DR.left)); }
+      var pg = pageOf(e), pb = false;
+      if(body.length && (pg !== lastPg || pbNext)) pb = true;
+      if(pg !== lastPg){ prevBot = pg ? pg.getBoundingClientRect().top : prevBot; lastPg = pg; }
+      pbNext = false;
+      var gap = pb || !body.length ? (rect.top - (pg ? pg.getBoundingClientRect().top : DR.top)) : rect.top - prevBot;
+      body.push('<P ParaShape="' + ps(align, hu(Math.max(0, gap)), lsp, lf) + '" Style="0"' + (pb ? ' PageBreak="true"' : '') + '>' + inner + '</P>');
+      prevBot = Math.max(prevBot, rect.bottom);
+    };
+    var pics = async function(box, imgs){
+      var out = "";
+      for(var i = 0; i < imgs.length; i++){ nPic++; st("⏳ 그림 넣는 중 " + nPic + "..."); var p = await picOf(imgs[i]); if(p === null){ nFail++; out += ""; } else out += p; }
+      if(!out) return;
+      var rect = { top: 1e9, bottom: -1e9 }; imgs.forEach(function(im){ var r = im.getBoundingClientRect(); rect.top = Math.min(rect.top, r.top); rect.bottom = Math.max(rect.bottom, r.bottom); });
+      var a = alignOf(box); if(imgs.length === 1 && GS(box).display === "flex" && GS(box).justifyContent === "center") a = "Center";
+      emit(box, rect, '<TEXT CharShape="' + cs(box) + '">' + out + '<CHAR/></TEXT>', a, 100);
+    };
+    var walk = async function(e){
+      var kids = [].slice.call(e.children);
+      for(var i = 0; i < kids.length; i++){ var ch = kids[i], s = GS(ch);
+        if(s.display === "none" || /noprint|no-print/.test(ch.className) || /^(BUTTON|SCRIPT|STYLE|DATALIST)$/.test(ch.tagName)) continue;
+        if(s.breakBefore === "page" || s.pageBreakBefore === "always") pbNext = true;
+        if(ch.tagName === "IMG"){ await pics(e.children.length === 1 ? e : ch, [ch]); }
+        else if(ch.tagName === "TABLE"){ emit(ch, ch.getBoundingClientRect(), '<TEXT CharShape="0">' + table(ch, false) + '<CHAR/></TEXT>', "Left", 100); }
+        else {
+          var t = ch.querySelector("table"), im = ch.querySelectorAll("img");
+          var kidEls = [].slice.call(ch.children);
+          if(im.length && kidEls.length && kidEls.every(function(k){ return k.tagName === "IMG"; })) await pics(ch, kidEls);
+          else if(t && ch.children.length === 1 && ch.firstElementChild === t) emit(t, t.getBoundingClientRect(), '<TEXT CharShape="0">' + table(t, s.justifyContent === "flex-end" || s.textAlign === "right") + '<CHAR/></TEXT>', "Left", 100);
+          else if(t || im.length) await walk(ch);
+          else {
+            var blk = kidEls.some(function(k){ var d = GS(k).display; return d === "block" || d === "flex" || d === "grid"; });
+            if(blk && s.display !== "flex") await walk(ch);
+            else if(blk && s.display === "flex" && s.flexDirection === "column") await walk(ch);
+            else { var txt = textOf(ch); if(txt.trim()) emit(ch, ch.getBoundingClientRect(), '<TEXT CharShape="' + cs(ch) + '"><CHAR>' + runs(txt) + '</CHAR></TEXT>', alignOf(ch), lsOf(ch)); }
+          }
         }
-        var blk = [].some.call(ch.children, function(k){ var d = getComputedStyle(k).display; return d === "block" || d === "flex" || d === "grid"; });
-        if(blk && st.display !== "flex"){ walk(ch); return; }
-        var txt = textOf(ch); if(!txt.trim()) return;
-        body.push(para(ch, txt, pb));
-      });
+        if(s.breakAfter === "page" || s.pageBreakAfter === "always") pbNext = true;
+      }
     };
-    walk(doc);
-    // 머리(글꼴·글자 모양·문단 모양·테두리)
-    var LANGS = ["Hangul", "Latin", "Hanja", "Japanese", "Other", "Symbol", "User"];
-    var fonts = LANGS.map(function(l){ return '<FONTFACE Count="1" Lang="' + l + '"><FONT Id="0" Name="맑은 고딕" Type="ttf"/></FONTFACE>'; }).join("");
+    await walk(doc);
+    st("⏳ 파일 묶는 중...");
+    // ── 머리 ──
+    var LANGS = ["Hangul", "Latin", "Hanja", "Japanese", "Other", "Symbol", "User"], FN = ["맑은 고딕", "바탕"];
+    var fonts = LANGS.map(function(l){ return '<FONTFACE Count="2" Lang="' + l + '">' + FN.map(function(n, i){ return '<FONT Id="' + i + '" Name="' + n + '" Type="ttf"/>'; }).join("") + '</FONTFACE>'; }).join("");
     var seven = function(tag, v){ return "<" + tag + " " + LANGS.map(function(l){ return l + '="' + v + '"'; }).join(" ") + "/>"; };
-    if(!CS.length) cs(13, false);
-    var charL = CS.map(function(c, i){ return '<CHARSHAPE BorderFillId="1" Height="' + c.h + '" Id="' + i + '" ShadeColor="4294967295" SymMark="0" TextColor="0" UseFontSpace="false" UseKerning="false">' + seven("FONTID", 0) + seven("RATIO", 100) + seven("CHARSPACING", 0) + seven("RELSIZE", 100) + seven("CHAROFFSET", 0) + (c.b ? "<BOLD/>" : "") + "</CHARSHAPE>"; }).join("");
-    var paraL = ["Left", "Center", "Right"].map(function(a, i){ return '<PARASHAPE Align="' + a + '" BreakLatinWord="KeepWord" BreakNonLatinWord="true" Condense="0" HeadingType="None" Id="' + i + '" KeepLines="false" KeepWithNext="false" Level="0" LineWrap="Break" PageBreakBefore="false" SnapToGrid="true" TabDef="0" VerAlign="Baseline" WidowOrphan="false"><PARAMARGIN Indent="0" Left="0" LineSpacing="130" LineSpacingType="Percent" Next="0" Prev="0" Right="0"/><PARABORDER BorderFill="1" Connect="false" IgnoreMargin="false"/></PARASHAPE>'; }).join("");
+    if(!CS.length) cs(doc);
+    var charL = CS.map(function(c, i){ return '<CHARSHAPE BorderFillId="1" Height="' + c.h + '" Id="' + i + '" ShadeColor="4294967295" SymMark="0" TextColor="0" UseFontSpace="false" UseKerning="false">' + seven("FONTID", c.f) + seven("RATIO", 100) + seven("CHARSPACING", c.sp) + seven("RELSIZE", 100) + seven("CHAROFFSET", 0) + (c.b ? "<BOLD/>" : "") + "</CHARSHAPE>"; }).join("");
+    var paraL = PS.map(function(p, i){ return '<PARASHAPE Align="' + p.a + '" BreakLatinWord="KeepWord" BreakNonLatinWord="true" Condense="0" HeadingType="None" Id="' + i + '" KeepLines="false" KeepWithNext="false" Level="0" LineWrap="Break" PageBreakBefore="false" SnapToGrid="false" TabDef="0" VerAlign="Baseline" WidowOrphan="false"><PARAMARGIN Indent="0" Left="' + (p.lf || 0) + '" LineSpacing="' + p.l + '" LineSpacingType="Percent" Next="0" Prev="' + p.p + '" Right="0"/><PARABORDER BorderFill="1" Connect="false" IgnoreMargin="false"/></PARASHAPE>'; }).join("");
     var line = function(tp){ return '<LEFTBORDER Type="' + tp + '" Width="0.12mm" Color="0"/><RIGHTBORDER Type="' + tp + '" Width="0.12mm" Color="0"/><TOPBORDER Type="' + tp + '" Width="0.12mm" Color="0"/><BOTTOMBORDER Type="' + tp + '" Width="0.12mm" Color="0"/><DIAGONAL Type="Solid" Width="0.1mm"/>'; };
     var bfA = '<BORDERFILL BackSlash="0" BreakCellSeparateLine="0" CenterLine="0" CounterBackSlash="0" CounterSlash="0" CrookedSlash="0" Id="';
+    if(!BF.length) bf(null);
     var bfL = bfA + '1" Shadow="false" Slash="0" ThreeD="false">' + line("None") + '</BORDERFILL>' + bfA + '2" Shadow="false" Slash="0" ThreeD="false">' + line("None") + '</BORDERFILL>'
       + BF.map(function(bg, i){ return bfA + (i + 3) + '" Shadow="false" Slash="0" ThreeD="false">' + line("Solid") + (bg != null ? '<FILLBRUSH><WINDOWBRUSH Alpha="0" FaceColor="' + bg + '" HatchColor="0"/></FILLBRUSH>' : '') + '</BORDERFILL>'; }).join("");
-    if(!BF.length) bf(null), bfL += bfA + '3" Shadow="false" Slash="0" ThreeD="false">' + line("Solid") + '</BORDERFILL>';
     var mm = function(v){ return Math.round(v * U); };
     var secdef = '<SECDEF CharGrid="0" FirstBorder="false" FirstFill="false" LineGrid="0" MemoShapeId="0" OutlineShape="0" SpaceColumns="1134" TabStop="8000" TextDirection="0" TextVerticalWidthHead="0"><STARTNUMBER Equation="0" Figure="0" Page="0" PageStartsOn="Both" Table="0"/><HIDE Border="false" EmptyLine="false" Fill="false" Footer="false" Header="false" MasterPage="false" PageNumPos="false"/>'
       + '<PAGEDEF GutterType="LeftOnly" Height="' + mm(H) + '" Landscape="' + (ORI === "landscape" ? 1 : 0) + '" Width="' + mm(W) + '"><PAGEMARGIN Bottom="' + mm(M) + '" Footer="0" Gutter="0" Header="0" Left="' + mm(M) + '" Right="' + mm(M) + '" Top="' + mm(M) + '"/></PAGEDEF></SECDEF><COLDEF Count="1" Layout="Left" SameGap="0" SameSize="true" Type="Newspaper"/>';
-    var first = '<P ParaShape="0" Style="0"><TEXT CharShape="0">' + secdef + '</TEXT></P>';
+    // 구역 정의는 첫 문단 안에 (빈 문단 하나가 생기지 않게 첫 덩어리와 합침)
+    var first = body.length ? body[0].replace(/(<TEXT CharShape="\d+">)/, "$1" + secdef) : '<P ParaShape="0" Style="0"><TEXT CharShape="0">' + secdef + '</TEXT></P>';
+    if(body.length && first === body[0]) first = '<P ParaShape="0" Style="0"><TEXT CharShape="0">' + secdef + '</TEXT></P>' + body[0];
+    var binL = BIN.length ? '<BINDATALIST Count="' + BIN.length + '">' + BIN.map(function(b, i){ return '<BINITEM BinData="' + (i + 1) + '" Format="jpg" Type="Embedding"/>'; }).join("") + '</BINDATALIST>' : '';
+    var tail = BIN.length ? '<TAIL><BINDATASTORAGE>' + BIN.map(function(b, i){ return '<BINDATA Encoding="Base64" Id="' + (i + 1) + '" Size="' + b.length + '">' + b + '</BINDATA>'; }).join("") + '</BINDATASTORAGE></TAIL>' : '<TAIL/>';
     var xml = '<?xml version="1.0" encoding="UTF-8" standalone="no" ?><HWPML Style="embed" SubVersion="10.0.0.0" Version="2.91"><HEAD SecCnt="1"><DOCSUMMARY><TITLE>' + X(TTL || "") + '</TITLE></DOCSUMMARY><DOCSETTING><BEGINNUMBER Endnote="1" Equation="1" Footnote="1" Page="1" Picture="1" Table="1"/><CARETPOS List="0" Para="0" Pos="0"/></DOCSETTING>'
-      + '<MAPPINGTABLE><FACENAMELIST>' + fonts + '</FACENAMELIST><BORDERFILLLIST Count="' + (BF.length + 2) + '">' + bfL + '</BORDERFILLLIST><CHARSHAPELIST Count="' + CS.length + '">' + charL + '</CHARSHAPELIST>'
-      + '<TABDEFLIST Count="1"><TABDEF AutoTabLeft="false" AutoTabRight="false" Id="0"/></TABDEFLIST><PARASHAPELIST Count="3">' + paraL + '</PARASHAPELIST>'
+      + '<MAPPINGTABLE>' + binL + '<FACENAMELIST>' + fonts + '</FACENAMELIST><BORDERFILLLIST Count="' + (BF.length + 2) + '">' + bfL + '</BORDERFILLLIST><CHARSHAPELIST Count="' + CS.length + '">' + charL + '</CHARSHAPELIST>'
+      + '<TABDEFLIST Count="1"><TABDEF AutoTabLeft="false" AutoTabRight="false" Id="0"/></TABDEFLIST><PARASHAPELIST Count="' + PS.length + '">' + paraL + '</PARASHAPELIST>'
       + '<STYLELIST Count="1"><STYLE CharShape="0" EngName="Normal" Id="0" LangId="1042" LockForm="0" Name="바탕글" NextStyle="0" ParaShape="0" Type="Para"/></STYLELIST></MAPPINGTABLE></HEAD>'
-      + '<BODY><SECTION Id="0">' + first + body.join("") + '</SECTION></BODY><TAIL/></HWPML>';
+      + '<BODY><SECTION Id="0">' + first + body.slice(1).join("") + '</SECTION></BODY>' + tail + '</HWPML>';
     window._docLastHml = xml;
     var b = new Blob([xml], { type: "application/xml" }), a = document.createElement("a");
     a.href = URL.createObjectURL(b); a.download = (TTL || "정산서").replace(/[\\\/:*?"<>|]/g, "_") + ".hml"; document.body.appendChild(a); a.click();
     setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
-  };
+    if(nFail) alert("그림 " + nFail + "개는 못 가져와서 빠졌어요 (인터넷·권한 문제). 나머지는 다 들어갔어요.");
+  }
   window.addEventListener("load", ap); setTimeout(ap, 300);
 }
 function _docPrint(o){
