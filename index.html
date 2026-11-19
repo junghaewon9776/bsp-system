@@ -97,7 +97,7 @@ label{display:block;font-size:10px;color:#999;margin-bottom:3px}
 .abtn2{background:#ea580c}
 ._hideOnPc{display:none!important}
 .popStickyFoot{position:sticky;bottom:-24px;margin:16px -24px -24px;padding:12px 24px;background:#fff;border-top:1px solid #e2e8f0;box-shadow:0 -6px 14px rgba(15,23,42,.08);z-index:5;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-@media(max-width:640px){.popStickyFoot{bottom:-14px;margin:14px -14px -14px;padding:10px 14px}}
+@media(max-width:640px){.popStickyFoot{bottom:-14px;margin:14px -14px -14px;padding:10px 14px calc(10px + env(safe-area-inset-bottom))}}
 .purList .tag{font-size:12px;padding:2px 7px}
 .purList .pst{font-size:12px}
 .purList .abtn{font-size:12px;padding:4px 9px;border-radius:5px;margin:1px}
@@ -148,9 +148,9 @@ label{display:block;font-size:10px;color:#999;margin-bottom:3px}
 .esm-stat{background:#f1f5f9;border-radius:8px;padding:6px 12px;font-size:11px;color:#475569;font-weight:600}
 .esm-stat b{display:block;font-size:16px;color:#1e293b}
 
-.popup{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:900;align-items:center;justify-content:center;padding:16px}
+.popup{display:none;position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(0,0,0,.5);z-index:900;align-items:center;justify-content:center;padding:16px}
 .popup.show{display:flex}
-.popup-box{background:#fff;border-radius:14px;padding:24px;width:600px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.popup-box{background:#fff;border-radius:14px;padding:24px;width:600px;max-width:100%;max-height:90vh;max-height:90dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;box-shadow:0 20px 60px rgba(0,0,0,.3)}
 .pop-foot{position:sticky;bottom:-24px;background:#fff;padding:12px 24px;margin:8px -24px 0;border-top:1px solid #e5e7eb;display:flex;gap:8px;justify-content:flex-end;z-index:5}
 .popup-box h3{font-size:16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
 .popup-box .close-x{background:none;border:none;font-size:22px;cursor:pointer;color:#999;padding:0 4px;line-height:1}
@@ -14791,7 +14791,7 @@ function _bkEsgLinkCopy(role){
 }
 // 결재 링크: 여는 중·실패를 화면 전체로 보여 줌 (조용히 웹 화면만 남지 않게)
 function _bkEsgLoading(msg,err){
-  var v=document.getElementById("bkEsgView"); if(!v){ v=document.createElement("div"); v.id="bkEsgView"; v.style.cssText="position:fixed;inset:0;z-index:9000;background:#f1f5f9;overflow:auto"; document.body.appendChild(v); }
+  var v=document.getElementById("bkEsgView"); if(!v){ v=document.createElement("div"); v.id="bkEsgView"; v.style.cssText="position:fixed;top:0;right:0;bottom:0;left:0;z-index:9000;background:#f1f5f9;overflow:auto"; document.body.appendChild(v); }
   v.innerHTML='<div style="max-width:520px;margin:18vh auto 0;padding:20px;text-align:center"><div style="font-size:40px">'+(err?'⚠️':'✍')+'</div><div style="font-size:18px;font-weight:900;margin:10px 0;color:'+(err?'#b91c1c':'#0f172a')+'">'+esc(msg)+'</div>'
     +(err?'<div style="font-size:13px;color:#475569;margin-bottom:14px">이 화면을 캡처해서 관리자에게 보내 주세요</div>':'<div style="font-size:13px;color:#475569">잠깐만 기다려 주세요</div>')
     +'<button onclick="document.getElementById(\'bkEsgView\').remove()" style="margin-top:14px;border:none;border-radius:8px;padding:10px 18px;font-weight:800;background:#475569;color:#fff;cursor:pointer">✕ 닫기</button></div>';
@@ -14843,7 +14843,7 @@ function _bkEsgView(){
   h+='<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px"><input id="bkEsgNm" placeholder="이름" style="padding:9px;width:130px;font-weight:700;font-size:16px"><label style="font-size:13px"><input type="checkbox" id="bkEsgRem" checked> 내 서명 기억</label><span style="flex:1"></span><button class="btn" style="background:#475569;color:#fff" onclick="window._bkEsgPadO&&window._bkEsgPadO.clear()">다시 쓰기</button><button class="btn" style="background:#16a34a;color:#fff;font-weight:900;font-size:17px;padding:10px 18px" onclick="_bkEsgSave()">✅ 서명 저장</button></div></div>';
   h+='</div></div>';
   if(todo.length) h+='<div style="position:sticky;bottom:0;z-index:3;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:rgba(15,23,42,.92);display:flex;gap:8px;justify-content:center;flex-wrap:wrap">'+todo.map(function(r){ return '<button onclick="_bkEsgSign(\''+esc(r)+'\')" style="border:none;border-radius:10px;padding:12px 22px;font-size:17px;font-weight:900;background:#2563eb;color:#fff;cursor:pointer">✍ '+esc(r)+' 서명하기</button>'; }).join('')+'</div>';
-  var v=document.createElement("div"); v.id="bkEsgView"; v.style.cssText="position:fixed;inset:0;z-index:9000;background:#f1f5f9;overflow:auto;-webkit-overflow-scrolling:touch"; v.innerHTML=h;
+  var v=document.createElement("div"); v.id="bkEsgView"; v.style.cssText="position:fixed;top:0;right:0;bottom:0;left:0;z-index:9000;background:#f1f5f9;overflow:auto;-webkit-overflow-scrolling:touch"; v.innerHTML=h;
   document.body.appendChild(v); _bkFitAll();
 }
 // 📱 폰에서 정산서(A4 문서)는 글자가 뒤죽박죽 줄바뀌지 않게 → 종이 폭(780px)으로 그린 뒤 화면 폭에 맞춰 통째로 축소. PC(넓은 화면)는 그대로
