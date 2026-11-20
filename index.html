@@ -15653,7 +15653,7 @@ function _bkAcctView(ak){
   return h;
 }
 // 📋 표 / 📱 카드 — 고른 것 기억, 처음엔 폰이면 카드
-function _bkCardOn(){ var v=""; try{ v=localStorage.getItem("cnh_bkView")||""; }catch(e){} return v ? v==="card" : window.innerWidth<760; }
+function _bkCardOn(){ var v=""; try{ v=localStorage.getItem("cnh_bkView")||""; }catch(e){} return v ? v==="card" : (window.innerWidth<760 || !!(window.matchMedia&&matchMedia("(pointer:coarse)").matches)); }
 function _bkViewSet(v){ try{ localStorage.setItem("cnh_bkView",v); }catch(e){} draw(); }
 function _bkViewTog(){
   var c=_bkCardOn(), b=function(on,lb,v){ return '<button onclick="_bkViewSet(\''+v+'\')" style="border:1.5px solid #1d4ed8;padding:4px 10px;font-size:12.5px;font-weight:800;cursor:pointer;background:'+(on?'#1d4ed8':'#fff')+';color:'+(on?'#fff':'#1d4ed8')+';border-radius:'+(v==='table'?'8px 0 0 8px':'0 8px 8px 0')+'">'+lb+'</button>'; };
