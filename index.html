@@ -497,6 +497,7 @@ label{display:block;font-size:10px;color:#999;margin-bottom:3px}
 <script src="pb.js?v=20261103t"></script>
 <script src="recv.js?v=20261103t"></script>
 <script src="easy.js?v=20261103t"></script>
+<script src="hsdoc.js?v=20261123a"></script>
 <script src="tabperm.js?v=20261103u"></script>
 <script>var TH_BASE = { c1: "#2563eb", c2: "#1d4ed8", bar: "#2563eb", accent: "#2563eb", label: "🔵 기본 (파란색)", ph: "예: 함께 만드는 법성포, 법성포청년회", sky: false };</script>
 <script src="theme.js?v=20261104e"></script>
@@ -20327,6 +20328,9 @@ function dReport(){
   h+='<div class="mut" style="font-size:12px;margin-bottom:10px">정산서 · 항목별 · 재원별 · 결제수단별 · 거래처별 · 증빙 점검표 · 일자별 — 골라서 인쇄</div>';
   h+='<button class="btn" style="background:#111827;color:#fff;width:100%" onclick="event.stopPropagation();rptGovPrint()">🖨️ 인쇄 / PDF</button>';
   h+='</div>';
+
+  // 사) 🏛 한수원 양식 — 사업계획서 · 교부신청서 · 결과보고서 (hsdoc.js)
+  if(typeof _hsCard==="function") h+=_hsCard();
 
   h+='</div>';
 
