@@ -67,6 +67,11 @@ function _hsYmd(d){ if(!d) return '&nbsp;&nbsp;&nbsp;&nbsp;년&nbsp;&nbsp;&nbsp;
 function _hsDays(){ var dd = pn(_hsV("info", "days")); if(dd) return dd; var a = _hsV("info", "from"), b = _hsV("info", "to"); if(!a || !b) return 0; return Math.round((new Date(b + "T00:00:00") - new Date(a + "T00:00:00")) / 864e5) + 1; }
 function _hsPeriod(){ var a = _hsV("info", "from"), b = _hsV("info", "to"); return a || b ? _hsDt(a) + " ~ " + _hsDt(b) + (_hsDays() ? " (" + _hsDays() + "일)" : "") : ""; }
 function _hsSp(s){ return String(s || "").split("").join(" "); }
+// 한수원 로고 (원본 한글 양식에서 뽑은 그림 · img/) · 직인 (계정관리 🔴 단체 직인)
+function _hsImg(f){ try { return new URL("img/" + f, location.href).href; } catch(e){ return "img/" + f; } }
+function _hsLogo(f, st){ return '<img src="' + _hsImg(f) + '" alt="" style="' + st + '">'; }
+function _hsHdLogo(){ return '<div style="text-align:right;height:13mm;margin:0 0 1mm">' + _hsLogo("hs_hsw.png", "height:12mm") + '</div>'; }
+function _hsSeal(){ var s = typeof orgSealHtml === "function" ? orgSealHtml(64) : ""; return '<span style="position:relative;display:inline-block">(직인)' + (s ? '<span style="position:absolute;left:-10px;top:-24px;opacity:.92">' + s + '</span>' : '') + '</span>'; }
 function _hsPg(inner, st){ return '<div class="pg" style="font-family:\'바탕\',Batang,serif;font-size:13.5px;line-height:1.65;color:#000;' + (st || '') + '">' + inner + '</div>'; }
 function _hsTbl(){ return '<table style="border-collapse:collapse;width:100%;margin:4px 0 10px;font-size:12.5px;font-family:\'맑은 고딕\',\'Malgun Gothic\',sans-serif">'; }
 function _hsTh(cols){ return '<tr>' + cols.map(function(c){ return '<td style="' + HS_H + (c[1] ? 'width:' + c[1] + ';' : '') + '"' + (c[2] ? ' rowspan="' + c[2] + '"' : '') + (c[3] ? ' colspan="' + c[3] + '"' : '') + '>' + c[0] + '</td>'; }).join('') + '</tr>'; }
@@ -86,7 +91,7 @@ function _hsPlanHtml(){
     + '<tr><td style="' + HS_H + '">전 화</td><td style="' + HS_T + '">' + O("tel") + '</td><td style="' + HS_H + '">FAX</td><td style="' + HS_T + '">' + O("fax") + '</td></tr>'
     + '<tr><td style="' + HS_H + '">E-mail</td><td style="' + HS_T + '" colspan="3">' + O("email") + '</td></tr>'
     + '<tr><td style="' + HS_H + '">주 소</td><td style="' + HS_T + '" colspan="3">' + (O("zip") ? '(우' + O("zip") + ') ' : '') + O("addr") + '</td></tr>'; };
-  var p1 = '<div style="text-align:center;font-size:26px;font-weight:800;letter-spacing:10px;margin:4mm 0 6mm">사 업 신 청 서</div>'
+  var p1 = _hsHdLogo() + '<div style="text-align:center;font-size:26px;font-weight:800;letter-spacing:10px;margin:2mm 0 6mm;border:2px solid #000;padding:2mm 0">사 업 신 청 서</div>'
     + _hsTbl() + org("신청<br>기관<br>(단체)") + org("시행<br>기관<br>(단체)")
     + '<tr><td style="' + HS_H + '" rowspan="4">신청<br>사업</td><td style="' + HS_H + '">사업종류</td><td style="' + HS_T + '">' + I("kind") + '</td><td style="' + HS_H + '">사업장소</td><td style="' + HS_T + '">' + I("place") + '</td></tr>'
     + '<tr><td style="' + HS_H + '">사 업 명</td><td style="' + HS_T + '">' + esc(_hsBizNm()) + '</td><td style="' + HS_H + '">수혜대상</td><td style="' + HS_T + '">' + I("target") + '</td></tr>'
@@ -96,14 +101,14 @@ function _hsPlanHtml(){
     + '<tr><td style="' + HS_H + '">담당자</td><td style="' + HS_H + '">성 명</td><td style="' + HS_T + '">' + I("chNm") + '</td><td style="' + HS_H + '">직 위</td><td style="' + HS_T + '">' + I("chPos") + '</td></tr></table>'
     + '<div style="margin:8mm 0 4mm;text-align:center;font-size:15px">위와 같이 ' + yr + '년도 한수원지원사업에 대한 사업신청서를 제출합니다.</div>'
     + '<div style="text-align:center;font-size:15px;margin-bottom:6mm">' + _hsYmd(_hsV("plan", "dt")) + '</div>'
-    + '<div style="margin-left:45%;font-size:15px;line-height:2">기관(단체)명 : ' + O("nm") + '<br>대 &nbsp;표 &nbsp;자 : ' + esc(_hsSp(_hsCeo(_hsV("plan", "dt")))) + ' &nbsp;(직인)</div>'
+    + '<div style="margin-left:45%;font-size:15px;line-height:2">기관(단체)명 : ' + O("nm") + '<br>대 &nbsp;표 &nbsp;자 : ' + esc(_hsSp(_hsCeo(_hsV("plan", "dt")))) + ' &nbsp;' + _hsSeal() + '</div>'
     + '<div style="font-size:18px;font-weight:800;margin:10mm 0 6mm">한국수력원자력(주) 사장 귀하</div>'
     + '<div style="font-size:13px">※ 붙임 &nbsp;1. 신청기관(단체)개요 1부 &nbsp;&nbsp;2. 사업계획서 1부 &nbsp;&nbsp;3. 서약서 1부</div>';
   var P = (HS.d || {}).plan || {};
   var it = '';
   B.items.forEach(function(x){ it += '<tr><td style="' + HS_C + '">' + esc(x.nm) + '</td><td style="' + HS_N + '">' + _hsK(x.sup + x.self) + '</td><td style="' + HS_N + '">' + (x.sup ? _hsK(x.sup) : '') + '</td><td style="' + HS_N + '">' + (x.self ? _hsK(x.self) : '') + '</td><td style="' + HS_T + 'font-size:11.5px">' + _hsTx(x.note.join("\n").replace(/ \/ /g, "\n")) + '</td></tr>'; });
   var sc = _hsLines(P.sched).map(function(l){ var c = l.split("|").map(function(s){ return s.trim(); }); return '<tr><td style="' + HS_C + '">' + esc(c[0] || "") + '</td><td style="' + HS_C + '">' + esc(c[1] || "") + '</td><td style="' + HS_T + '">' + esc(c[2] || "") + '</td><td style="' + HS_C + '">' + esc(c[3] || "") + '</td></tr>'; }).join('');
-  var p2 = '<div style="text-align:center;font-size:24px;font-weight:800;letter-spacing:8px;margin:2mm 0 5mm">사 업 계 획 서</div>'
+  var p2 = _hsHdLogo() + '<div style="text-align:center;font-size:24px;font-weight:800;letter-spacing:8px;margin:1mm 0 5mm">사 업 계 획 서</div>'
     + _hsTbl() + '<tr><td style="' + HS_H + 'width:18%">사 업 명</td><td style="' + HS_T + 'font-weight:700">' + esc(_hsBizNm()) + '</td></tr></table>'
     + _hsSec("1. 사업 목적") + _hsBody(P.purpose)
     + _hsSec("2. 사업 내용") + '<b>□ 시행 개요</b>' + _hsTbl() + _hsTh([["사업장소"], ["사업기간"], ["시행구분"], ["시행방법"], ["시행자"]])
@@ -134,7 +139,7 @@ function _hsGrantHtml(){
   var prev = pn(G.prev), req = G.req === "" || G.req == null ? B.sup - prev : pn(G.req), rem = B.sup - prev - req;
   var it = B.items.map(function(x){ return '<tr><td style="' + HS_C + '">' + esc(x.nm) + '</td><td style="' + HS_N + '">' + _hsK(x.sup + x.self) + '</td><td style="' + HS_N + '">' + (x.sup ? _hsK(x.sup) : '') + '</td><td style="' + HS_C + '"></td><td style="' + HS_N + '">' + (x.self ? _hsK(x.self) : '') + '</td><td style="' + HS_T + 'font-size:11.5px">' + _hsTx(x.note.join("\n").replace(/ \/ /g, "\n")) + '</td></tr>'; }).join('');
   var dt = G.dt ? _hsDt(G.dt) : '&nbsp;&nbsp;&nbsp;&nbsp;.&nbsp;&nbsp;&nbsp;&nbsp;.&nbsp;&nbsp;&nbsp;&nbsp;.';
-  var h = '<div style="font-size:12px">[별지 제12호 서식]</div><div style="text-align:center;font-size:23px;font-weight:800;margin:4mm 0 7mm">한수원 사업자지원사업비 교부신청서</div>'
+  var h = '<div style="display:flex;justify-content:space-between;align-items:flex-end"><div style="font-size:12px">[별지 제12호 서식]</div>' + _hsLogo("hs_heart.png", "height:11mm") + '</div><div style="text-align:center;font-size:23px;font-weight:800;margin:4mm 0 7mm">한수원 사업자지원사업비 교부신청서</div>'
     + '<div style="font-size:15px;margin-bottom:6px"><b>1. 사업명 :</b> ' + esc(_hsBizNm()) + '</div>'
     + '<div style="font-size:15px"><b>2. 교부신청 금액 및 내역</b></div>'
     + _hsUnit("◦ 교부내역", "단위 : 천원") + _hsTbl() + _hsTh([["구 분", "12%"], ["사업자 지원 사업비 총액 (a)"], ["기 교부금액 (b)"], ["금회 교부 신청금액 (c)"], ["잔 액 (d=a-b-c)"], ["비 고", "11%"]])
@@ -143,8 +148,9 @@ function _hsGrantHtml(){
     + '<tr style="font-weight:800"><td style="' + HS_C + '">계</td><td style="' + HS_N + '">' + _hsK(B.tot) + '</td><td style="' + HS_N + '">' + _hsK(B.sup) + '</td><td style="' + HS_C + '"></td><td style="' + HS_N + '">' + (B.self ? _hsK(B.self) : '') + '</td><td style="' + HS_T + '"></td></tr>' + it + '</table>'
     + '<div style="margin:9mm 0 5mm;font-size:15px;text-align:center">「한수원 사업자지원사업 업무처리지침」에 따라 사업자지원사업비를 위와 같이 신청합니다.</div>'
     + '<div style="text-align:center;font-size:15px;margin-bottom:8mm">' + dt + '</div>'
-    + '<div style="margin-left:30%;font-size:15px;line-height:2.1">신청자 : 단 체 명 &nbsp;' + O("nm") + '<br><span style="padding-left:4.6em">대 표 자 &nbsp;' + esc(_hsSp(_hsCeo(G.dt))) + ' &nbsp;(직인)</span><br><span style="padding-left:4.6em">소 재 지 &nbsp;' + O("addr") + '</span><br><span style="padding-left:4.6em">예금계좌 &nbsp;' + O("bank") + '</span></div>'
-    + '<div style="font-size:13px;margin-top:10mm">※ 첨부서류 : 지급증빙서류(산출내역서 및 세무증빙 등)</div>';
+    + '<div style="margin-left:30%;font-size:15px;line-height:2.1">신청자 : 단 체 명 &nbsp;' + O("nm") + '<br><span style="padding-left:4.6em">대 표 자 &nbsp;' + esc(_hsSp(_hsCeo(G.dt))) + ' &nbsp;' + _hsSeal() + '</span><br><span style="padding-left:4.6em">소 재 지 &nbsp;' + O("addr") + '</span><br><span style="padding-left:4.6em">예금계좌 &nbsp;' + O("bank") + '</span></div>'
+    + '<div style="font-size:13px;margin-top:10mm">※ 첨부서류 : 지급증빙서류(산출내역서 및 세무증빙 등)</div>'
+    + '<div style="margin-top:12mm">' + _hsLogo("hs_khnp.png", "height:10mm") + '</div>';
   return _hsPg(h);
 }
 
@@ -159,7 +165,7 @@ function _hsResHtml(opt){
     + '<div style="text-align:center;margin:30mm 0 6mm;font-size:22px;font-weight:700">한수원 사업자지원사업</div><div style="text-align:center;font-size:30px;font-weight:800;letter-spacing:2px">사업추진실적 및 정산보고서</div>'
     + '<div style="text-align:center;font-size:17px;margin:10mm 0 22mm">(사업명 : ' + esc(_hsBizNm()) + ')</div>'
     + '<div style="text-align:center;font-size:17px;margin-bottom:16mm">' + (R.dt ? _hsDt(R.dt) : '&nbsp;&nbsp;&nbsp;&nbsp;.&nbsp;&nbsp;&nbsp;&nbsp;.&nbsp;&nbsp;&nbsp;&nbsp;.') + '</div>'
-    + '<div style="margin-left:30%;font-size:16px;line-height:2">제출자 : 단체명 &nbsp;' + O("nm") + '<br><span style="padding-left:4.2em">대표자 &nbsp;' + esc(_hsSp(_hsCeo(R.dt))) + ' &nbsp;(직인)</span></div>'
+    + '<div style="margin-left:30%;font-size:16px;line-height:2">제출자 : 단체명 &nbsp;' + O("nm") + '<br><span style="padding-left:4.2em">대표자 &nbsp;' + esc(_hsSp(_hsCeo(R.dt))) + ' &nbsp;' + _hsSeal() + '</span></div>'
     + '<div style="margin-top:16mm;font-size:14px;line-height:2">❍ 실무책임자 : ' + O("mgrPos") + ' , 성명 ' + O("mgrNm") + '<br>❍ 연 &nbsp;락 &nbsp;처 : 전화 ' + O("mgrTel") + (O("fax") ? ' , FAX ' + O("fax") : '') + (O("email") ? ' , E-mail ' + O("email") : '') + '<br>❍ 주 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;소 : ' + (O("zip") ? '(우' + O("zip") + ') ' : '') + O("addr") + '</div>'
     + '<div style="margin-top:12mm;font-size:13.5px;border:1px solid #000;padding:8px 12px;line-height:1.9">※ 첨부서류<br>&nbsp;1. 지원사업 추진실적 1부 &nbsp;&nbsp;&nbsp;2. 자금집행 정산보고서 1부<br>&nbsp;3. 영수증·세금계산서 사본 각 1부 &nbsp;&nbsp;&nbsp;4. 행사유인물·사진 등 1부<br>&nbsp;5. 기타 각종 증빙자료 1부</div>';
   var sumT = function(sup, self, lbs){
