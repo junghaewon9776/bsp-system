@@ -3,7 +3,7 @@
 //  글(목적·효과·성과 등)과 단체 정보는 DB 에만: /main/HsDoc/_org (단체 공통) · /main/HsDoc/{행사} (그 사업)
 //  ※ 공개 코드라 이름·전화번호 같은 개인정보는 여기 쓰지 말 것
 var HS = { k: "", d: null, org: null, busy: false };
-var HS_ORG_F = [["nm", "단체명"], ["bizNo", "고유번호"], ["ceo", "대표자"], ["tel", "전화"], ["fax", "FAX"], ["email", "E-mail"], ["zip", "우편번호"], ["addr", "주소"], ["bank", "예금계좌 (교부신청서)"], ["mgrPos", "실무책임자 직위 (결과보고서)"], ["mgrNm", "실무책임자 성명"], ["mgrTel", "실무책임자 연락처"]];
+var HS_ORG_F = [["nm", "단체명"], ["ceo", "대표자"], ["bizNo", "고유번호"], ["tel", "전화"], ["fax", "FAX"], ["email", "E-mail"], ["zip", "우편번호"], ["addr", "주소"], ["bank", "예금계좌 (교부신청서)"], ["mgrPos", "실무책임자 직위 (결과보고서)"], ["mgrNm", "실무책임자 성명"], ["mgrTel", "실무책임자 연락처"]];
 var HS_INFO_F = [["bizNm", "사업명", "예) 2027. 법성포청년회 하계방역"], ["kind", "사업종류", "예) 지역복지사업"], ["place", "사업장소", "예) 법성면 일대"], ["target", "수혜대상", "예) 법성면민"], ["from", "사업 시작일", "", "date"], ["to", "사업 끝나는 날", "", "date"], ["days", "사업 일수", "비우면 날짜로 자동 (예: 130)"], ["gubun", "시행구분", "계속 / 신규"], ["how", "시행방법", "직접 / 위탁"], ["chNm", "담당자 성명 (신청서)"], ["chPos", "담당자 직위"]];
 var HS_PLAN_F = [["purpose", "1. 사업 목적"], ["supTgt", "□ 지원 대상"], ["supDet", "□ 지원 내역 · 사업 내용"], ["env", "4. 사업 환경"], ["effect", "5. 사업 효과"], ["sched", "6. 사업 추진 일정 — 한 줄에 「일정 | 항목 | 추진 내용 | 비고」"]];
 var HS_RES_F = [["planTxt", "계획 대비 실적 — 실행계획"], ["doneTxt", "계획 대비 실적 — 추진실적"], ["doneNote", "계획 대비 실적 — 비고 (차이 나는 사유)"], ["rPurpose", "② 사업목적 (비우면 사업계획서 목적)"], ["rContent", "③ 사업내용"], ["achieve", "④ 사업추진 성과"], ["selfEval", "⑤ 사업추진 성과에 대한 자체평가"], ["sugg", "⑥ 개선 및 건의사항"], ["remWhy", "집행잔액 발생사유 — 한 줄에 「항목: 사유」"], ["chgWhy", "변경 사유 — 한 줄에 「항목: 사유」 (비우면 「○○ 잔액 / 추가」)"]];
@@ -15,7 +15,18 @@ function _hsLoad(){
   HS.k = k; HS.d = null;
   return Promise.all([fbDb.ref('/main/HsDoc/' + k).once('value'), fbDb.ref('/main/HsDoc/_org').once('value')]).then(function(r){ if(HS.k !== k) return; HS.d = r[0].val() || {}; HS.org = r[1].val() || {}; });
 }
-function _hsV(sec, f){ var o = sec === "org" ? (HS.org || {}) : ((HS.d || {})[sec] || {}); return o[f] == null ? "" : String(o[f]); }
+function _hsV(sec, f){ var o = sec === "org" ? _hsOrgAt(HS.dt) : ((HS.d || {})[sec] || {}); return o[f] == null ? "" : String(o[f]); }
+// 대표자 — 2년마다 바뀜. 단체 정보의 「대표자 임기」 줄(「시작 이름」)에서 그 문서 날짜에 대표자였던 사람
+// 단체 정보는 기간별 — 이름·대표자(2년마다)·주소·고유번호가 바뀌면 「바뀐 날부터」 새 기간. 문서 날짜(신청일·제출일)에 맞는 기간이 들어감
+//  /main/HsDoc/_org = { hist: [ { from:"YYYY-MM-DD", nm, ceo, bizNo, ..., files:[{nm,u,fn,att}] } ] }
+function _hsToday(){ return typeof today === "function" ? today() : new Date().toISOString().slice(0, 10); }
+function _hsOrgList(){
+  var o = HS.org || {};
+  if(Array.isArray(o.hist) && o.hist.length) return o.hist.filter(Boolean).slice().sort(function(a, b){ return String(a.from || "").localeCompare(String(b.from || "")); });
+  var b = { from: "2000-01-01" }; HS_ORG_F.forEach(function(f){ if(o[f[0]]) b[f[0]] = o[f[0]]; }); return [b];   // 옛 모양
+}
+function _hsOrgAt(dt){ var d = String(dt || "") || _hsToday(), L = _hsOrgList(), r = L[0] || {}; L.forEach(function(x){ if(String(x.from || "") <= d) r = x; }); return r; }
+function _hsCeo(dt){ return String(_hsOrgAt(dt).ceo || ""); }
 function _hsYr(){ var f = _hsV("info", "from"); return (f && f.slice(0, 4)) || String((CUR_EVT && CUR_EVT.yr) || new Date().getFullYear()); }
 function _hsBizNm(){ return _hsV("info", "bizNm") || (_hsYr() + ". " + (_hsV("org", "nm") || "") + " " + ((CUR_EVT && CUR_EVT.nm) || "")).trim(); }
 
@@ -68,6 +79,7 @@ function _hsMap(t){ var o = {}; _hsLines(t).forEach(function(l){ var i = l.searc
 
 // ═════════ 1) 사업신청서 + 사업계획서 ═════════
 function _hsPlanHtml(){
+  HS.dt = _hsV("plan", "dt");
   var B = _hsBud(), O = function(f){ return esc(_hsV("org", f)); }, I = function(f){ return esc(_hsV("info", f)); }, yr = _hsYr();
   var from = _hsV("info", "from"), to = _hsV("info", "to"), sm = from ? (+from.slice(5, 7)) : "";
   var org = function(lb){ return '<tr><td style="' + HS_H + '" rowspan="4">' + lb + '</td><td style="' + HS_H + '">기관(단체)명</td><td style="' + HS_T + '">' + O("nm") + '</td><td style="' + HS_H + '">고유번호</td><td style="' + HS_T + '">' + O("bizNo") + '</td></tr>'
@@ -84,7 +96,7 @@ function _hsPlanHtml(){
     + '<tr><td style="' + HS_H + '">담당자</td><td style="' + HS_H + '">성 명</td><td style="' + HS_T + '">' + I("chNm") + '</td><td style="' + HS_H + '">직 위</td><td style="' + HS_T + '">' + I("chPos") + '</td></tr></table>'
     + '<div style="margin:8mm 0 4mm;text-align:center;font-size:15px">위와 같이 ' + yr + '년도 한수원지원사업에 대한 사업신청서를 제출합니다.</div>'
     + '<div style="text-align:center;font-size:15px;margin-bottom:6mm">' + _hsYmd(_hsV("plan", "dt")) + '</div>'
-    + '<div style="margin-left:45%;font-size:15px;line-height:2">기관(단체)명 : ' + O("nm") + '<br>대 &nbsp;표 &nbsp;자 : ' + esc(_hsSp(_hsV("org", "ceo"))) + ' &nbsp;(직인)</div>'
+    + '<div style="margin-left:45%;font-size:15px;line-height:2">기관(단체)명 : ' + O("nm") + '<br>대 &nbsp;표 &nbsp;자 : ' + esc(_hsSp(_hsCeo(_hsV("plan", "dt")))) + ' &nbsp;(직인)</div>'
     + '<div style="font-size:18px;font-weight:800;margin:10mm 0 6mm">한국수력원자력(주) 사장 귀하</div>'
     + '<div style="font-size:13px">※ 붙임 &nbsp;1. 신청기관(단체)개요 1부 &nbsp;&nbsp;2. 사업계획서 1부 &nbsp;&nbsp;3. 서약서 1부</div>';
   var P = (HS.d || {}).plan || {};
@@ -109,12 +121,16 @@ function _hsPlanHtml(){
     + _hsSec("5. 사업 효과") + _hsBody(P.effect)
     + _hsSec("6. 사업 추진 일정") + _hsTbl() + _hsTh([["일 정", "16%"], ["항 목", "18%"], ["추 진 내 용"], ["비 고", "12%"]]) + (sc || '<tr><td style="' + HS_C + 'color:#94a3b8" colspan="4">(✏ 내용 적기 › 추진 일정)</td></tr>') + '</table>'
     + '<div style="font-size:12px;margin-top:6px">※ 붙임 : 한수원지원사업 산출내역 증빙서류(견적서, 물가정보, 나라장터 등)</div>';
-  return _hsPg(p1) + _hsPg(p2);
+  var at = (_hsOrgAt(HS.dt).files || []).filter(function(f){ return f && f.u && f.att; }), ap = '';
+  at.forEach(function(f, i){ var pdf = /\.pdf$/i.test(f.fn || ""); ap += _hsPg('<div style="font-size:16px;font-weight:800;margin-bottom:4mm">붙임 ' + (i + 1) + '. ' + esc(f.nm || "서류") + '</div>'
+    + (pdf ? '<div style="border:1px dashed #64748b;padding:12mm;text-align:center;font-size:14px">PDF 파일이라 따로 인쇄해서 붙여 주세요<br><span style="font-size:12px">' + esc(f.fn || "") + '</span></div>'
+      : '<div style="height:245mm;display:flex;align-items:flex-start;justify-content:center"><img src="' + esc(typeof _evPrintBig === "function" ? _evPrintBig(f.u) : f.u) + '" style="max-width:100%;max-height:100%;object-fit:contain"></div>')); });
+  return _hsPg(p1) + _hsPg(p2) + ap;
 }
 
 // ═════════ 2) 교부신청서 ═════════
 function _hsGrantHtml(){
-  var B = _hsBud(), G = (HS.d || {}).grant || {}, O = function(f){ return esc(_hsV("org", f)); };
+  var B = _hsBud(), G = (HS.d || {}).grant || {}, O = function(f){ return esc(_hsV("org", f)); }; HS.dt = G.dt;
   var prev = pn(G.prev), req = G.req === "" || G.req == null ? B.sup - prev : pn(G.req), rem = B.sup - prev - req;
   var it = B.items.map(function(x){ return '<tr><td style="' + HS_C + '">' + esc(x.nm) + '</td><td style="' + HS_N + '">' + _hsK(x.sup + x.self) + '</td><td style="' + HS_N + '">' + (x.sup ? _hsK(x.sup) : '') + '</td><td style="' + HS_C + '"></td><td style="' + HS_N + '">' + (x.self ? _hsK(x.self) : '') + '</td><td style="' + HS_T + 'font-size:11.5px">' + _hsTx(x.note.join("\n").replace(/ \/ /g, "\n")) + '</td></tr>'; }).join('');
   var dt = G.dt ? _hsDt(G.dt) : '&nbsp;&nbsp;&nbsp;&nbsp;.&nbsp;&nbsp;&nbsp;&nbsp;.&nbsp;&nbsp;&nbsp;&nbsp;.';
@@ -127,7 +143,7 @@ function _hsGrantHtml(){
     + '<tr style="font-weight:800"><td style="' + HS_C + '">계</td><td style="' + HS_N + '">' + _hsK(B.tot) + '</td><td style="' + HS_N + '">' + _hsK(B.sup) + '</td><td style="' + HS_C + '"></td><td style="' + HS_N + '">' + (B.self ? _hsK(B.self) : '') + '</td><td style="' + HS_T + '"></td></tr>' + it + '</table>'
     + '<div style="margin:9mm 0 5mm;font-size:15px;text-align:center">「한수원 사업자지원사업 업무처리지침」에 따라 사업자지원사업비를 위와 같이 신청합니다.</div>'
     + '<div style="text-align:center;font-size:15px;margin-bottom:8mm">' + dt + '</div>'
-    + '<div style="margin-left:30%;font-size:15px;line-height:2.1">신청자 : 단 체 명 &nbsp;' + O("nm") + '<br><span style="padding-left:4.6em">대 표 자 &nbsp;' + esc(_hsSp(_hsV("org", "ceo"))) + ' &nbsp;(직인)</span><br><span style="padding-left:4.6em">소 재 지 &nbsp;' + O("addr") + '</span><br><span style="padding-left:4.6em">예금계좌 &nbsp;' + O("bank") + '</span></div>'
+    + '<div style="margin-left:30%;font-size:15px;line-height:2.1">신청자 : 단 체 명 &nbsp;' + O("nm") + '<br><span style="padding-left:4.6em">대 표 자 &nbsp;' + esc(_hsSp(_hsCeo(G.dt))) + ' &nbsp;(직인)</span><br><span style="padding-left:4.6em">소 재 지 &nbsp;' + O("addr") + '</span><br><span style="padding-left:4.6em">예금계좌 &nbsp;' + O("bank") + '</span></div>'
     + '<div style="font-size:13px;margin-top:10mm">※ 첨부서류 : 지급증빙서류(산출내역서 및 세무증빙 등)</div>';
   return _hsPg(h);
 }
@@ -135,7 +151,7 @@ function _hsGrantHtml(){
 // ═════════ 3) 결과보고서 (사업추진실적 및 정산보고서) ═════════
 function _hsResHtml(opt){
   opt = opt || {};
-  var B = _hsBud(), X = _hsExec(), R = (HS.d || {}).result || {}, P = (HS.d || {}).plan || {}, O = function(f){ return esc(_hsV("org", f)); };
+  var B = _hsBud(), X = _hsExec(), R = (HS.d || {}).result || {}, P = (HS.d || {}).plan || {}, O = function(f){ return esc(_hsV("org", f)); }; HS.dt = R.dt;
   var use = { sup: 0, self: 0 }; X.forEach(function(r){ use[r.f] += r.am; });
   var uT = use.sup + use.self, inter = pn(R.inter);
   // 표지
@@ -143,7 +159,7 @@ function _hsResHtml(opt){
     + '<div style="text-align:center;margin:30mm 0 6mm;font-size:22px;font-weight:700">한수원 사업자지원사업</div><div style="text-align:center;font-size:30px;font-weight:800;letter-spacing:2px">사업추진실적 및 정산보고서</div>'
     + '<div style="text-align:center;font-size:17px;margin:10mm 0 22mm">(사업명 : ' + esc(_hsBizNm()) + ')</div>'
     + '<div style="text-align:center;font-size:17px;margin-bottom:16mm">' + (R.dt ? _hsDt(R.dt) : '&nbsp;&nbsp;&nbsp;&nbsp;.&nbsp;&nbsp;&nbsp;&nbsp;.&nbsp;&nbsp;&nbsp;&nbsp;.') + '</div>'
-    + '<div style="margin-left:30%;font-size:16px;line-height:2">제출자 : 단체명 &nbsp;' + O("nm") + '<br><span style="padding-left:4.2em">대표자 &nbsp;' + esc(_hsSp(_hsV("org", "ceo"))) + ' &nbsp;(직인)</span></div>'
+    + '<div style="margin-left:30%;font-size:16px;line-height:2">제출자 : 단체명 &nbsp;' + O("nm") + '<br><span style="padding-left:4.2em">대표자 &nbsp;' + esc(_hsSp(_hsCeo(R.dt))) + ' &nbsp;(직인)</span></div>'
     + '<div style="margin-top:16mm;font-size:14px;line-height:2">❍ 실무책임자 : ' + O("mgrPos") + ' , 성명 ' + O("mgrNm") + '<br>❍ 연 &nbsp;락 &nbsp;처 : 전화 ' + O("mgrTel") + (O("fax") ? ' , FAX ' + O("fax") : '') + (O("email") ? ' , E-mail ' + O("email") : '') + '<br>❍ 주 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;소 : ' + (O("zip") ? '(우' + O("zip") + ') ' : '') + O("addr") + '</div>'
     + '<div style="margin-top:12mm;font-size:13.5px;border:1px solid #000;padding:8px 12px;line-height:1.9">※ 첨부서류<br>&nbsp;1. 지원사업 추진실적 1부 &nbsp;&nbsp;&nbsp;2. 자금집행 정산보고서 1부<br>&nbsp;3. 영수증·세금계산서 사본 각 1부 &nbsp;&nbsp;&nbsp;4. 행사유인물·사진 등 1부<br>&nbsp;5. 기타 각종 증빙자료 1부</div>';
   var sumT = function(sup, self, lbs){
@@ -152,7 +168,7 @@ function _hsResHtml(opt){
   };
   // 1 사업 추진실적
   var p1 = _hsBig("1", "사업 추진실적")
-    + _hsSec("1. 사업개요") + '<div style="line-height:1.9;margin-left:6px">□ 시 행 자 : ' + O("nm") + (O("ceo") ? ' (대표자 : ' + O("ceo") + ')' : '') + '<br>□ 사 업 명 : ' + esc(_hsBizNm()) + '<br>□ 사업장소 : ' + esc(_hsV("info", "place")) + '<br>□ 사업기간 : ' + _hsPeriod() + '</div>'
+    + _hsSec("1. 사업개요") + '<div style="line-height:1.9;margin-left:6px">□ 시 행 자 : ' + O("nm") + (_hsCeo(R.dt) ? ' (대표자 : ' + esc(_hsCeo(R.dt)) + ')' : '') + '<br>□ 사 업 명 : ' + esc(_hsBizNm()) + '<br>□ 사업장소 : ' + esc(_hsV("info", "place")) + '<br>□ 사업기간 : ' + _hsPeriod() + '</div>'
     + _hsUnit("□ 사 업 비", "단위 : 원, %") + sumT(0, 0, ["계", "사업자지원금", "자부담"])
     + _hsSec("2. 추진실적") + '<b>① 계획 대비 실적</b>' + _hsTbl() + _hsTh([["구 분", "15%"], ["실행계획"], ["추진실적"], ["비 고", "15%"]])
     + '<tr><td style="' + HS_C + '">' + esc((CUR_EVT && CUR_EVT.nm) || "") + '</td><td style="' + HS_T + '">' + _hsTx(R.planTxt) + '</td><td style="' + HS_T + '">' + _hsTx(R.doneTxt) + '</td><td style="' + HS_T + 'font-size:11.5px">' + _hsTx(R.doneNote) + '</td></tr></table>'
@@ -226,6 +242,7 @@ function _hsCard(){
     + '<button style="' + b + '#0f766e" onclick="event.stopPropagation();hsPrint(\'grant\')">💰 교부신청서</button>'
     + '<button style="' + b + '#7c2d12" onclick="event.stopPropagation();hsResAsk()">📘 결과보고서</button>'
     + '<button style="' + b + '#334155" onclick="event.stopPropagation();hsEdit()">✏ 내용 적기</button>'
+    + '<button style="' + b + '#475569" onclick="event.stopPropagation();hsOrgEdit()">🏢 단체 정보</button>'
     + '</div></div>';
 }
 function hsPrint(kind, opt){
@@ -258,7 +275,7 @@ function _hsEdDraw(){
   var B = _hsBud(), G = (HS.d || {}).grant || {}, R = (HS.d || {}).result || {}, P = (HS.d || {}).plan || {};
   var h = '<h3>✏ 한수원 양식 내용 — ' + esc((CUR_EVT && CUR_EVT.nm) || "") + ' ' + esc(_hsYr()) + ' <button class="close-x" onclick="closePopup2()">&times;</button></h3>'
     + '<div style="font-size:12.5px;color:#475569;margin-bottom:6px">금액은 <b>세출 예산(계획)</b>과 <b>구매 기록(실제)</b>에서 자동으로 들어가요. 여기엔 글과 날짜만 적으면 돼요. <button class="btn btn-s" style="background:#7c3aed;color:#fff" onclick="hsCopyPrev()">📋 다른 해 내용 가져오기</button></div>';
-  h += sec("🏢 단체 정보 (모든 사업 공통)", grid + HS_ORG_F.map(function(f){ return inp("hso_" + f[0], f[1], _hsV("org", f[0])); }).join('') + '</div>');
+  h += '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:6px;padding:6px 10px;font-size:13px">🏢 단체 정보 (이름·대표자·고유번호·주소·계좌·고유번호증)는 따로 관리 → 문서 날짜에 맞는 것으로 들어가요. 지금: <b>' + esc(_hsOrgAt().nm || "-") + '</b> · 대표자 <b>' + esc(_hsCeo() || "-") + '</b> <button class="btn btn-s" style="background:#1e3a5f;color:#fff" onclick="hsSaveQuiet().then(hsOrgEdit)">🏢 단체 정보 열기</button></div>';
   h += sec("📌 사업 기본", grid + HS_INFO_F.map(function(f){ return inp("hsi_" + f[0], f[1], _hsV("info", f[0]), f[2], f[3]); }).join('') + '</div>');
   var tps = _hsTps();
   h += sec("💰 재원 — 세출 대분류가 지원금인지 자부담인지 (지금 계획: 지원 " + fm(B.sup) + " · 자부담 " + fm(B.self) + ")", tps.length ? '<div style="display:flex;gap:8px;flex-wrap:wrap">' + tps.map(function(t, i){ var f = _hsFund(t); return '<label style="font-size:13px;border:1px solid #cbd5e1;border-radius:6px;padding:4px 8px">' + esc(t) + ' <select id="hsf_' + i + '" data-tp="' + esc(t) + '" style="font-size:13px"><option value="sup"' + (f === "sup" ? ' selected' : '') + '>지원금</option><option value="self"' + (f === "self" ? ' selected' : '') + '>자부담</option></select></label>'; }).join('') + '</div>' : '<div style="color:#b91c1c;font-size:13px">세출 예산이 아직 없어요 — 예산관리(세출)에서 먼저 짜 주세요</div>');
@@ -270,25 +287,24 @@ function _hsEdDraw(){
 }
 function _hsCollect(){
   var g = function(id){ var e = document.getElementById(id); return e ? e.value : ""; };
-  var org = {}; HS_ORG_F.forEach(function(f){ org[f[0]] = g("hso_" + f[0]).trim(); });
   var info = {}; HS_INFO_F.forEach(function(f){ info[f[0]] = g("hsi_" + f[0]).trim(); });
   var fund = {}; _hsTps().forEach(function(t, i){ var e = document.getElementById("hsf_" + i); if(e) fund[t.replace(/[.#$\[\]\/]/g, "_")] = e.value; });
   var plan = { dt: g("hsp_dt") }; HS_PLAN_F.forEach(function(f){ plan[f[0]] = g("hsp_" + f[0]); });
   var grant = { dt: g("hsg_dt"), prev: g("hsg_prev").replace(/[^\d]/g, ""), req: g("hsg_req").replace(/[^\d]/g, "") };
   var result = { dt: g("hsr_dt"), inter: g("hsr_inter").replace(/[^\d]/g, "") }; HS_RES_F.forEach(function(f){ result[f[0]] = g("hsr_" + f[0]); });
-  return { org: org, d: { info: info, fund: fund, plan: plan, grant: grant, result: result } };
+  return { d: { info: info, fund: fund, plan: plan, grant: grant, result: result } };
 }
 function hsSave(){
   var c = _hsCollect(), k = _hsKey();
   c.d.upAt = new Date().toISOString(); c.d.evtNm = (CUR_EVT && CUR_EVT.nm) || ""; c.d.yr = String((CUR_EVT && CUR_EVT.yr) || "");
   showLoading("💾 저장 중...");
-  Promise.all([fbDb.ref('/main/HsDoc/' + k).set(c.d), fbDb.ref('/main/HsDoc/_org').set(c.org)]).then(function(){
-    hideLoading(); HS.d = c.d; HS.org = c.org; HS.k = k; closePopup2(); toast("💾 한수원 양식 내용 저장");
+  fbDb.ref('/main/HsDoc/' + k).set(c.d).then(function(){
+    hideLoading(); HS.d = c.d; HS.k = k; closePopup2(); toast("💾 한수원 양식 내용 저장");
   }).catch(function(e){ hideLoading(); toast("저장 실패: " + e.message, true); });
 }
 // 📋 다른 해(같은 이름 행사)의 글 가져오기 — 날짜·금액은 안 가져옴
 function hsCopyPrev(){
-  var c = _hsCollect(); HS.d = Object.assign(HS.d || {}, c.d); HS.org = c.org;   // 지금 적던 것 잃지 않게
+  var c = _hsCollect(); HS.d = Object.assign(HS.d || {}, c.d);   // 지금 적던 것 잃지 않게
   fbDb.ref('/main/HsDoc').once('value').then(function(s){
     var all = s.val() || {}, me = _hsKey(), L = Object.keys(all).filter(function(k){ return k !== "_org" && k !== me && all[k] && (all[k].plan || all[k].result); });
     if(!L.length){ toast("가져올 다른 사업 내용이 아직 없어요", true); return; }
@@ -305,4 +321,80 @@ function _hsCopyDo(k){
   ["plan", "result"].forEach(function(s){ var src = x[s] || {}, dst = HS.d[s] = Object.assign({}, HS.d[s] || {}); Object.keys(src).forEach(function(f){ if(keep.indexOf(f) < 0) dst[f] = src[f]; }); });
   var I = HS.d.info = Object.assign({}, HS.d.info || {}); ["kind", "place", "target", "gubun", "how", "chNm", "chPos"].forEach(function(f){ if(!I[f] && (x.info || {})[f]) I[f] = x.info[f]; });
   closePopup2(); _hsEdDraw(); toast("📋 가져왔어요 — 고친 뒤 💾 저장");
+}
+
+// 내용 적기 창에서 단체 정보로 넘어갈 때 — 적던 글 저장 (창이 바뀌어도 안 잃게)
+function hsSaveQuiet(){ var c = _hsCollect(), k = _hsKey(); c.d.upAt = new Date().toISOString(); c.d.evtNm = (CUR_EVT && CUR_EVT.nm) || ""; c.d.yr = String((CUR_EVT && CUR_EVT.yr) || "");
+  return fbDb.ref('/main/HsDoc/' + k).set(c.d).then(function(){ HS.d = c.d; HS.k = k; }); }
+
+// ═════════ 🏢 단체 정보 — 기간별 (이름·대표자·주소·고유번호·계좌·실무책임자 + 고유번호증 같은 서류 파일) ═════════
+var HS_FILE_KINDS = ["고유번호증", "통장사본", "정관", "임원명단", "단체 소개", "기타"];
+function hsOrgEdit(){
+  showLoading("불러오는 중...");
+  _hsLoad().then(function(){ hideLoading(); HS.oe = JSON.parse(JSON.stringify(_hsOrgList())); _hsOrgDraw(); }).catch(function(e){ hideLoading(); toast("불러오기 실패: " + (e && e.message || e), true); });
+}
+function _hsOrgDraw(){
+  var L = HS.oe || [], cur = _hsOrgAt(), now = L.indexOf(L.filter(function(x){ return x.from === cur.from; })[0]);
+  var h = '<h3>🏢 단체 정보 <button class="close-x" onclick="closePopup2()">&times;</button></h3>'
+    + '<div style="font-size:12.5px;color:#475569;line-height:1.6;margin-bottom:8px">회장(2년마다)·단체 이름·주소·고유번호가 바뀌면 <b>「＋ 바뀐 날부터 새로」</b>를 눌러 그날부터의 정보를 따로 적어요. 예전 것은 그대로 남아서, <b>문서 날짜(신청일·제출일)에 맞는 기간</b>의 이름·대표자가 들어가요. 고유번호증·통장사본도 여기 올려 두면 사업계획서 뒤에 붙일 수 있어요.</div>'
+    + '<div style="margin-bottom:8px"><button class="btn" style="background:#16a34a;color:#fff;font-weight:800" onclick="_hsOrgAdd()">＋ 바뀐 날부터 새로</button></div>';
+  for(var i = L.length - 1; i >= 0; i--){
+    var x = L[i], on = i === now, nx = L[i + 1];
+    h += '<div style="border:2px solid ' + (on ? '#1e3a5f' : '#cbd5e1') + ';border-radius:8px;padding:8px 10px;margin-bottom:10px;background:' + (on ? '#f8fafc' : '#fff') + '">'
+      + '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px"><b style="font-size:14.5px">📅</b><input type="date" id="hoe_' + i + '_from" value="' + esc(x.from || "") + '" style="font-size:14px;padding:4px"><b>부터</b><span style="font-size:12.5px;color:#64748b">' + (nx ? '~ ' + esc(nx.from) + ' 전날까지' : '~ 지금') + '</span>'
+      + (on ? '<span style="background:#1e3a5f;color:#fff;border-radius:10px;padding:1px 8px;font-size:12px">지금</span>' : '')
+      + (L.length > 1 ? '<button class="btn btn-s" style="margin-left:auto;background:#b91c1c;color:#fff" onclick="_hsOrgDel(' + i + ')">이 기간 삭제</button>' : '') + '</div>'
+      + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:5px 10px">'
+      + HS_ORG_F.map(function(f){ return '<label style="font-size:12px;font-weight:700;color:#334155">' + f[1] + '<input id="hoe_' + i + '_' + f[0] + '" value="' + esc(x[f[0]] || "") + '" style="width:100%;box-sizing:border-box;padding:5px;font-size:14px;margin-top:1px;border:1px solid #cbd5e1;border-radius:5px"></label>'; }).join('') + '</div>'
+      + '<div style="margin-top:8px;font-size:13px;font-weight:800">📎 서류 파일</div>'
+      + (x.files || []).map(function(f, j){ if(!f) return ''; var img = !/\.pdf$/i.test(f.fn || "");
+        return '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;border-bottom:1px dashed #e2e8f0;padding:4px 0">' + (img ? '<img src="' + esc(typeof imgSrc === "function" ? imgSrc(f.u) : f.u) + '" style="width:46px;height:46px;object-fit:cover;border:1px solid #cbd5e1;border-radius:4px">' : '<span style="font-size:22px">📄</span>')
+          + '<input id="hoe_' + i + '_f' + j + '_nm" value="' + esc(f.nm || "") + '" style="width:120px;font-size:13px;padding:3px">'
+          + '<a href="' + esc(f.u) + '" target="_blank" rel="noopener" style="font-size:12.5px">열기</a>'
+          + '<label style="font-size:12.5px;display:flex;gap:3px;align-items:center"><input type="checkbox" id="hoe_' + i + '_f' + j + '_att"' + (f.att ? ' checked' : '') + '>사업계획서 뒤에 붙임</label>'
+          + '<button class="btn btn-s" style="background:#64748b;color:#fff" onclick="_hsOrgFDel(' + i + ',' + j + ')">✕</button></div>'; }).join('')
+      + '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:5px"><select id="hoe_' + i + '_kind" style="font-size:13px;padding:3px">' + HS_FILE_KINDS.map(function(k){ return '<option>' + k + '</option>'; }).join('') + '</select>'
+      + '<label class="btn btn-s" style="background:#0f766e;color:#fff;cursor:pointer">⬆ 파일 올리기 (사진·PDF)<input type="file" accept="image/*,.pdf" style="display:none" onchange="_hsOrgUp(' + i + ',this)"></label></div>'
+      + '</div>';
+  }
+  h += '<div style="position:sticky;bottom:0;background:#fff;padding:8px 0;text-align:right;border-top:1px solid #e2e8f0"><button class="btn btn-b" style="font-size:15px;padding:8px 22px" onclick="_hsOrgSave()">💾 저장</button></div>';
+  openPopup2(h, 860);
+}
+function _hsOrgSync(){
+  var g = function(id){ var e = document.getElementById(id); return e ? (e.type === "checkbox" ? e.checked : e.value) : null; };
+  (HS.oe || []).forEach(function(x, i){
+    var fr = g("hoe_" + i + "_from"); if(fr != null) x.from = fr;
+    HS_ORG_F.forEach(function(f){ var v = g("hoe_" + i + "_" + f[0]); if(v != null) x[f[0]] = String(v).trim(); });
+    (x.files || []).forEach(function(f, j){ if(!f) return; var n = g("hoe_" + i + "_f" + j + "_nm"), a = g("hoe_" + i + "_f" + j + "_att"); if(n != null) f.nm = n; if(a != null) f.att = !!a; });
+  });
+}
+function _hsOrgAdd(){
+  _hsOrgSync(); var L = HS.oe, last = JSON.parse(JSON.stringify(L[L.length - 1] || {}));
+  var d = prompt("무엇이 바뀌었나요? 바뀐 날짜를 적어 주세요 (예: 2027-01-01)\n그날부터 새 기간이 생기고, 지금 내용이 복사돼요 → 바뀐 칸만 고치면 돼요", _hsToday());
+  if(!d) return; d = d.trim().replace(/\./g, "-"); if(!/^\d{4}-\d{2}-\d{2}$/.test(d)){ toast("날짜는 2027-01-01 모양으로", true); return; }
+  if(L.some(function(x){ return x.from === d; })){ toast("그 날짜 기간이 이미 있어요", true); return; }
+  last.from = d; L.push(last); L.sort(function(a, b){ return String(a.from).localeCompare(String(b.from)); }); _hsOrgDraw();
+}
+function _hsOrgDel(i){ _hsOrgSync(); if(!confirm((HS.oe[i].from || "") + " 부터의 기간을 지울까요? (저장해야 반영)")) return; HS.oe.splice(i, 1); _hsOrgDraw(); }
+function _hsOrgFDel(i, j){ _hsOrgSync(); if(!confirm("이 파일을 목록에서 뺄까요? (저장해야 반영)")) return; HS.oe[i].files.splice(j, 1); _hsOrgDraw(); }
+async function _hsOrgUp(i, inp){
+  var f = inp.files && inp.files[0]; if(!f) return; _hsOrgSync();
+  var kind = (document.getElementById("hoe_" + i + "_kind") || {}).value || "서류";
+  showLoading("📎 올리는 중...");
+  try {
+    var r = await compressOne(f), ext = (/\.[a-z0-9]+$/i.exec(r.name || f.name) || [".jpg"])[0];
+    var res = await api("uploadPhoto", { dataUrl: r.dataUrl, name: ((HS.oe[i].nm || "단체") + "_" + kind + "_" + (HS.oe[i].from || "")).replace(/[\\\/:*?"<>|\s]/g, "_") + ext, type: "purchase", evtId: "단체서류" });
+    hideLoading();
+    if(!(res && res.ok && res.url)){ toast("올리기 실패: " + ((res && res.err) || ""), true); return; }
+    var x = HS.oe[i]; x.files = (x.files || []).filter(Boolean); x.files.push({ nm: kind, u: res.url, fn: f.name, att: kind === "고유번호증" || kind === "통장사본", at: _hsToday() });
+    _hsOrgDraw(); toast("📎 올렸어요 — 💾 저장을 눌러 주세요");
+  } catch(e){ hideLoading(); toast("올리기 실패: " + (e.message || e), true); }
+}
+function _hsOrgSave(){
+  _hsOrgSync(); var L = (HS.oe || []).slice().sort(function(a, b){ return String(a.from).localeCompare(String(b.from)); });
+  if(L.some(function(x){ return !/^\d{4}-\d{2}-\d{2}$/.test(x.from || ""); })){ toast("기간 시작 날짜를 다 적어 주세요", true); return; }
+  L.forEach(function(x){ if(x.files) x.files = x.files.filter(Boolean); });
+  showLoading("💾 저장 중...");
+  fbDb.ref('/main/HsDoc/_org').set({ hist: L, upAt: new Date().toISOString() }).then(function(){ hideLoading(); HS.org = { hist: L }; closePopup2(); toast("💾 단체 정보 저장 — 지금: " + (_hsOrgAt().nm || "") + " · 대표자 " + _hsCeo()); })
+    .catch(function(e){ hideLoading(); toast("저장 실패: " + e.message, true); });
 }
